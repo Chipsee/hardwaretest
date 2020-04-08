@@ -1,5 +1,5 @@
 # Introduction
-One Qt program which is used by Chipsee to autotest hardware.
+One Qt program which is used by Chipsee to test hardware.
 
 # Supported boards
 This program only supports Chipsee follow platform products now:

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/chipsee.png</file>
+        <file>images/IO_high.png</file>
+        <file>images/IO_low.png</file>
+    </qresource>
+</RCC>

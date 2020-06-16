@@ -13,7 +13,10 @@ public:
     SlaveThread(QObject *parent = 0);
     ~SlaveThread();
 
-    void startSlave();
+    void startSlave(QString *board);
+    void pi485Init();
+    void enablePi485Send();
+    void enablePi485Receive();
     void run();
 
 signals:
@@ -26,6 +29,7 @@ private:
     QString portName;
     bool quit;
     QWaitCondition cond;
+    QString * board;
 };
 
 #endif // SLAVETHREAD_H

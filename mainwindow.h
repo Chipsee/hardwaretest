@@ -47,6 +47,8 @@ private slots:
     void openSerialPort();
     void closeSerialPort();
     void clearSerialText();
+    void rs485Init();
+    void rs485SendEnable(bool);
     void readDate();
     void writeDate();
     void wifiEnable();
@@ -55,6 +57,9 @@ private slots:
     QString getGPIOValue(QString);
     void setGPIOValue(QString,QString);
     void setGPIOModel(QString,QString);
+    QString getGPIOValueRaw(QString);
+    void setGPIOValueRaw(QString,QString);
+    void setGPIOModelRaw(QString,QString);
     void setGPIOInStatu();
     void setGPIOOutStatu();
     void setGPIOOutAllHigh();
@@ -64,6 +69,9 @@ private slots:
     void canSend();
     void canStop();
     void canReceive();
+    void  checkCustom4gNumPolicy(int idx);
+    void mobile4gEnable();
+    void mobile4gDisable();
     void autoTest();
     void getusbInfo();
     void getipInfo();
@@ -127,6 +135,7 @@ private:
     QString GetFileValue(QString);
     QString GetComResult(QString);
     QString GetPlat();
+    void Delay_MSec_Suspend(int);
     void fillPortsParameters();
     void gpioExport(QString);
     void boardInit();
@@ -142,6 +151,7 @@ private:
     void gpioInit();
     void canInit();
     void autotestInit();
+    void mobile4gInit();
     void showRequest(const QString &s);
     void showcanRequest(const QString &s);
 

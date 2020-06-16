@@ -3,5 +3,6 @@
         <file>images/chipsee.png</file>
         <file>images/IO_high.png</file>
         <file>images/IO_low.png</file>
+        <file>resourcefiles/hardwaretest/ipaddr</file>
     </qresource>
 </RCC>

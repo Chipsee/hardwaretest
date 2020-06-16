@@ -11,7 +11,6 @@
 #include <QSerialPortInfo>
 #include <QIntValidator>
 #include <QLineEdit>
-#include <unistd.h>
 #include <QtNetwork/QHostAddress>
 
 /*
@@ -60,7 +59,7 @@
 
 /* IMX6U Define */
 #define IMX6ULED0PATH "/sys/class/leds/Heartbeat/brightness"
-#define IMX6ULED1PATH "/sys/class/leds/led-timer/brightness"
+#define IMX6ULED1PATH "/sys/class/leds/led-mmc1/brightness"
 #define IMX6UAUDIOPATH "/usr/hardwaretest/AudioTest.aac"
 #define IMX6UCUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
 #define IMX6UVOLUMEPATH "name='Headphone Playback Volume'"
@@ -70,6 +69,21 @@
 #define IMX6UBACKLIGHTPATH "/sys/class/backlight/backlight.8/brightness"
 #define IMX6UMAXBACKLIGHTPATH "/sys/class/backlight/backlight.8/max_brightness"
 #define IMX6UUSBDEBUGFILEPATH "/sys/kernel/debug/usb/devices"
+
+/* Industtrial Pi Define */
+#define PILED0PATH "/sys/class/leds/led0/brightness"
+#define PILED1PATH ""
+#define PIAUDIOPATH "/usr/hardwaretest/AudioTest.aac"
+#define PICUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
+#define PIVOLUMEPATH "name='PCM Playback Volume'"
+#define PIBUZZERPATH "/dev/buzzer"
+#define PIIPPATH "/usr/hardwaretest/ipaddr"
+#define PIVIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
+#define PIBACKLIGHTPATH "/sys/class/gpio/gpio41/value"
+#define PIMAXBACKLIGHTPATH "/sys/class/gpio/gpio41/value"
+#define PIUSBDEBUGFILEPATH "/sys/kernel/debug/usb/devices"
+#define RS485ENIO "34"
+
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -99,6 +113,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // NetWork
     networkInit();
 
+    // 4G
+    mobile4gInit();
+
     // GPIO
     gpioInit();
 
@@ -111,7 +128,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    qDebug() << "I will gone";
+    //if(board == "pi"){
+        //QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
+        //system(cmdstr.toLocal8Bit());
+    //}
     delete ui;
+    qDebug() << "I had gone";
 }
 
 /*
@@ -141,7 +164,7 @@ QString MainWindow::GetTempFileValue()
 QString MainWindow::GetFileValue(QString filePath)
 {
     QFile file(filePath);
-    if (file.open(QIODevice::ReadWrite))
+    if (file.open(QIODevice::ReadOnly))
     {
         QTextStream in(&file);
         QString line =in.readAll();
@@ -167,6 +190,7 @@ QString MainWindow::GetPlat()
     QString plat;
     QString cpucore = GetComResult("grep -c processor /proc/cpuinfo");
     QString imx6qdlul = GetComResult("grep -c Freescale /proc/cpuinfo");
+    QString pi = GetComResult("grep -c BCM2835 /proc/cpuinfo");
 //    qDebug() << cpucore.left(1);
 //    qDebug() << imx6qdlul.left(1);
 
@@ -178,8 +202,23 @@ QString MainWindow::GetPlat()
         } else if (cpucore.left(1) == "1"){
             plat = "imx6ul";
         }
-     }
+    } else if(pi.left(1) == "1"){
+        if(cpucore.left(1) == "4"){
+            plat = "pi";
+        }
+    }
     return plat;
+}
+
+void MainWindow::Delay_MSec_Suspend(int msec)
+{
+
+    QTime _Timer = QTime::currentTime();
+
+    QTime _NowTimer;
+    do{
+        _NowTimer=QTime::currentTime();
+    }while (_Timer.msecsTo(_NowTimer)<=msec);
 }
 
 /*
@@ -255,6 +294,26 @@ void MainWindow::BoardSetting()
         board = "am3354";
     }else if(ui->radioButton_bbb_exp->isChecked()){
         board = "bbbexp";
+    }else if(ui->radioButton_pi->isChecked()){
+        board = "pi";
+        ledpath = PILED0PATH;
+        ledpath2 = PILED1PATH;
+        audiopath = PIAUDIOPATH;
+        cueaudiopath = PICUEAUDIOPATH;
+        volumepath = PIVOLUMEPATH;
+        buzzerpath = PIBUZZERPATH;
+        videopath = PIVIDEOPATH;
+        backlightpath = PIBACKLIGHTPATH;
+        maxbacklightpath = PIMAXBACKLIGHTPATH;
+        ipaddrpath = PIIPPATH;
+        gpioOutArray[0] = "1";
+        gpioOutArray[1] = "2";
+        gpioOutArray[2] = "3";
+        gpioOutArray[3] = "4";
+        gpioInArray[0] = "5";
+        gpioInArray[1] = "6";
+        gpioInArray[2] = "7";
+        gpioInArray[3] = "8";
     }
 }
 
@@ -270,18 +329,34 @@ void MainWindow::boardInit()
         ui->radioButton_imx6u->setDisabled(true);
         ui->radioButton_am335x->setDisabled(true);
         ui->radioButton_bbb_exp->setDisabled(true);
+        ui->radioButton_pi->setDisabled(true);
     } else if (cpu == "imx6dl") {
         ui->radioButton_imx6q->setDisabled(true);
         ui->radioButton_imx6d->setChecked(true);
         ui->radioButton_imx6u->setDisabled(true);
         ui->radioButton_am335x->setDisabled(true);
         ui->radioButton_bbb_exp->setDisabled(true);
+        ui->radioButton_pi->setDisabled(true);
     } else if (cpu == "imx6ul"){
         ui->radioButton_imx6q->setDisabled(true);
         ui->radioButton_imx6d->setDisabled(true);
         ui->radioButton_imx6u->setChecked(true);
         ui->radioButton_am335x->setDisabled(true);
         ui->radioButton_bbb_exp->setDisabled(true);
+        ui->radioButton_pi->setDisabled(true);
+    } else if (cpu == "pi"){
+        ui->radioButton_imx6q->setDisabled(true);
+        ui->radioButton_imx6d->setDisabled(true);
+        ui->radioButton_imx6u->setDisabled(true);
+        ui->radioButton_am335x->setDisabled(true);
+        ui->radioButton_bbb_exp->setDisabled(true);
+        ui->radioButton_pi->setChecked(true);
+
+        /*change vlc to allow run for root*/
+        //QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
+        //system(cmdstr.toLocal8Bit());
+        //cmdstr = "chmod a+w /usr/bin/vlc && sed 's/geteuid/getppid/g' /usr/bin/vlc";
+        //system(cmdstr.toLocal8Bit());
     }
 
     BoardSetting();
@@ -317,6 +392,9 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
+    if(board == "pi"){
+        ui->pushButton_timeSync->setVisible(false);
+    }
 }
 
 /*
@@ -351,11 +429,21 @@ void MainWindow::CloseLed2()
 
 void MainWindow::ledInit()
 {
+    QString cmdstr = "chmod 777 " + ledpath+"&";
+    system(cmdstr.toLocal8Bit());
     ui->radioButton_led1_off->setChecked(true);
-    ui->radioButton_led2_off->setChecked(true);
+    ui->radioButton_led2_on->setVisible(false);
+    ui->radioButton_led2_off->setVisible(false);
+    ui->label_led2->setVisible(false);
     connect(ui->radioButton_led1_on,&QRadioButton::clicked,this,&MainWindow::OpenLed);
     connect(ui->radioButton_led1_off,&QRadioButton::clicked,this,&MainWindow::CloseLed);
     if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
+        QString cmdstr2 = "chmod 777 " + ledpath2+"&";
+        system(cmdstr2.toLocal8Bit());
+        ui->label_led2->setVisible(true);
+        ui->radioButton_led2_on->setVisible(true);
+        ui->radioButton_led2_off->setVisible(true);
+        ui->radioButton_led2_off->setChecked(true);
         connect(ui->radioButton_led2_on,&QRadioButton::clicked,this,&MainWindow::OpenLed2);
         connect(ui->radioButton_led2_off,&QRadioButton::clicked,this,&MainWindow::CloseLed2);
     }else if(board == "am3354"){
@@ -372,8 +460,13 @@ void MainWindow::ledInit()
 void MainWindow::AudioTest()
 {
     QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
-    system("killall gst-play-1.0");
-    QString cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
+    QString cmdstr = "";
+    if(board == "pi") {
+        cmdstr = "cvlc "+ audiopath + " vlc://quit" +"&";
+    }else{
+        system("killall gst-play-1.0");
+        cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
+    }
     system(cmdstr.toLocal8Bit());
 }
 
@@ -411,8 +504,13 @@ void MainWindow::RecordTest()
 
 void MainWindow::CueAudio()
 {
-    system("killall gst-play-1.0");
-    QString cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
+    QString cmdstr = "";
+    if(board == "pi") {
+        cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" +"&";
+    }else{
+        system("killall gst-play-1.0");
+        cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
+    }
     system(cmdstr.toLocal8Bit());
 }
 
@@ -463,7 +561,12 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setRange(60,100);
         ui->horizontalSlider_audio_volume->setValue(100);
     }else if(board == "am3354"){
-    }else if (board == "bbbexp"){}
+    }else if (board == "bbbexp"){
+    }else if (board == "pi"){
+        ui->pushButton_record->setVisible(false);
+        ui->horizontalSlider_audio_volume->setRange(0,400);
+        ui->horizontalSlider_audio_volume->setValue(0);
+    }
     connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);
 
     ui->checkBox_buzzer->setChecked(false);
@@ -484,8 +587,13 @@ void MainWindow::VideoTest()
         return;
     }
     QMessageBox::warning(this,"Tips","Press OK to Play Video!");
-    system("killall gst-play-1.0");
-    QString cmdstr = "gst-play-1.0 "+videopath+"&";
+    QString cmdstr="";
+    if(board == "pi") {
+        cmdstr = "cvlc -f "+ videopath + " vlc://quit" +"&";
+    } else{
+        system("killall gst-play-1.0");
+        cmdstr = "gst-play-1.0 "+videopath+"&";
+    }
     system(cmdstr.toLocal8Bit());
 }
 
@@ -493,8 +601,20 @@ void MainWindow::ChangeBacklight()
 {
     int backlightvalue = ui->horizontalSlider_backlight->value();
     QString value = QString::number(backlightvalue,10); // int to string
+    if(board == "pi" && value == "0"){
+        QMessageBox::warning(this,"Tips","If you trun off the backlight of LCD, It will back after 5 seconds!");
+    }
     QString cmdstr = "echo "+value+" >"+backlightpath+"&";
     system(cmdstr.toLocal8Bit()); // int to const char*
+    if(board == "pi"){
+        if (value == "0"){
+            Delay_MSec_Suspend(5000);
+            cmdstr = "echo 1 >"+backlightpath+"&";
+            system(cmdstr.toLocal8Bit()); // int to const char*
+            ui->horizontalSlider_backlight->setValue(1);
+        }
+
+    }
 }
 
 int MainWindow::MaxBacklighValue()
@@ -536,6 +656,10 @@ void MainWindow::displayInit()
 
     ui->horizontalSlider_backlight->setRange(1,MaxBacklighValue());
     ui->horizontalSlider_backlight->setValue(GetBacklightValue());
+    if(board == "pi"){
+        ui->horizontalSlider_backlight->setRange(0,1);
+        ui->horizontalSlider_backlight->setValue(1);
+    }
     connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
 }
 
@@ -682,6 +806,9 @@ void MainWindow::clearSerialText()
 
 void MainWindow::readDate()
 {
+    if(board == "pi") {
+        rs485SendEnable(false);
+    }
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QByteArray date = serial->readAll();
     while (serial->waitForReadyRead(10))
@@ -693,8 +820,28 @@ void MainWindow::writeDate()
 {
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QByteArray sendDate = "Message from serial by manual!!!\n";
-    serial->write(sendDate);
-    ui->textBrowser_serial_text->setText(currenttime+"\n"+currentSettings.name+" Sended Message by manual!!");
+    if(board == "pi") {
+        rs485SendEnable(true);
+    }
+    for(int i=0; i<100; i++){
+        serial->write(sendDate);
+        ui->textBrowser_serial_text->setText(currenttime+"\n"+currentSettings.name+" Sended Message by manual!!");
+    }
+}
+
+void MainWindow::rs485Init()
+{
+    gpioExport(RS485ENIO);
+    setGPIOModelRaw(RS485ENIO,"out");
+    setGPIOValueRaw(RS485ENIO,"0");
+}
+
+void MainWindow::rs485SendEnable(bool enable)
+{
+    if(enable)
+        setGPIOValueRaw(RS485ENIO,"1");
+    else
+        setGPIOValueRaw(RS485ENIO,"0");
 }
 
 void MainWindow::serialInit()
@@ -706,6 +853,10 @@ void MainWindow::serialInit()
     ui->comboBox_baud->setInsertPolicy(QComboBox::NoInsert);
     ui->pushButton_serialClose->setEnabled(false);
     ui->pushButton_serialSend->setEnabled(false);
+    if(board == "pi")
+    {
+        rs485Init();
+    }
     connect(ui->comboBox_baud, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                 this, &MainWindow::checkCustomBaudRatePolicy);
     connect(ui->comboBox_com, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
@@ -766,7 +917,12 @@ void MainWindow::wifiInfoDisplay()
 
 void MainWindow::getipInfo()
 {
-    QString cmdstr = "echo `ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
+    QString cmdstr = "";
+    if (board == "pi"){
+        cmdstr = "echo `ifconfig | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
+    } else {
+        cmdstr = "echo `ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
+    }
     system(cmdstr.toLocal8Bit());
     if(GetFileValue(ipaddrpath).contains("192.168"))
         CueAudio();
@@ -777,6 +933,10 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
+    if(board == "pi"){
+        ui->pushButton_wifiEnable->setVisible(false);
+        ui->pushButton_wifiDisable->setVisible(false);
+    }
 }
 
 void MainWindow::networkautotest()
@@ -786,6 +946,54 @@ void MainWindow::networkautotest()
     ipautotestTimer->start(2000);
 }
 
+/*
+ * 4G
+ *
+ * mobile4gEnable() mobile4gDisable() checkCustom4gNumPolicy(int idx) mobile4gInit()
+ *
+ */
+void MainWindow::mobile4gEnable()
+{
+    ui->pushButton_4gEnable->setDisabled(true);
+    ui->pushButton_4gDisable->setDisabled(false);
+    ui->comboBox_4g->setDisabled(true);
+    QString nettype = ui->comboBox_4g->currentText();
+    QString cmdstr = "quectel-CM -s " + nettype + "&";
+    system(cmdstr.toLocal8Bit());
+    ui->textBrowser_network_text->setText("4G Disabling, press 'Netinfo' to know status.");
+}
+
+void MainWindow::mobile4gDisable()
+{
+    ui->pushButton_4gDisable->setDisabled(true);
+    ui->pushButton_4gEnable->setDisabled(false);
+    ui->comboBox_4g->setDisabled(false);
+    QString cmdstr = "killall -9 quectel-CM";
+    system(cmdstr.toLocal8Bit());
+    ui->textBrowser_network_text->setText("4G Disabled");
+}
+
+void MainWindow::checkCustom4gNumPolicy(int idx)
+{
+    bool isCustom4gNum = !ui->comboBox_4g->itemData(idx).isValid();
+    ui->comboBox_4g->setEditable(isCustom4gNum);
+    if (isCustom4gNum)
+        ui->comboBox_4g->clearEditText();
+}
+
+void MainWindow::mobile4gInit()
+{
+    ui->comboBox_4g->addItem("3gnet","3gnet");
+    ui->comboBox_4g->addItem("cmnet","cmnet");
+    ui->comboBox_4g->addItem("ctnet","ctnet");
+    ui->comboBox_4g->addItem("Custome");
+    ui->pushButton_4gEnable->setDisabled(false);
+    ui->pushButton_4gDisable->setDisabled(true);
+    connect(ui->comboBox_4g, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),this,&MainWindow::checkCustom4gNumPolicy);
+    ui->pushButton_4gDisable->setDisabled(true);
+    connect(ui->pushButton_4gEnable,&QPushButton::clicked,this,&MainWindow::mobile4gEnable);
+    connect(ui->pushButton_4gDisable,&QPushButton::clicked,this,&MainWindow::mobile4gDisable);
+}
 
 /*
  *  USB
@@ -806,7 +1014,8 @@ void MainWindow::getusbInfo()
             line.contains("MXT USB Device")||
             line.contains("Mass-Storage")||
             line.contains("USB2.0-CRW")||
-            line.contains("DataTraveler 2.0"))
+            line.contains("DataTraveler 2.0")||
+            line.contains("USB Storage"))
     {
         CueAudio();
     }
@@ -822,28 +1031,36 @@ void MainWindow::usbInit()
 /*
  *  GPIO
  *
+ *  getGPIOValueRaw(QString) setGPIOValueRaw(QString,QString) setGPIOModelRaw(QString)
  *  getGPIOValue(QString) setGPIOValue(QString,QString) setGPIOModel(QString)  getGPIOValue(QString) setGPIOOutStatu() setGPIOOutAllHigh()
  *
  *  setGPIOOutAllLow() gpioExport(QString) gpioInit()
  *
  */
 
-//QString MainWindow::getGPIOValue(QString gpionum)
-//{
-//    QString gpiopath = QString("%1").arg(GPIOBASEPATH)+gpionum+"/value";
-//    if(GetFileValue(gpiopath)==NULL){
-//        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!!");
-//        return NULL;
-//    }else
-//        return GetFileValue(gpiopath);
-//}
+QString MainWindow::getGPIOValueRaw(QString gpionum)
+{
+    QString gpiopath = QString("%1").arg("/sys/class/gpio/gpio")+gpionum+"/value";
+    if(GetFileValue(gpiopath)==NULL){
+        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!!");
+        return NULL;
+    }else
+        return GetFileValue(gpiopath);
+}
 
-//void MainWindow::setGPIOValue(QString gpionum, QString value)
-//{
-//    QString gpiopath = QString("%1").arg(GPIOBASEPATH)+gpionum+"/value";
-//    QString cmdstr = "echo "+value+" >"+gpiopath;
-//    system(cmdstr.toLocal8Bit());
-//}
+void MainWindow::setGPIOValueRaw(QString gpionum, QString value)
+{
+    QString gpiopath = QString("%1").arg("/sys/class/gpio/gpio")+gpionum+"/value";
+    QString cmdstr = "echo "+value+" >"+gpiopath;
+    system(cmdstr.toLocal8Bit());
+}
+
+void MainWindow::setGPIOModelRaw(QString gpionum, QString model)
+{
+    QString gpiomodelpath = QString("%1").arg("/sys/class/gpio/gpio")+gpionum+"/direction";
+    QString cmdstr = "echo "+model+" >"+gpiomodelpath;
+    system(cmdstr.toLocal8Bit());
+}
 
 QString MainWindow::getGPIOValue(QString gpionum)
 {
@@ -1045,6 +1262,9 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
+    }else if(board == "pi"){
+        ui->comboBox_canNum->setDisabled(true);
+        ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else{
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("Custum");
@@ -1055,6 +1275,9 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
+    if(board == "pi"){
+        ui->pushButton_canStart->setDisabled(true);
+    }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);
     connect(ui->pushButton_canSend,&QPushButton::clicked,this,&MainWindow::canSend);
     connect(ui->pushButton_canStop,&QPushButton::clicked,this,&MainWindow::canStop);
@@ -1094,13 +1317,18 @@ void MainWindow::autoTest()
         eventloop.exec();
     }
 
-    // Test Record And Speaker
-    RecordTest();
+    if(board == "pi"){
 
-    // Test Serial and CAN
+    } else {
+        // Test Record And Speaker
+        RecordTest();
+
+        // Test Serial and CAN
+        connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
+    }
     connect(&thread, &SlaveThread::request, this,&MainWindow::showRequest);
-    connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
-    thread.startSlave();
+    thread.startSlave(&board);
+
 }
 
 void MainWindow::showRequest(const QString &s)

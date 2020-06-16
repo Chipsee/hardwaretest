@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1176</width>
+    <width>1003</width>
     <height>553</height>
    </rect>
   </property>
@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_39">
+   <layout class="QHBoxLayout" name="horizontalLayout_8">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_DLSD">
       <item>
@@ -365,20 +365,6 @@
          <string>Serial</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="3" column="0" colspan="2">
-          <layout class="QVBoxLayout" name="verticalLayout_serial_1">
-           <item>
-            <widget class="QLabel" name="label_serial_statu">
-             <property name="text">
-              <string>Statu:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTextBrowser" name="textBrowser_serial_text"/>
-           </item>
-          </layout>
-         </item>
          <item row="0" column="1">
           <layout class="QHBoxLayout" name="horizontalLayout_serial_2">
            <item>
@@ -391,7 +377,7 @@
            <item>
             <widget class="QComboBox" name="comboBox_stopBit">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -412,7 +398,7 @@
            <item>
             <widget class="QComboBox" name="comboBox_baud">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -433,7 +419,7 @@
            <item>
             <widget class="QComboBox" name="comboBox_com">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -442,7 +428,84 @@
            </item>
           </layout>
          </item>
-         <item row="3" column="2">
+         <item row="1" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_serial_5">
+           <item>
+            <widget class="QLabel" name="label_dataBit">
+             <property name="text">
+              <string>Data Bit:  </string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBox_dataBit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_serial_3">
+           <item>
+            <widget class="QLabel" name="label_checkBit">
+             <property name="text">
+              <string>Check Bit:  </string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBox_checkBit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_serial_6">
+           <item>
+            <widget class="QLabel" name="label_flow">
+             <property name="text">
+              <string>Flow:  </string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBox_flow">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_serial_1">
+           <item>
+            <widget class="QLabel" name="label_serial_statu">
+             <property name="text">
+              <string>Statu:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextBrowser" name="textBrowser_serial_text"/>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="1">
           <layout class="QVBoxLayout" name="verticalLayout_serial_2">
            <item>
             <spacer name="horizontalSpacer_serial_1">
@@ -511,69 +574,6 @@
            </item>
           </layout>
          </item>
-         <item row="0" column="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_serial_3">
-           <item>
-            <widget class="QLabel" name="label_checkBit">
-             <property name="text">
-              <string>Check Bit:  </string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="comboBox_checkBit">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_serial_6">
-           <item>
-            <widget class="QLabel" name="label_flow">
-             <property name="text">
-              <string>Flow:  </string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="comboBox_flow">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout_serial_5">
-           <item>
-            <widget class="QLabel" name="label_dataBit">
-             <property name="text">
-              <string>Data Bit:  </string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="comboBox_dataBit">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
         </layout>
        </widget>
       </item>
@@ -582,47 +582,91 @@
         <property name="title">
          <string>NetWork</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_13">
+        <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_network_1">
+          <layout class="QVBoxLayout" name="verticalLayout_N4G">
            <item>
-            <widget class="QPushButton" name="pushButton_wifiEnable">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>WIFI Enable</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_WIFI">
+             <item>
+              <widget class="QPushButton" name="pushButton_wifiEnable">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>WIFI Enable</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_wifiDisable">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>WIFI Disable</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_netInfo">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>NetInfo</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_wifiDisable">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>WIFI Disable</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton_netInfo">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>NetInfo</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_4G">
+             <item>
+              <widget class="QComboBox" name="comboBox_4g">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_4gEnable">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>4G Enable</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_4gDisable">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>4G Disable</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -705,6 +749,12 @@
            </item>
            <item row="4" column="0">
             <widget class="QLabel" name="label_out_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>OUT_2</string>
              </property>
@@ -732,6 +782,12 @@
            </item>
            <item row="5" column="0">
             <widget class="QLabel" name="label_out_3">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>OUT_3</string>
              </property>
@@ -749,6 +805,12 @@
            </item>
            <item row="3" column="0">
             <widget class="QLabel" name="label_out_1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>OUT_1</string>
              </property>
@@ -766,6 +828,12 @@
            </item>
            <item row="6" column="0">
             <widget class="QLabel" name="label_out_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>OUT_4</string>
              </property>
@@ -780,7 +848,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>SetAllHigh</string>
+              <string>AllHigh</string>
              </property>
             </widget>
            </item>
@@ -800,7 +868,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>SetAllLow</string>
+              <string>AllLow</string>
              </property>
             </widget>
            </item>
@@ -818,19 +886,6 @@
             </spacer>
            </item>
           </layout>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_gpio_1">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
          </item>
          <item>
           <layout class="QGridLayout" name="gridLayout_gpio_2">
@@ -935,7 +990,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>GPIOReFresh</string>
+              <string>ReFresh</string>
              </property>
             </widget>
            </item>
@@ -1061,14 +1116,14 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>BBB-EXP</string>
+            <string>BBB</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup_board</string>
            </attribute>
           </widget>
          </item>
-         <item row="0" column="3">
+         <item row="0" column="4">
           <widget class="QRadioButton" name="radioButton_imx6u">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1077,11 +1132,11 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>IMX6U</string>
+            <string>6U</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
+         <item row="0" column="5">
           <widget class="QRadioButton" name="radioButton_imx6d">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1090,7 +1145,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>IMX6D</string>
+            <string>6D</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup_board</string>
@@ -1106,7 +1161,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>AM335X</string>
+            <string>335X</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup_board</string>
@@ -1122,11 +1177,11 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Version 1.0</string>
+            <string>Version 2.0</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="5">
+         <item row="0" column="7">
           <widget class="QRadioButton" name="radioButton_imx6q">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1135,14 +1190,14 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>IMX6Q</string>
+            <string>6Q</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup_board</string>
            </attribute>
           </widget>
          </item>
-         <item row="2" column="5">
+         <item row="2" column="7">
           <widget class="QPushButton" name="pushButton_exit">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1153,6 +1208,16 @@
            <property name="text">
             <string>EXIT</string>
            </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QRadioButton" name="radioButton_pi">
+           <property name="text">
+            <string>PI</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">buttonGroup_board</string>
+           </attribute>
           </widget>
          </item>
         </layout>
@@ -1167,12 +1232,12 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_board"/>
-  <buttongroup name="buttonGroup_out_1"/>
-  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_out_3"/>
+  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_led1"/>
+  <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_board"/>
+  <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

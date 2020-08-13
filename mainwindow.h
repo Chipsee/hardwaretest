@@ -111,6 +111,7 @@ private:
     QTimer * writeTimer;
     SlaveThread thread;
     bool buzzerflag;
+    bool audioflag;
 
     struct serailSettings {
             QString name;

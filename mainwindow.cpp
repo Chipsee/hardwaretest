@@ -91,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    audioflag = true;
 
     // boardInit
     boardInit();
@@ -462,6 +463,7 @@ void MainWindow::AudioTest()
     QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
     QString cmdstr = "";
     if(board == "pi") {
+        system("killall vlc");
         cmdstr = "cvlc "+ audiopath + " vlc://quit" +"&";
     }else{
         system("killall gst-play-1.0");
@@ -504,14 +506,20 @@ void MainWindow::RecordTest()
 
 void MainWindow::CueAudio()
 {
-    QString cmdstr = "";
-    if(board == "pi") {
-        cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" +"&";
-    }else{
-        system("killall gst-play-1.0");
-        cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
+    if(audioflag) {
+        audioflag = false;
+        QString cmdstr = "";
+        if(board == "pi") {
+            cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" +"&";
+            //cmdstr = "aplay " + cueaudiopath + " >/dev/null &";
+        }else{
+            system("killall gst-play-1.0");
+            cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
+        }
+        system(cmdstr.toLocal8Bit());
+        audioflag = true;
     }
-    system(cmdstr.toLocal8Bit());
+    qDebug() << "CueAudio!";
 }
 
 void MainWindow::ChangeVolume()
@@ -919,9 +927,10 @@ void MainWindow::getipInfo()
 {
     QString cmdstr = "";
     if (board == "pi"){
-        cmdstr = "echo `ifconfig | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
+        cmdstr = "echo `ifconfig eth0 | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
     } else {
-        cmdstr = "echo `ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
+        cmdstr = "echo `ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
+        cmdstr = "echo `ifconfig eth1 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >>"+ipaddrpath;
     }
     system(cmdstr.toLocal8Bit());
     if(GetFileValue(ipaddrpath).contains("192.168"))
@@ -958,7 +967,7 @@ void MainWindow::mobile4gEnable()
     ui->pushButton_4gDisable->setDisabled(false);
     ui->comboBox_4g->setDisabled(true);
     QString nettype = ui->comboBox_4g->currentText();
-    QString cmdstr = "quectel-CM -s " + nettype + "&";
+    QString cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
     system(cmdstr.toLocal8Bit());
     ui->textBrowser_network_text->setText("4G Disabling, press 'Netinfo' to know status.");
 }
@@ -1352,10 +1361,3 @@ void MainWindow::autotestInit()
     connect(autoTesttimer,SIGNAL(timeout()),SLOT(autoTest()));
     autoTesttimer->start(2000);
 }
-
-
-
-
-
-
-

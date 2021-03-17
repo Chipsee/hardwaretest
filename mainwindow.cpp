@@ -11,6 +11,7 @@
 #include <QSerialPortInfo>
 #include <QIntValidator>
 #include <QLineEdit>
+#include <QNetworkInterface>
 #include <QtNetwork/QHostAddress>
 
 /*
@@ -79,8 +80,6 @@
 #define PIBUZZERPATH "/dev/buzzer"
 #define PIIPPATH "/usr/hardwaretest/ipaddr"
 #define PIVIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
-#define PIBACKLIGHTPATH "/sys/class/gpio/gpio41/value"
-#define PIMAXBACKLIGHTPATH "/sys/class/gpio/gpio41/value"
 #define PIUSBDEBUGFILEPATH "/sys/kernel/debug/usb/devices"
 #define RS485ENIO "34"
 
@@ -124,16 +123,16 @@ MainWindow::MainWindow(QWidget *parent) :
     canInit();
 
     // AutoTest, used for chipsee autotest
-//    autotestInit();
+    autotestInit();
 }
 
 MainWindow::~MainWindow()
 {
     qDebug() << "I will gone";
-    //if(board == "pi"){
-        //QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
-        //system(cmdstr.toLocal8Bit());
-    //}
+    if(cpuplat == "pi"){
+        QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
+        system(cmdstr.toLocal8Bit());
+    }
     delete ui;
     qDebug() << "I had gone";
 }
@@ -191,7 +190,8 @@ QString MainWindow::GetPlat()
     QString plat;
     QString cpucore = GetComResult("grep -c processor /proc/cpuinfo");
     QString imx6qdlul = GetComResult("grep -c Freescale /proc/cpuinfo");
-    QString pi = GetComResult("grep -c BCM2835 /proc/cpuinfo");
+    QString pi3 = GetComResult("grep -c BCM2835 /proc/cpuinfo");
+    QString pi4 = GetComResult("grep -c BCM2711 /proc/cpuinfo");
 //    qDebug() << cpucore.left(1);
 //    qDebug() << imx6qdlul.left(1);
 
@@ -203,12 +203,29 @@ QString MainWindow::GetPlat()
         } else if (cpucore.left(1) == "1"){
             plat = "imx6ul";
         }
-    } else if(pi.left(1) == "1"){
+    } else if(pi3.left(1) == "1" || pi4.left(1) == "1"){
         if(cpucore.left(1) == "4"){
             plat = "pi";
         }
     }
     return plat;
+}
+
+QString MainWindow::GetPiBoard()
+{
+    QString board;
+    if(GetPlat() == "pi")
+    {
+        board = GetFileValue("/opt/chipsee/.board");
+        // Remove "\n" from board
+        board.remove(QChar('\n'),Qt::CaseInsensitive);
+    } else
+    {
+        board = "NULL";
+    }
+
+    return board;
+
 }
 
 void MainWindow::Delay_MSec_Suspend(int msec)
@@ -231,7 +248,7 @@ void MainWindow::Delay_MSec_Suspend(int msec)
 
 void MainWindow::BoardSetting()
 {
-    if(ui->radioButton_imx6q->isChecked()){
+    if(GetPlat() == "imx6q"){
         board = "imx6q";
         ledpath = IMX6QLED4PATH;
         ledpath2 = IMX6QLED5PATH;
@@ -251,7 +268,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(ui->radioButton_imx6d->isChecked()){
+    }else if(GetPlat() == "imx6dl"){
         board = "imx6d";
         ledpath = IMX6DLED0PATH;
         ledpath2 = IMX6DLED1PATH;
@@ -271,7 +288,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(ui->radioButton_imx6u->isChecked()){
+    }else if(GetPlat() == "imx6ul"){
         board = "imx6u";
         ledpath = IMX6ULED0PATH;
         ledpath2 = IMX6ULED1PATH;
@@ -291,12 +308,12 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(ui->radioButton_am335x->isChecked()){
+    }else if(GetPlat() == "am3354"){
         board = "am3354";
-    }else if(ui->radioButton_bbb_exp->isChecked()){
+    }else if(GetPlat() == "bbbexp"){
         board = "bbbexp";
-    }else if(ui->radioButton_pi->isChecked()){
-        board = "pi";
+    }else if(GetPlat() == "pi"){
+        board = GetPiBoard();
         ledpath = PILED0PATH;
         ledpath2 = PILED1PATH;
         audiopath = PIAUDIOPATH;
@@ -304,8 +321,6 @@ void MainWindow::BoardSetting()
         volumepath = PIVOLUMEPATH;
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
-        backlightpath = PIBACKLIGHTPATH;
-        maxbacklightpath = PIMAXBACKLIGHTPATH;
         ipaddrpath = PIIPPATH;
         gpioOutArray[0] = "1";
         gpioOutArray[1] = "2";
@@ -320,44 +335,50 @@ void MainWindow::BoardSetting()
 
 void MainWindow::boardInit()
 {
-    QString cpu = GetPlat();
+    cpuplat = GetPlat();
 
-    //qDebug() << cpu;
+    //qDebug() << cpuplat;
 
-    if (cpu == "imx6q") {
-        ui->radioButton_imx6q->setChecked(true);
-        ui->radioButton_imx6d->setDisabled(true);
-        ui->radioButton_imx6u->setDisabled(true);
-        ui->radioButton_am335x->setDisabled(true);
-        ui->radioButton_bbb_exp->setDisabled(true);
-        ui->radioButton_pi->setDisabled(true);
-    } else if (cpu == "imx6dl") {
-        ui->radioButton_imx6q->setDisabled(true);
-        ui->radioButton_imx6d->setChecked(true);
-        ui->radioButton_imx6u->setDisabled(true);
-        ui->radioButton_am335x->setDisabled(true);
-        ui->radioButton_bbb_exp->setDisabled(true);
-        ui->radioButton_pi->setDisabled(true);
-    } else if (cpu == "imx6ul"){
-        ui->radioButton_imx6q->setDisabled(true);
-        ui->radioButton_imx6d->setDisabled(true);
-        ui->radioButton_imx6u->setChecked(true);
-        ui->radioButton_am335x->setDisabled(true);
-        ui->radioButton_bbb_exp->setDisabled(true);
-        ui->radioButton_pi->setDisabled(true);
-    } else if (cpu == "pi"){
-        ui->radioButton_imx6q->setDisabled(true);
-        ui->radioButton_imx6d->setDisabled(true);
-        ui->radioButton_imx6u->setDisabled(true);
-        ui->radioButton_am335x->setDisabled(true);
-        ui->radioButton_bbb_exp->setDisabled(true);
-        ui->radioButton_pi->setChecked(true);
+    if (cpuplat == "imx6q" || cpuplat =="imx6dl" || cpuplat == "imx6ul") {
+        ui->labelBoard->setText("IMX6QDLUL");
+    } else if (cpuplat == "pi"){
 
         /*change vlc to allow run for root*/
-        //QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
-        //system(cmdstr.toLocal8Bit());
-        //cmdstr = "chmod a+w /usr/bin/vlc && sed 's/geteuid/getppid/g' /usr/bin/vlc";
-        //system(cmdstr.toLocal8Bit());
+        QString cmdstr = "cp /usr/bin/vlc /usr/bin/vlc.bak && sync";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "chmod a+w /usr/bin/vlc && sed 's/geteuid/getppid/g' /usr/bin/vlc > /tmp/vlc && cp /tmp/vlc /usr/bin/vlc";
+        system(cmdstr.toLocal8Bit());
+
+        ui->labelBoard->setText(GetPiBoard());
+
+        // Backlight init
+        if(GetPiBoard() == "CS10600RA070" || GetPiBoard() == "CS12800RA101") {
+            gpioExport("41");
+            setGPIOModelRaw("41","out");
+            setGPIOValueRaw("41","1");
+            backlightpath = "/sys/class/gpio/gpio41/value";
+            maxbacklightpath = "/sys/class/gpio/gpio41/value";
+        }
+
+        if(GetPiBoard() == "CS10600RA4070") {
+            gpioExport("18");
+            setGPIOModelRaw("18","out");
+            setGPIOValueRaw("18","1");
+            backlightpath = "/sys/class/gpio/gpio18/value";
+            maxbacklightpath = "/sys/class/gpio/gpio18/value";
+        }
+
+        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101") {
+            gpioExport("13");
+            setGPIOModelRaw("13","out");
+            setGPIOValueRaw("13","1");
+            backlightpath = "/sys/class/gpio/gpio13/value";
+            maxbacklightpath = "/sys/class/gpio/gpio13/value";
+            gpioExport("17");
+            setGPIOModelRaw("17","out");
+            setGPIOValueRaw("17","0");
+            relaypath = "/sys/class/gpio/gpio17/value";
+        }
     }
 
     BoardSetting();
@@ -393,7 +414,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(board == "pi"){
+    if(cpuplat == "pi"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -462,7 +483,7 @@ void MainWindow::AudioTest()
 {
     QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
     QString cmdstr = "";
-    if(board == "pi") {
+    if(cpuplat == "pi") {
         system("killall vlc");
         cmdstr = "cvlc "+ audiopath + " vlc://quit" +"&";
     }else{
@@ -501,6 +522,17 @@ void MainWindow::RecordTest()
         eventloop.exec();
 
         system("aplay /usr/hardwaretest/output.wav &");
+
+    }else if(cpuplat == "pi"){
+        system("test -f /usr/hardwaretest/output.wav && rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(16000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        system("aplay /usr/hardwaretest/output.wav &");
     }
 }
 
@@ -509,14 +541,19 @@ void MainWindow::CueAudio()
     if(audioflag) {
         audioflag = false;
         QString cmdstr = "";
-        if(board == "pi") {
-            cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" +"&";
+        if(cpuplat == "pi") {
+            cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" + " &";
             //cmdstr = "aplay " + cueaudiopath + " >/dev/null &";
         }else{
             system("killall gst-play-1.0");
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
         }
         system(cmdstr.toLocal8Bit());
+
+        //QEventLoop eventloop;
+        //QTimer::singleShot(8000, &eventloop,SLOT(quit()));
+        //eventloop.exec();
+
         audioflag = true;
     }
     qDebug() << "CueAudio!";
@@ -526,7 +563,12 @@ void MainWindow::ChangeVolume()
 {
     int volumevalue = ui->horizontalSlider_audio_volume->value();
     QString value = QString::number(volumevalue,10); // int to string
-    QString cmdstr = "amixer cset "+volumepath+" "+value+"&";
+    QString cmdstr = "";
+    if(cpuplat == "pi"){
+        cmdstr = "pactl set-sink-volume 0 "+value+"% &";
+    }else{
+        cmdstr = "amixer cset "+volumepath+" "+value+"&";
+    }
     system(cmdstr.toLocal8Bit()); // int to const char*
 }
 
@@ -570,10 +612,11 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(100);
     }else if(board == "am3354"){
     }else if (board == "bbbexp"){
-    }else if (board == "pi"){
-        ui->pushButton_record->setVisible(false);
-        ui->horizontalSlider_audio_volume->setRange(0,400);
-        ui->horizontalSlider_audio_volume->setValue(0);
+    }else if (cpuplat == "pi"){
+        ui->horizontalSlider_audio_volume->setRange(0,100);
+        ui->horizontalSlider_audio_volume->setValue(50);
+        QString cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
+        system(cmdstr.toLocal8Bit());
     }
     connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);
 
@@ -596,7 +639,7 @@ void MainWindow::VideoTest()
     }
     QMessageBox::warning(this,"Tips","Press OK to Play Video!");
     QString cmdstr="";
-    if(board == "pi") {
+    if(cpuplat == "pi") {
         cmdstr = "cvlc -f "+ videopath + " vlc://quit" +"&";
     } else{
         system("killall gst-play-1.0");
@@ -609,12 +652,12 @@ void MainWindow::ChangeBacklight()
 {
     int backlightvalue = ui->horizontalSlider_backlight->value();
     QString value = QString::number(backlightvalue,10); // int to string
-    if(board == "pi" && value == "0"){
+    if(cpuplat == "pi" && value == "0"){
         QMessageBox::warning(this,"Tips","If you trun off the backlight of LCD, It will back after 5 seconds!");
     }
     QString cmdstr = "echo "+value+" >"+backlightpath+"&";
     system(cmdstr.toLocal8Bit()); // int to const char*
-    if(board == "pi"){
+    if(cpuplat == "pi"){
         if (value == "0"){
             Delay_MSec_Suspend(5000);
             cmdstr = "echo 1 >"+backlightpath+"&";
@@ -627,6 +670,8 @@ void MainWindow::ChangeBacklight()
 
 int MainWindow::MaxBacklighValue()
 {
+    if(cpuplat == "pi")
+        return 1;
     QString cmdstr = "cat "+maxbacklightpath+" >"+TEMPFILEPATH;
     system(cmdstr.toLocal8Bit());
     if(GetFileValue(TEMPFILEPATH)==NULL){
@@ -664,7 +709,7 @@ void MainWindow::displayInit()
 
     ui->horizontalSlider_backlight->setRange(1,MaxBacklighValue());
     ui->horizontalSlider_backlight->setValue(GetBacklightValue());
-    if(board == "pi"){
+    if(cpuplat == "pi"){
         ui->horizontalSlider_backlight->setRange(0,1);
         ui->horizontalSlider_backlight->setValue(1);
     }
@@ -814,7 +859,7 @@ void MainWindow::clearSerialText()
 
 void MainWindow::readDate()
 {
-    if(board == "pi") {
+    if(board == "CS10600RA070") {
         rs485SendEnable(false);
     }
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
@@ -828,7 +873,7 @@ void MainWindow::writeDate()
 {
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QByteArray sendDate = "Message from serial by manual!!!\n";
-    if(board == "pi") {
+    if(board == "CS10600RA070") {
         rs485SendEnable(true);
     }
     for(int i=0; i<100; i++){
@@ -861,7 +906,7 @@ void MainWindow::serialInit()
     ui->comboBox_baud->setInsertPolicy(QComboBox::NoInsert);
     ui->pushButton_serialClose->setEnabled(false);
     ui->pushButton_serialSend->setEnabled(false);
-    if(board == "pi")
+    if(board == "CS10600RA070")
     {
         rs485Init();
     }
@@ -921,12 +966,35 @@ void MainWindow::wifiInfoDisplay()
     ui->textBrowser_network_text->clear();
     ui->textBrowser_network_text->setText(GetFileValue(TEMPFILEPATH));
     this->ui->pushButton_netInfo->setText("Refresh");
+
+    // Use Network functions
+    QList<QNetworkInterface> listImpl = QNetworkInterface::allInterfaces();
+       if(!listImpl.isEmpty())
+       {
+           QString networkinfo = "";
+           for (int i = 0; i < listImpl.length(); ++i) {
+               QNetworkInterface interface = listImpl.at(i);
+               if(interface.name()=="lo")
+                   continue;
+               QList<QNetworkAddressEntry> enrtyList = interface.addressEntries();
+               if(enrtyList.length() > 0){
+                    QNetworkAddressEntry entry = enrtyList.at(0);
+                    qDebug() << interface.name();
+                    qDebug() << entry.ip().toString();
+                    networkinfo += interface.name() + "\n";
+                    networkinfo += "IP: " + entry.ip().toString() + "\n";
+                    networkinfo += "MAC: " + interface.hardwareAddress() + "\n";
+               }
+               networkinfo += "\n";
+           }
+           ui->textBrowser_network_text->setText(networkinfo);
+       }
 }
 
 void MainWindow::getipInfo()
 {
     QString cmdstr = "";
-    if (board == "pi"){
+    if (cpuplat == "pi"){
         cmdstr = "echo `ifconfig eth0 | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
     } else {
         cmdstr = "echo `ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
@@ -942,7 +1010,7 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
-    if(board == "pi"){
+    if(cpuplat == "pi"){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
@@ -952,7 +1020,7 @@ void MainWindow::networkautotest()
 {
     ipautotestTimer = new QTimer(this);
     connect(ipautotestTimer,SIGNAL(timeout()),this,SLOT(getipInfo()));
-    ipautotestTimer->start(2000);
+    ipautotestTimer->start(5000);
 }
 
 /*
@@ -1034,7 +1102,7 @@ void MainWindow::usbInit()
 {
     usbautotestTimer = new QTimer(this);
     connect(usbautotestTimer,SIGNAL(timeout()),this,SLOT(getusbInfo()));
-    usbautotestTimer->start(2000);
+    usbautotestTimer->start(5000);
 }
 
 /*
@@ -1044,6 +1112,8 @@ void MainWindow::usbInit()
  *  getGPIOValue(QString) setGPIOValue(QString,QString) setGPIOModel(QString)  getGPIOValue(QString) setGPIOOutStatu() setGPIOOutAllHigh()
  *
  *  setGPIOOutAllLow() gpioExport(QString) gpioInit()
+ *
+ *  RelayNC() RelayNO() ChangeRelayState()
  *
  */
 
@@ -1163,6 +1233,34 @@ void MainWindow::gpioExport(QString gpionum)
     system(cmdstr.toLocal8Bit());
 }
 
+void MainWindow::RelayNC()
+{
+    QString cmdstr = "echo 0 >"+relaypath+"&";
+    system(cmdstr.toLocal8Bit());
+    ui->checkBox_Relay->setText("RelayNC");
+}
+
+void MainWindow::RelayNO()
+{
+    QString cmdstr = "echo 1 >"+relaypath+"&";
+    system(cmdstr.toLocal8Bit());
+    ui->checkBox_Relay->setText("RelayNO");
+}
+
+void MainWindow::ChangeRelayState()
+{
+    if(relayflag)
+    {
+        RelayNO();
+        relayflag=!relayflag;
+    }
+    else
+    {
+        RelayNC();
+        relayflag=!relayflag;
+    }
+}
+
 void MainWindow::gpioInit()
 {
 //    for(int i=0; i<4; i++){
@@ -1178,21 +1276,40 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    gpioOutStatuTimer = new QTimer(this);
-    connect(gpioOutStatuTimer,SIGNAL(timeout()),this,SLOT(setGPIOOutStatu()));
-    gpioOutStatuTimer->start(50);
-    connect(ui->pushButton_setAllHigh,&QPushButton::clicked,this,&MainWindow::setGPIOOutAllHigh);
-    connect(ui->pushButton_setAllLow,&QPushButton::clicked,this,&MainWindow::setGPIOOutAllLow);
+    if(board == "LRRA4-101" || board == "CS12800RA4101") {
+        ui->radioButton_out_1_high->setCheckable(false);
+        ui->radioButton_out_2_high->setCheckable(false);
+        ui->radioButton_out_3_high->setCheckable(false);
+        ui->radioButton_out_4_high->setCheckable(false);
+        ui->radioButton_out_1_low->setCheckable(false);
+        ui->radioButton_out_2_low->setCheckable(false);
+        ui->radioButton_out_3_low->setCheckable(false);
+        ui->radioButton_out_4_low->setCheckable(false);
+        ui->pushButton_setAllHigh->setDisabled(true);
+        ui->pushButton_setAllLow->setDisabled(true);
+        ui->pushButton_gpioRefresh->setDisabled(true);
+        ui->checkBox_Relay->setVisible(true);
+        relayflag=true;
+        ui->checkBox_Relay->setChecked(false);
+        connect(ui->checkBox_Relay,SIGNAL(toggled(bool)),this,SLOT(ChangeRelayState()));
+    } else {
+        ui->checkBox_Relay->setVisible(false);
+        gpioOutStatuTimer = new QTimer(this);
+        connect(gpioOutStatuTimer,SIGNAL(timeout()),this,SLOT(setGPIOOutStatu()));
+        gpioOutStatuTimer->start(50);
+        connect(ui->pushButton_setAllHigh,&QPushButton::clicked,this,&MainWindow::setGPIOOutAllHigh);
+        connect(ui->pushButton_setAllLow,&QPushButton::clicked,this,&MainWindow::setGPIOOutAllLow);
 
 
-    // GPIO_IN
-    ui->label_high_high->setPixmap(QPixmap(":/images/IO_high.png"));
-    ui->label_low_low->setPixmap(QPixmap(":/images/IO_low.png"));
+        // GPIO_IN
+        ui->label_high_high->setPixmap(QPixmap(":/images/IO_high.png"));
+        ui->label_low_low->setPixmap(QPixmap(":/images/IO_low.png"));
 
-    gpioInStatuTimer = new QTimer(this);
-    connect(gpioInStatuTimer,SIGNAL(timeout()),this,SLOT(setGPIOInStatu()));
-    gpioInStatuTimer->start(50);
-    connect(ui->pushButton_gpioRefresh,&QPushButton::clicked,this,&MainWindow::setGPIOInStatu);
+        gpioInStatuTimer = new QTimer(this);
+        connect(gpioInStatuTimer,SIGNAL(timeout()),this,SLOT(setGPIOInStatu()));
+        gpioInStatuTimer->start(50);
+        connect(ui->pushButton_gpioRefresh,&QPushButton::clicked,this,&MainWindow::setGPIOInStatu);
+    }
 }
 
 /*
@@ -1271,7 +1388,7 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "pi"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else{
@@ -1284,7 +1401,7 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "pi"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101"){
         ui->pushButton_canStart->setDisabled(true);
     }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);
@@ -1314,6 +1431,9 @@ void MainWindow::autoTest()
         EnableBuzzer();
         OpenLed();
         OpenLed2();
+        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+            RelayNO();
+        }
 
         QTimer::singleShot(1000, &eventloop,SLOT(quit()));
         eventloop.exec();
@@ -1321,21 +1441,198 @@ void MainWindow::autoTest()
         DisableBuzzer();
         CloseLed();
         CloseLed2();
+        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+            RelayNC();
+        }
 
         QTimer::singleShot(1000, &eventloop,SLOT(quit()));
         eventloop.exec();
     }
 
-    if(board == "pi"){
-
-    } else {
-        // Test Record And Speaker
-        RecordTest();
-
+    if(board != "CS12800RA4101" && board != "LRRA4-101" && board !="CS10600RA070") {
         // Test Serial and CAN
         connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
     }
     connect(&thread, &SlaveThread::request, this,&MainWindow::showRequest);
+
+    QSerialPort *serial = new QSerialPort();
+    QSerialPort *serial1 = new QSerialPort();
+    QSerialPort *serial2 = new QSerialPort();
+    QSerialPort *serial3 = new QSerialPort();
+    QSerialPort *serial4 = new QSerialPort();
+    QSerialPort *serial5 = new QSerialPort();
+    QSerialPort * port[6] = {serial,serial1,serial2,serial3,serial4,serial5};
+
+    int i = 0;
+    foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts()){
+        port[i]->setPortName(info.portName());
+        port[i]->setBaudRate(QSerialPort::Baud115200);
+        port[i]->setDataBits(QSerialPort::Data8);
+        port[i]->setParity(QSerialPort::NoParity);
+        port[i]->setStopBits(QSerialPort::OneStop);
+        port[i]->setFlowControl(QSerialPort::NoFlowControl);
+        //qDebug() << port[i]->portName();
+        i++;
+        if(i>5)
+            break;
+        qDebug() << port[i-1]->portName();
+    }
+
+    if(board == "CS12800RA4101" || board == "LRRA4-101"){
+        port[5] = port[4];
+    }
+
+    QString str("#################\n");
+    if(port[0]->isOpen())
+        port[0]->close();
+    if(port[0]->open(QIODevice::ReadWrite)) {
+        port[0]->write(str.toLatin1());
+
+        QTimer::singleShot(100, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        port[0]->close();
+    }
+
+    if(cpuplat == "pi"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+            QString audiostr("@@AUDIO\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(audiostr.toLatin1());
+
+                QTimer::singleShot(100, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+            RecordTest();
+        }
+    } else {
+        QString audiostr("@@AUDIO\n");
+        if(port[0]->isOpen())
+            port[0]->close();
+        if(port[0]->open(QIODevice::ReadWrite)) {
+            port[0]->write(audiostr.toLatin1());
+
+            QTimer::singleShot(100, &eventloop,SLOT(quit()));
+            eventloop.exec();
+
+            port[0]->close();
+        }
+        // Test Record And Speaker
+        RecordTest();
+    }
+
+    // send board information to master
+    // format:
+    // @@[Board Version]
+    // like: @@CS10600RA4070
+    // note: the whole characters don't bigger then 16
+    QString boardstr("@@"+board+"\n");
+    if(port[0]->isOpen())
+        port[0]->close();
+    if(port[0]->open(QIODevice::ReadWrite)) {
+        port[0]->write(boardstr.toLatin1());
+
+        QTimer::singleShot(100, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        port[0]->close();
+    }
+
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101"){
+        if(port[5] != NULL && port[5]->portName() == "ttyACM0")
+        {
+            qDebug() << "ZIGBEEISOK";
+            QString zigbeestr("ZIGBEEISOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(zigbeestr.toLatin1());
+
+                QTimer::singleShot(100, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        }else{
+            qDebug() << "ZIGBEEISNOTOK";
+            QString zigbeestr("ZIGBEEISNOTOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(zigbeestr.toLatin1());
+
+                QTimer::singleShot(100, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+
+        }
+    }
+
+    // RTC
+    qDebug()<< GetComResult("find /dev/rtc0");
+    if(GetComResult("find /dev/rtc0").remove(QChar('\n'),Qt::CaseInsensitive) == "/dev/rtc0") {
+        QString rtcstr("RTCISOK\n");
+        if(port[0]->isOpen())
+            port[0]->close();
+        if(port[0]->open(QIODevice::ReadWrite)) {
+            port[0]->write(rtcstr.toLatin1());
+
+            QTimer::singleShot(500, &eventloop,SLOT(quit()));
+            eventloop.exec();
+
+            port[0]->close();
+        }
+    }
+
+    //For CS12800RA101 /dev/ttyUSB0 and /dev/ttyUSB1 test
+    if(board == "CS12800RA101"){
+        QString cmdstr = "/usr/hardwaretest/receive /dev/ttyUSB0 > /tmp/serial.txt &";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "/usr/hardwaretest/send /dev/ttyUSB1 &";
+        system(cmdstr.toLocal8Bit());
+        QTimer::singleShot(5000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+        cmdstr = "/usr/hardwaretest/receive /dev/ttyUSB1 >> /tmp/serial.txt &";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "/usr/hardwaretest/send /dev/ttyUSB0 &";
+        system(cmdstr.toLocal8Bit());
+        QTimer::singleShot(5000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+        if(GetFileValue("/tmp/serial.txt") == "/dev/ttyUSB0\n/dev/ttyUSB1\n"){
+            qDebug() << "ttyUSB0 and ttyUSB1 is OK.";
+            QString usbserialstr("TTYUSBISOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(usbserialstr.toLatin1());
+
+                QTimer::singleShot(500, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        } else{
+            qDebug() << "ttyUSB0 and ttyUSB1 is Not OK.";
+            QString usbserialstr("TTYUSBISNOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(usbserialstr.toLatin1());
+
+                QTimer::singleShot(500, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        }
+    }
+
     thread.startSlave(&board);
 
 }
@@ -1354,8 +1651,12 @@ void MainWindow::showcanRequest(const QString &s)
 
 void MainWindow::autotestInit()
 {
-    usbInit();
-    networkautotest();
+    if(cpuplat != "pi"){
+        usbInit();
+    }
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101") {
+        networkautotest();
+    }
     disconnect(serial,&QSerialPort::readyRead,this,&MainWindow::readDate);
     autoTesttimer = new QTimer(this);
     connect(autoTesttimer,SIGNAL(timeout()),SLOT(autoTest()));

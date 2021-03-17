@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_8">
+   <layout class="QHBoxLayout" name="horizontalLayout_5">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_DLSD">
       <item>
@@ -873,17 +873,11 @@
             </widget>
            </item>
            <item row="7" column="2">
-            <spacer name="horizontalSpacer_gpio_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+            <widget class="QCheckBox" name="checkBox_Relay">
+             <property name="text">
+              <string>Relay</string>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
+            </widget>
            </item>
           </layout>
          </item>
@@ -1104,11 +1098,18 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>Setting</string>
+         <string>Board</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="2">
-          <widget class="QRadioButton" name="radioButton_bbb_exp">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QLabel" name="labelBoard">
+           <property name="text">
+            <string>Board</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelVersion">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -1116,88 +1117,11 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>BBB</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup_board</string>
-           </attribute>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QRadioButton" name="radioButton_imx6u">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>6U</string>
+            <string>Version 3.0</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="5">
-          <widget class="QRadioButton" name="radioButton_imx6d">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>6D</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup_board</string>
-           </attribute>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QRadioButton" name="radioButton_am335x">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>335X</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup_board</string>
-           </attribute>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Version 2.0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="7">
-          <widget class="QRadioButton" name="radioButton_imx6q">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>6Q</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup_board</string>
-           </attribute>
-          </widget>
-         </item>
-         <item row="2" column="7">
+         <item>
           <widget class="QPushButton" name="pushButton_exit">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1208,16 +1132,6 @@
            <property name="text">
             <string>EXIT</string>
            </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QRadioButton" name="radioButton_pi">
-           <property name="text">
-            <string>PI</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup_board</string>
-           </attribute>
           </widget>
          </item>
         </layout>
@@ -1232,12 +1146,12 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_led1"/>
+  <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_board"/>
+  <buttongroup name="buttonGroup_out_4"/>
+  <buttongroup name="buttonGroup_out_3"/>
   <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_out_2"/>
-  <buttongroup name="buttonGroup_board"/>
-  <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

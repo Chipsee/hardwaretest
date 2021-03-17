@@ -35,6 +35,9 @@ private slots:
     void EnableBuzzer();
     void DisableBuzzer();
     void ChangeBuzzerState();
+    void RelayNC();
+    void RelayNO();
+    void ChangeRelayState();
     void VideoTest();
     void LCDTest();
     void TouchTest();
@@ -86,10 +89,12 @@ private:
     QString cueaudiopath;
     QString videopath;
     QString buzzerpath;
+    QString relaypath;
     QString volumepath;
     QString backlightpath;
     QString maxbacklightpath;
     QString board;
+    QString cpuplat;
     QString ipaddrpath;
     QByteArray autodata;
     QIntValidator *intValidator;
@@ -111,6 +116,7 @@ private:
     QTimer * writeTimer;
     SlaveThread thread;
     bool buzzerflag;
+    bool relayflag;
     bool audioflag;
 
     struct serailSettings {
@@ -136,6 +142,7 @@ private:
     QString GetFileValue(QString);
     QString GetComResult(QString);
     QString GetPlat();
+    QString GetPiBoard();
     void Delay_MSec_Suspend(int);
     void fillPortsParameters();
     void gpioExport(QString);

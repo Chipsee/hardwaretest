@@ -17,6 +17,7 @@ public:
     void pi485Init();
     void enablePi485Send();
     void enablePi485Receive();
+    QString GetComResult(QString);
     void run();
 
 signals:

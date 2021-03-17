@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=hardwaretest
+Name[zh_CN]=硬件测试
+Terminal=false
+Exec=sudo /home/pi/hardwaretest/hardwaretest
+Icon=/usr/share/pixmaps/hardwaretest.png
+Comment=chipsee hardwaretest
+Comment[zh_CN]=芯普思硬件测试
+Categories=Utility;

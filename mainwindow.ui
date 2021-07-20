@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1003</width>
-    <height>553</height>
+    <width>1008</width>
+    <height>599</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1070,6 +1070,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QCheckBox" name="checkBox_2can">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>2CAN</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -1147,10 +1160,9 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_led2"/>
-  <buttongroup name="buttonGroup_board"/>
   <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_out_3"/>
+  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_out_2"/>
  </buttongroups>

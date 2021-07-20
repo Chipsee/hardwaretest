@@ -35,6 +35,9 @@ private slots:
     void EnableBuzzer();
     void DisableBuzzer();
     void ChangeBuzzerState();
+    void Enable2Can();
+    void Disable2Can();
+    void ChangeCanState();
     void RelayNC();
     void RelayNO();
     void ChangeRelayState();
@@ -118,6 +121,7 @@ private:
     bool buzzerflag;
     bool relayflag;
     bool audioflag;
+    bool canflag;
 
     struct serailSettings {
             QString name;

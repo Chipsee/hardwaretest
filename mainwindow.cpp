@@ -29,6 +29,12 @@
 #define SERIALTEMPFILEPATH "/tmp/serialtmp.txt"
 #define TEMPFILEPATH "/tmp/tmp.txt"
 #define TIMEOUT 2000
+#define USBDEBUGFILEPATH "/sys/kernel/debug/usb/devices"
+#define AUDIOPATH "/usr/hardwaretest/AudioTest.aac"
+#define CUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
+#define IPPATH "/usr/hardwaretest/ipaddr"
+#define VIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
+#define BUZZERPATH "/dev/buzzer"
 
 /* IMX6Q Define */
 #define IMX6QLED4PATH "/sys/class/leds/led0/brightness"
@@ -82,6 +88,19 @@
 #define PIVIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
 #define PIUSBDEBUGFILEPATH "/sys/kernel/debug/usb/devices"
 #define RS485ENIO "34"
+
+/* AM335X Define*/
+#define AM335XLED0PATH "/sys/class/leds/led\:yellow\:heartbeet/brightness"
+#define AM335XLED1PATH ""
+#define AM335XAUDIOPATH AUDIOPATH
+#define AM335XCUEAUDIOPATH CUEAUDIOPATH
+#define AM335XVOLUMEPATH "name='PCM Playback Volume'"
+#define AM335XBUZZERPATH BUZZERPATH
+#define AM335XIPPATH IPPATH
+#define AM335XVIDEOPATH VIDEOPATH
+#define AM335XBACKLIGHTPATH "/sys/class/backlight/backlight/brightness"
+#define AM335XMAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
+#define AM335XUSBDEBUGFILEPATH USBDEBUGFILEPATH
 
 
 
@@ -192,6 +211,7 @@ QString MainWindow::GetPlat()
     QString imx6qdlul = GetComResult("grep -c Freescale /proc/cpuinfo");
     QString pi3 = GetComResult("grep -c BCM2835 /proc/cpuinfo");
     QString pi4 = GetComResult("grep -c BCM2711 /proc/cpuinfo");
+    QString am335x = GetComResult("grep -c AM33XX /proc/cpuinfo");
 //    qDebug() << cpucore.left(1);
 //    qDebug() << imx6qdlul.left(1);
 
@@ -207,6 +227,8 @@ QString MainWindow::GetPlat()
         if(cpucore.left(1) == "4"){
             plat = "pi";
         }
+    } else if(am335x.left(1) == "1"){
+        plat= "am335x";
     }
     return plat;
 }
@@ -308,8 +330,26 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "am3354"){
-        board = "am3354";
+    }else if(GetPlat() == "am335x"){
+        board = "AM335XBOARD";
+        ledpath = AM335XLED0PATH;
+        ledpath2 = AM335XLED1PATH;
+        audiopath = AM335XAUDIOPATH;
+        cueaudiopath = AM335XCUEAUDIOPATH;
+        volumepath = AM335XVOLUMEPATH;
+        buzzerpath = AM335XBUZZERPATH;
+        videopath = AM335XVIDEOPATH;
+        backlightpath = AM335XBACKLIGHTPATH;
+        maxbacklightpath = AM335XMAXBACKLIGHTPATH;
+        ipaddrpath = AM335XIPPATH;
+        gpioOutArray[0] = "1";
+        gpioOutArray[1] = "2";
+        gpioOutArray[2] = "3";
+        gpioOutArray[3] = "4";
+        gpioInArray[0] = "5";
+        gpioInArray[1] = "6";
+        gpioInArray[2] = "7";
+        gpioInArray[3] = "8";
     }else if(GetPlat() == "bbbexp"){
         board = "bbbexp";
     }else if(GetPlat() == "pi"){
@@ -379,6 +419,8 @@ void MainWindow::boardInit()
             setGPIOValueRaw("17","0");
             relaypath = "/sys/class/gpio/gpio17/value";
         }
+    } else if(cpuplat == "am335x"){
+        ui->labelBoard->setText("AM335XBOARD");
     }
 
     BoardSetting();
@@ -414,7 +456,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(cpuplat == "pi"){
+    if(cpuplat == "pi" || cpuplat == "am335x"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -468,7 +510,6 @@ void MainWindow::ledInit()
         ui->radioButton_led2_off->setChecked(true);
         connect(ui->radioButton_led2_on,&QRadioButton::clicked,this,&MainWindow::OpenLed2);
         connect(ui->radioButton_led2_off,&QRadioButton::clicked,this,&MainWindow::CloseLed2);
-    }else if(board == "am3354"){
     }else if (board == "bbbexp"){}
 }
 /*
@@ -533,6 +574,19 @@ void MainWindow::RecordTest()
         eventloop.exec();
 
         system("aplay /usr/hardwaretest/output.wav &");
+    }else if(board == "AM335XBOARD"){   //need check again
+        system("killall gst-play-1.0");
+        system("rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "gst-launch-1.0 alsasrc device=\"default\" num-buffers=1600 ! wavenc ! filesink location=/usr/hardwaretest/output.wav &";
+
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(18000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        system("killall gst-play-1.0");
+        system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
     }
 }
 
@@ -550,9 +604,9 @@ void MainWindow::CueAudio()
         }
         system(cmdstr.toLocal8Bit());
 
-        //QEventLoop eventloop;
-        //QTimer::singleShot(8000, &eventloop,SLOT(quit()));
-        //eventloop.exec();
+        QEventLoop eventloop;
+        QTimer::singleShot(5000, &eventloop,SLOT(quit()));
+        eventloop.exec();
 
         audioflag = true;
     }
@@ -604,13 +658,12 @@ void MainWindow::audioInit()
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::AudioTest);
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
     connect(ui->pushButton_record,&QPushButton::clicked,this,&MainWindow::RecordTest);
-    if(board == "imx6q" || board == "imx6d"){
+    if(board == "imx6q" || board == "imx6d" || board == "AM335XBOARD"){
         ui->horizontalSlider_audio_volume->setRange(60,127);
         ui->horizontalSlider_audio_volume->setValue(127);
     }else if(board == "imx6u"){
         ui->horizontalSlider_audio_volume->setRange(60,100);
         ui->horizontalSlider_audio_volume->setValue(100);
-    }else if(board == "am3354"){
     }else if (board == "bbbexp"){
     }else if (cpuplat == "pi"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
@@ -641,7 +694,9 @@ void MainWindow::VideoTest()
     QString cmdstr="";
     if(cpuplat == "pi") {
         cmdstr = "cvlc -f "+ videopath + " vlc://quit" +"&";
-    } else{
+    } else if(board == "AM335XBOARD"){
+        cmdstr = "runMpeg4AacDec.sh &";
+    }else{
         system("killall gst-play-1.0");
         cmdstr = "gst-play-1.0 "+videopath+"&";
     }
@@ -713,6 +768,11 @@ void MainWindow::displayInit()
         ui->horizontalSlider_backlight->setRange(0,1);
         ui->horizontalSlider_backlight->setValue(1);
     }
+
+    if(cpuplat == "am335x"){
+        ui->pushButton_video->setVisible(false);
+    }
+
     connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
 }
 
@@ -994,7 +1054,7 @@ void MainWindow::wifiInfoDisplay()
 void MainWindow::getipInfo()
 {
     QString cmdstr = "";
-    if (cpuplat == "pi"){
+    if (cpuplat == "pi" || cpuplat == "am335x"){
         cmdstr = "echo `ifconfig eth0 | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
     } else {
         cmdstr = "echo `ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
@@ -1060,6 +1120,13 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
+    if(board == "AM335XBOARD"){
+        ui->comboBox_4g->setVisible(false);
+        ui->pushButton_4gDisable->setVisible(false);
+        ui->pushButton_4gEnable->setVisible(false);
+        return;
+    }
+
     ui->comboBox_4g->addItem("3gnet","3gnet");
     ui->comboBox_4g->addItem("cmnet","cmnet");
     ui->comboBox_4g->addItem("ctnet","ctnet");
@@ -1381,9 +1448,42 @@ void MainWindow::checkCustomCanNumPolicy(int idx)
         ui->comboBox_canNum->clearEditText();
 }
 
+void MainWindow::Enable2Can()
+{
+    QString cmdstr = "cp /run/media/mmcblk0p1/am335x-chipsee-som-2can.dtb /run/media/mmcblk0p1/am335x-chipsee-som.dtb && sync && "
+            "echo 1 >/usr/hardwaretest/.2can";
+    system(cmdstr.toLocal8Bit());
+}
+
+void MainWindow::Disable2Can()
+{
+    QString cmdstr = "cp /run/media/mmcblk0p1/am335x-chipsee-som-1can.dtb /run/media/mmcblk0p1/am335x-chipsee-som.dtb && sync && "
+            "echo 0 >/usr/hardwaretest/.2can";
+    system(cmdstr.toLocal8Bit());
+}
+
+void MainWindow::ChangeCanState()
+{
+    if(!canflag)
+    {
+        Enable2Can();
+        QMessageBox::warning(this,"Tips","System will reboot to change to 2CAN");
+        ui->checkBox_2can->setVisible(false);
+    }
+    else
+    {
+        Disable2Can();
+        QMessageBox::warning(this,"Tips","System will reboot to change to 1CAN");
+        ui->checkBox_2can->setVisible(false);
+    }
+
+    system("reboot");
+}
+
 void MainWindow::canInit()
 {
     // UI
+    ui->checkBox_2can->setVisible(false);
     if(board == "imx6q" || board == "imx6d" || board == "imx6u"){
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
@@ -1391,10 +1491,35 @@ void MainWindow::canInit()
     }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
+    }else if(board == "AM335XBOARD"){
+        ui->checkBox_2can->setVisible(true);
+        QString cmdstr = "test -f /usr/hardwaretest/.2can || touch /usr/hardwaretest/.2can";
+        system(cmdstr.toLocal8Bit());
+        if(GetFileValue("/usr/hardwaretest/.2can").remove(QChar('\n'),Qt::CaseInsensitive)=="1"){
+            canflag = true;
+            ui->comboBox_canNum->addItem("can0","can0");
+            ui->comboBox_canNum->addItem("can1","can1");
+        } else {
+            canflag = false;
+            ui->comboBox_canNum->addItem("can0","can0");
+        }
+        ui->comboBox_canNum->addItem("Custum");
+        ui->checkBox_2can->setChecked(canflag);
+    }else if(board == "CS12800RA101") {
+        if(GetComResult("ifconfig -a").contains("can1")) {
+                ui->comboBox_canNum->addItem("can0","can0");
+                ui->comboBox_canNum->addItem("can1","can1");
+                ui->comboBox_canNum->addItem("Custum");
+        } else {
+                ui->comboBox_canNum->addItem("can0","can0");
+                ui->comboBox_canNum->addItem("Custum");
+        }
     }else{
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("Custum");
     }
+
+    connect(ui->checkBox_2can,SIGNAL(toggled(bool)),this,SLOT(ChangeCanState()));
     connect(ui->comboBox_canNum, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                 this, &MainWindow::checkCustomCanNumPolicy);
 
@@ -1422,7 +1547,7 @@ void MainWindow::canInit()
  */
 
 void MainWindow::autoTest()
-{
+{   
     autoTesttimer->stop();
     // Test Beeper And Led
     QEventLoop eventloop;
@@ -1447,6 +1572,13 @@ void MainWindow::autoTest()
 
         QTimer::singleShot(1000, &eventloop,SLOT(quit()));
         eventloop.exec();
+    }
+
+    if(cpuplat != "pi"){
+        usbInit();
+    }
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101") {
+        networkautotest();
     }
 
     if(board != "CS12800RA4101" && board != "LRRA4-101" && board !="CS10600RA070") {
@@ -1509,7 +1641,9 @@ void MainWindow::autoTest()
             }
             RecordTest();
         }
-    } else {
+    } else if(board == "AM335XBOARD"){
+
+    }else{
         QString audiostr("@@AUDIO\n");
         if(port[0]->isOpen())
             port[0]->close();
@@ -1651,12 +1785,14 @@ void MainWindow::showcanRequest(const QString &s)
 
 void MainWindow::autotestInit()
 {
+#if 0
     if(cpuplat != "pi"){
         usbInit();
     }
     if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101") {
         networkautotest();
     }
+#endif
     disconnect(serial,&QSerialPort::readyRead,this,&MainWindow::readDate);
     autoTesttimer = new QTimer(this);
     connect(autoTesttimer,SIGNAL(timeout()),SLOT(autoTest()));

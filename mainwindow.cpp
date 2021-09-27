@@ -135,6 +135,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // 4G
     mobile4gInit();
 
+    // GPS
+    gpsInit();
+
     // GPIO
     gpioInit();
 
@@ -142,7 +145,7 @@ MainWindow::MainWindow(QWidget *parent) :
     canInit();
 
     // AutoTest, used for chipsee autotest
-    autotestInit();
+    //autotestInit();
 }
 
 MainWindow::~MainWindow()
@@ -391,6 +394,7 @@ void MainWindow::boardInit()
 
         ui->labelBoard->setText(GetPiBoard());
 
+#if 0
         // Backlight init
         if(GetPiBoard() == "CS10600RA070" || GetPiBoard() == "CS12800RA101") {
             gpioExport("41");
@@ -419,6 +423,19 @@ void MainWindow::boardInit()
             setGPIOValueRaw("17","0");
             relaypath = "/sys/class/gpio/gpio17/value";
         }
+#endif
+	// Relay init
+        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101") {
+            gpioExport("17");
+            setGPIOModelRaw("17","out");
+            setGPIOValueRaw("17","0");
+            relaypath = "/sys/class/gpio/gpio17/value";
+        }
+
+        // use new backlight path
+        backlightpath = "/sys/class/backlight/pwm-backlight/brightness";
+        maxbacklightpath = "/sys/class/backlight/pwm-backlight/max_brightness";
+
     } else if(cpuplat == "am335x"){
         ui->labelBoard->setText("AM335XBOARD");
     }
@@ -706,12 +723,17 @@ void MainWindow::VideoTest()
 void MainWindow::ChangeBacklight()
 {
     int backlightvalue = ui->horizontalSlider_backlight->value();
+    if(backlightvalue < 5) // disable close backlight
+        backlightvalue = 5;
     QString value = QString::number(backlightvalue,10); // int to string
+#if 0
     if(cpuplat == "pi" && value == "0"){
         QMessageBox::warning(this,"Tips","If you trun off the backlight of LCD, It will back after 5 seconds!");
     }
+#endif
     QString cmdstr = "echo "+value+" >"+backlightpath+"&";
     system(cmdstr.toLocal8Bit()); // int to const char*
+#if 0
     if(cpuplat == "pi"){
         if (value == "0"){
             Delay_MSec_Suspend(5000);
@@ -721,12 +743,15 @@ void MainWindow::ChangeBacklight()
         }
 
     }
+#endif
 }
 
 int MainWindow::MaxBacklighValue()
 {
+#if 0
     if(cpuplat == "pi")
         return 1;
+#endif
     QString cmdstr = "cat "+maxbacklightpath+" >"+TEMPFILEPATH;
     system(cmdstr.toLocal8Bit());
     if(GetFileValue(TEMPFILEPATH)==NULL){
@@ -764,10 +789,12 @@ void MainWindow::displayInit()
 
     ui->horizontalSlider_backlight->setRange(1,MaxBacklighValue());
     ui->horizontalSlider_backlight->setValue(GetBacklightValue());
+#if 0
     if(cpuplat == "pi"){
         ui->horizontalSlider_backlight->setRange(0,1);
         ui->horizontalSlider_backlight->setValue(1);
     }
+#endif
 
     if(cpuplat == "am335x"){
         ui->pushButton_video->setVisible(false);
@@ -1137,6 +1164,102 @@ void MainWindow::mobile4gInit()
     ui->pushButton_4gDisable->setDisabled(true);
     connect(ui->pushButton_4gEnable,&QPushButton::clicked,this,&MainWindow::mobile4gEnable);
     connect(ui->pushButton_4gDisable,&QPushButton::clicked,this,&MainWindow::mobile4gDisable);
+}
+
+/*
+ * GPS
+ *
+ * readGPSData() gpsEnable() gpsDisable() gpsInit()
+ *
+ */
+
+void MainWindow::readGPSData()
+{
+    QByteArray gpsdata;
+    if(gpsport->waitForReadyRead(1000)){
+        gpsdata= gpsport->readAll();
+        while (gpsport->waitForReadyRead(10)) {
+            gpsdata += gpsport->readAll();
+        }
+    }
+
+    ui->textBrowser_network_text->setText(gpsdata);
+}
+
+void MainWindow::gpsEnable()
+{
+
+    QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\n");
+    QString startcmd("AT+QGPS=1\n");
+    if(atport->isOpen())
+        atport->close();
+    if(atport->open(QIODevice::ReadWrite)){
+        ui->pushButton_GPSEnable->setDisabled(true);
+        ui->pushButton_GPSDisable->setDisabled(false);
+        atport->write(cfgcmd.toLatin1());
+        if(atport->waitForBytesWritten(1000))
+            atport->write(startcmd.toLatin1());
+        if(atport->waitForBytesWritten(1000))
+            atport->close();
+    }else
+    {
+        QMessageBox::critical(this, tr("Error"), "No GPS");
+        return;
+    }
+
+    if(gpsport->isOpen())
+        gpsport->close();
+    if(!gpsport->open(QIODevice::ReadOnly)){
+        QMessageBox::critical(this, tr("Error"), "No GPS");
+        return;
+    }
+
+    gpsreadTimer->start(2000);
+}
+
+void MainWindow::gpsDisable()
+{
+    QString stopcmd("AT+QGPSEND\n");
+    if(atport->isOpen())
+        atport->close();
+    if(atport->open(QIODevice::ReadWrite)){
+        ui->pushButton_GPSEnable->setDisabled(false);
+        ui->pushButton_GPSDisable->setDisabled(true);
+        atport->write(stopcmd.toLatin1());
+        if(atport->waitForBytesWritten(1000))
+            atport->close();
+    }
+
+    gpsreadTimer->stop();
+}
+
+void MainWindow::gpsInit()
+{
+    atport = new QSerialPort(this);
+    atport->setPortName("/dev/ttyUSB2");
+    atport->setBaudRate(QSerialPort::Baud9600);
+    atport->setDataBits(QSerialPort::Data8);
+    atport->setParity(QSerialPort::NoParity);
+    atport->setStopBits(QSerialPort::OneStop);
+    atport->setFlowControl(QSerialPort::NoFlowControl);
+
+    gpsport = new QSerialPort(this);
+    gpsport->setPortName("/dev/ttyUSB1");
+    gpsport->setBaudRate(QSerialPort::Baud9600);
+    gpsport->setDataBits(QSerialPort::Data8);
+    gpsport->setParity(QSerialPort::NoParity);
+    gpsport->setStopBits(QSerialPort::OneStop);
+    gpsport->setFlowControl(QSerialPort::NoFlowControl);
+
+    ui->pushButton_GPSEnable->setDisabled(false);
+    ui->pushButton_GPSDisable->setDisabled(true);
+
+    connect(ui->pushButton_GPSEnable,&QPushButton::clicked,this,&MainWindow::gpsEnable);
+    connect(ui->pushButton_GPSDisable,&QPushButton::clicked,this,&MainWindow::gpsDisable);
+
+    gpsreadTimer = new QTimer(this);
+    connect(gpsreadTimer,SIGNAL(timeout()),SLOT(readGPSData()));
+
 }
 
 /*
@@ -1577,7 +1700,7 @@ void MainWindow::autoTest()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101") {
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX") {
         networkautotest();
     }
 
@@ -1676,7 +1799,7 @@ void MainWindow::autoTest()
         port[0]->close();
     }
 
-    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101"){
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101BOX"){
         if(port[5] != NULL && port[5]->portName() == "ttyACM0")
         {
             qDebug() << "ZIGBEEISOK";
@@ -1789,7 +1912,7 @@ void MainWindow::autotestInit()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101") {
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX") {
         networkautotest();
     }
 #endif

@@ -582,9 +582,9 @@
         <property name="title">
          <string>NetWork</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_N4G">
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_W4G">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_WIFI">
              <item>
@@ -668,9 +668,27 @@
              </item>
             </layout>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_GPS">
+             <item>
+              <widget class="QPushButton" name="pushButton_GPSEnable">
+               <property name="text">
+                <string>GPS Enable</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_GPSDisable">
+               <property name="text">
+                <string>GPS Disable</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
           </layout>
          </item>
-         <item>
+         <item row="1" column="0">
           <widget class="QTextBrowser" name="textBrowser_network_text"/>
          </item>
         </layout>
@@ -1130,7 +1148,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Version 3.0</string>
+            <string>Version 4.0</string>
            </property>
           </widget>
          </item>
@@ -1159,11 +1177,11 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_out_3"/>
-  <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_led1"/>
   <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_led2"/>
  </buttongroups>
 </ui>

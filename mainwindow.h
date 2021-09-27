@@ -75,9 +75,13 @@ private slots:
     void canSend();
     void canStop();
     void canReceive();
-    void  checkCustom4gNumPolicy(int idx);
+    void checkCustom4gNumPolicy(int idx);
     void mobile4gEnable();
     void mobile4gDisable();
+    void readGPSData();
+    void gpsEnable();
+    void gpsDisable();
+    void gpsInit();
     void autoTest();
     void getusbInfo();
     void getipInfo();
@@ -114,9 +118,12 @@ private:
     QSerialPort *serial2;
     QSerialPort *serial3;
     QSerialPort *serial4;
+    QSerialPort *atport;
+    QSerialPort *gpsport;
     QTimer *autoTesttimer;
     QTimer * readTimer;
     QTimer * writeTimer;
+    QTimer * gpsreadTimer;
     SlaveThread thread;
     bool buzzerflag;
     bool relayflag;

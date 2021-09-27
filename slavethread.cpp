@@ -100,7 +100,7 @@ void SlaveThread::run()
             break;
     }
 
-    if(*board == "CS10600RA4070" || *board == "AM335XBOARD"){
+    if(*board == "CS10600RA4070" || *board == "AM335XBOARD" || *board == "CS12800RA4101BOX"){
         port[4] = port[3];
         port[3] = port[2];
         port[2] = port[1];
@@ -142,7 +142,7 @@ void SlaveThread::run()
         system("canconfig can0 start");
         system("candump can0 > /tmp/can0.txt &");
         //if(*board !="CS12800RA101" && *board != "CS10600RA4070") {
-        if(*board != "CS10600RA4070") {
+        if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX") {
             system("echo >/tmp/can1.txt");
             system("canconfig can1 stop");
             system("canconfig can1 bitrate 10000 ctrlmode triple-sampling on loopback off ");
@@ -225,7 +225,7 @@ void SlaveThread::run()
 
             // CAN1
             //if(*board !="CS12800RA101" && *board != "CS10600RA4070") {
-            if(*board != "CS10600RA4070") {
+            if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX") {
                 QFile file1("/tmp/can1.txt");
                 if (file1.open(QIODevice::ReadWrite)){
                     QTextStream in(&file1);

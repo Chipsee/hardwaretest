@@ -82,7 +82,7 @@
 #define PILED1PATH ""
 #define PIAUDIOPATH "/usr/hardwaretest/AudioTest.aac"
 #define PICUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
-#define PIVOLUMEPATH "name='PCM Playback Volume'"
+#define PIVOLUMEPATH "name='Master Playback Volume'"
 #define PIBUZZERPATH "/dev/buzzer"
 #define PIIPPATH "/usr/hardwaretest/ipaddr"
 #define PIVIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
@@ -251,6 +251,18 @@ QString MainWindow::GetPiBoard()
 
     return board;
 
+}
+
+QString MainWindow::GetDebianCodeName()
+{
+    QString codename="NULL";
+    if(GetPlat() == "pi"){
+        codename = GetComResult("lsb_release -c");
+        if(codename.contains("bullseye"))
+            codename = "bullseye";
+    }
+    qDebug() << "CodeName is: " + codename;
+    return codename;
 }
 
 void MainWindow::Delay_MSec_Suspend(int msec)
@@ -636,7 +648,11 @@ void MainWindow::ChangeVolume()
     QString value = QString::number(volumevalue,10); // int to string
     QString cmdstr = "";
     if(cpuplat == "pi"){
-        cmdstr = "pactl set-sink-volume 0 "+value+"% &";
+        if(GetDebianCodeName()=="bullseye")
+            cmdstr = "amixer cset "+volumepath+" "+value+"% &";
+        else
+            cmdstr = "pactl set-sink-volume 0 "+value+"% &";
+        qDebug()<<"STR:"+cmdstr;
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }
@@ -671,6 +687,7 @@ void MainWindow::ChangeBuzzerState()
 
 void MainWindow::audioInit()
 {
+    QString cmdstr;
     buzzerflag = true;
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::AudioTest);
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
@@ -685,7 +702,13 @@ void MainWindow::audioInit()
     }else if (cpuplat == "pi"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(50);
-        QString cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
+        if(GetDebianCodeName() == "bullseye"){
+            //cmdstr = "amixer cset "+volumepath+" 50%";
+            ui->horizontalSlider_audio_volume->setVisible(false);
+            ui->label_audio_volume->setVisible(false);
+        }
+        else
+            cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
         system(cmdstr.toLocal8Bit());
     }
     connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);

@@ -1,1 +1,14 @@
 *.user
+.qmake.stash
+hardwaretest
+Makefile
+*.tar.gz
+LCDTester/LCDTester
+LCDTester/Makefile
+LCDTester/*.o
+LCDTester/moc_*
+LCDTester/qrc_*
+*.o
+moc_*
+qrc_*
+ui_*

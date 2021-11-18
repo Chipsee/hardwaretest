@@ -4,6 +4,8 @@
 # cd LCDTester
 # qmake && make
 
+KVR=`uname -r`
+
 if [ ! -f hardwaretest -a ! -f LCDTester/LCDTester ]; then
 	echo "no binary, compile them first"
 	echo "How to:"
@@ -14,7 +16,7 @@ fi
 
 ## install
 if [ -f hardwaretest-app.tar.gz ]; then
-	rm hardwaretest-app.tar.gz
+	rm hardwaretest-app-*.tar.gz
 fi
 mkdir -p usr/share/applications
 mkdir -p usr/share/pixmaps
@@ -38,9 +40,9 @@ sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/libqtquick2plugin.so usr/
 sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/plugins.qmltypes usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/plugins.qmltypes
 sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/qmldir usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/qmldir
 sync
-tar zcvf hardwaretest-app.tar.gz usr
+tar zcvf hardwaretest-app-${KVR}.tar.gz usr
 sync
-tar zxvf hardwaretest-app.tar.gz -C /
+tar zxvf hardwaretest-app-${KVR}.tar.gz -C /
 sync
 rm usr -rf
 echo "Installed."

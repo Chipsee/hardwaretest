@@ -1212,8 +1212,8 @@ void MainWindow::readGPSData()
 void MainWindow::gpsEnable()
 {
 
-    QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\n");
-    QString startcmd("AT+QGPS=1\n");
+    QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\r\n");
+    QString startcmd("AT+QGPS=1\r\n");
     if(atport->isOpen())
         atport->close();
     if(atport->open(QIODevice::ReadWrite)){

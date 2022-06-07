@@ -11,3 +11,16 @@ This program only supports Chipsee follow platform products now:
  - IMX6UL
  - Industrial-Pi
  - AM335X
+
+# Release notes
+
+**V4.2:**
+
+- Fix GPS bugs.
+
+
+**V4.1:**
+
+- First Record.
+- Add Release notes.
+

@@ -1211,7 +1211,6 @@ void MainWindow::readGPSData()
 
 void MainWindow::gpsEnable()
 {
-
     QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\r\n");
     QString startcmd("AT+QGPS=1\r\n");
     if(atport->isOpen())
@@ -1220,10 +1219,12 @@ void MainWindow::gpsEnable()
         ui->pushButton_GPSEnable->setDisabled(true);
         ui->pushButton_GPSDisable->setDisabled(false);
         atport->write(cfgcmd.toLatin1());
-        if(atport->waitForBytesWritten(1000))
-            atport->write(startcmd.toLatin1());
-        if(atport->waitForBytesWritten(1000))
-            atport->close();
+        while(atport->waitForReadyRead(100));
+        atport->write(startcmd.toLatin1());
+        qDebug() << "GPS open ";
+        while(atport->waitForReadyRead(100));
+        atport->close();
+        qDebug() << "serialport closed";
     }else
     {
         QMessageBox::critical(this, tr("Error"), "No GPS");
@@ -1242,15 +1243,15 @@ void MainWindow::gpsEnable()
 
 void MainWindow::gpsDisable()
 {
-    QString stopcmd("AT+QGPSEND\n");
+    QString stopcmd("AT+QGPSEND\r");
     if(atport->isOpen())
         atport->close();
     if(atport->open(QIODevice::ReadWrite)){
         ui->pushButton_GPSEnable->setDisabled(false);
         ui->pushButton_GPSDisable->setDisabled(true);
         atport->write(stopcmd.toLatin1());
-        if(atport->waitForBytesWritten(1000))
-            atport->close();
+        while(atport->waitForReadyRead(100));
+        atport->close();
     }
 
     gpsreadTimer->stop();

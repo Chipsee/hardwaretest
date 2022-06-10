@@ -132,7 +132,26 @@ void SlaveThread::run()
         qDebug() << port[2]->portName();
         qDebug() << port[3]->portName();
         qDebug() << port[4]->portName();
-        }
+    }
+
+    /*
+     * PORT[0]=/dev/ttyS3
+     * PORT[1]=/dev/ttyS3
+     * PORT[2]=/dev/ttyS5
+     * PORT[3]=/dev/ttyS5
+     * PORT[4]=/dev/ttyS5
+     */
+
+    if(*board == "CS12800PX101"){
+        port[0] = port[1];
+        port[3] = port[2];
+        port[4] = port[2];
+        qDebug() << port[0]->portName();
+        qDebug() << port[1]->portName();
+        qDebug() << port[2]->portName();
+        qDebug() << port[3]->portName();
+        qDebug() << port[4]->portName();
+    }
 
     if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101"){
         //CAN INIT
@@ -140,9 +159,13 @@ void SlaveThread::run()
         system("canconfig can0 stop");
         system("canconfig can0 bitrate 10000 ctrlmode triple-sampling on loopback off ");
         system("canconfig can0 start");
+        if(*board == "CS12800PX101"){
+            system("sleep 5");
+            system("canconfig can0 start");
+        }
         system("candump can0 > /tmp/can0.txt &");
         //if(*board !="CS12800RA101" && *board != "CS10600RA4070") {
-        if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX") {
+        if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX" && *board != "CS12800PX101") {
             system("echo >/tmp/can1.txt");
             system("canconfig can1 stop");
             system("canconfig can1 bitrate 10000 ctrlmode triple-sampling on loopback off ");
@@ -173,10 +196,12 @@ void SlaveThread::run()
                 }
             }
 
-            if(i==0)
+            if(i==0 && *board != "CS12800PX101"){
                 timeout = 20000;
-            else
+            }
+            else{
                 timeout = 1000;
+            }
             requestData = "";
             if(port[i]->isOpen())
                 port[i]->close();
@@ -225,7 +250,7 @@ void SlaveThread::run()
 
             // CAN1
             //if(*board !="CS12800RA101" && *board != "CS10600RA4070") {
-            if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX") {
+            if(*board != "CS10600RA4070" && *board != "CS12800RA4101BOX" && *board != "CS12800PX101") {
                 QFile file1("/tmp/can1.txt");
                 if (file1.open(QIODevice::ReadWrite)){
                     QTextStream in(&file1);

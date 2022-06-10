@@ -1,11 +1,11 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=hardwaretest
+Name=hardwaretest_auto
 Name[zh_CN]=硬件自动测试
 Terminal=true
 Exec=sudo /usr/hardwaretest/hardwaretest_auto
 Icon=/usr/share/pixmaps/hardwaretest.png
-Comment=chipsee hardwaretest
+Comment=chipsee hardwaretest auto
 Comment[zh_CN]=芯普思硬件测试
 Categories=Utility;

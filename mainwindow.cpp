@@ -102,7 +102,18 @@
 #define AM335XMAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 #define AM335XUSBDEBUGFILEPATH USBDEBUGFILEPATH
 
-
+/* PX30 Devices*/
+#define PX30LED0PATH "/sys/class/leds/work-led/brightness"
+#define PX30LED1PATH ""
+#define PX30AUDIOPATH AUDIOPATH
+#define PX30CUEAUDIOPATH CUEAUDIOPATH
+#define PX30VOLUMEPATH "name='PCM Playback Volume'"
+#define PX30BUZZERPATH BUZZERPATH
+#define PX30IPPATH IPPATH
+#define PX30VIDEOPATH VIDEOPATH
+#define PX30BACKLIGHTPATH "/sys/class/backlight/backlight/brightness"
+#define PX30MAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
+#define PX30USBDEBUGFILEPATH USBDEBUGFILEPATH
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -215,6 +226,7 @@ QString MainWindow::GetPlat()
     QString pi3 = GetComResult("grep -c BCM2835 /proc/cpuinfo");
     QString pi4 = GetComResult("grep -c BCM2711 /proc/cpuinfo");
     QString am335x = GetComResult("grep -c AM33XX /proc/cpuinfo");
+    QString px30 = GetComResult("grep -c px30 /proc/device-tree/compatible");
 //    qDebug() << cpucore.left(1);
 //    qDebug() << imx6qdlul.left(1);
 
@@ -232,14 +244,34 @@ QString MainWindow::GetPlat()
         }
     } else if(am335x.left(1) == "1"){
         plat= "am335x";
+    } else if(px30.left(1) == "2") {
+        plat = "px30";
     }
+
     return plat;
 }
 
 QString MainWindow::GetPiBoard()
 {
     QString board;
-    if(GetPlat() == "pi")
+    if(GetPlat() == "pi" || GetPlat() == "px30")
+    {
+        board = GetFileValue("/opt/chipsee/.board");
+        // Remove "\n" from board
+        board.remove(QChar('\n'),Qt::CaseInsensitive);
+    } else
+    {
+        board = "NULL";
+    }
+
+    return board;
+
+}
+
+QString MainWindow::GetBoard()
+{
+    QString board;
+    if(GetPlat() == "pi" || GetPlat() == "px30")
     {
         board = GetFileValue("/opt/chipsee/.board");
         // Remove "\n" from board
@@ -385,6 +417,26 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
+    }else if(GetPlat() == "px30"){
+        board = GetPiBoard();
+        ledpath = PX30LED0PATH;
+        ledpath2 = PX30LED1PATH;
+        audiopath = PX30AUDIOPATH;
+        cueaudiopath = PX30CUEAUDIOPATH;
+        volumepath = PX30VOLUMEPATH;
+        buzzerpath = PX30BUZZERPATH;
+        backlightpath = PX30BACKLIGHTPATH;
+        maxbacklightpath = PX30MAXBACKLIGHTPATH;
+        videopath = PX30VIDEOPATH;
+        ipaddrpath = PX30IPPATH;
+        gpioOutArray[0] = "1";
+        gpioOutArray[1] = "2";
+        gpioOutArray[2] = "3";
+        gpioOutArray[3] = "4";
+        gpioInArray[0] = "5";
+        gpioInArray[1] = "6";
+        gpioInArray[2] = "7";
+        gpioInArray[3] = "8";
     }
 }
 
@@ -450,6 +502,9 @@ void MainWindow::boardInit()
 
     } else if(cpuplat == "am335x"){
         ui->labelBoard->setText("AM335XBOARD");
+    } else if(cpuplat == "px30") {
+        ui->labelBoard->setText(GetBoard());
+        relaypath = "/dev/relay";
     }
 
     BoardSetting();
@@ -485,7 +540,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(cpuplat == "pi" || cpuplat == "am335x"){
+    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -556,6 +611,11 @@ void MainWindow::AudioTest()
     if(cpuplat == "pi") {
         system("killall vlc");
         cmdstr = "cvlc "+ audiopath + " vlc://quit" +"&";
+    }else if(cpuplat == "px30"){
+        system("killall -9 gst-play-1.0");
+        cmdstr = "pactl set-sink-port 1 '[Out] Headphone' && pactl set-sink-port 1 '[Out] Speaker' >/dev/null &";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
     }else{
         system("killall gst-play-1.0");
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
@@ -603,6 +663,19 @@ void MainWindow::RecordTest()
         eventloop.exec();
 
         system("aplay /usr/hardwaretest/output.wav &");
+    }else if(cpuplat == "px30"){
+        system("test -f /usr/hardwaretest/output.wav && rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(16000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        cmdstr = "pactl set-sink-port 1 '[Out] Headphone' && pactl set-sink-port 1 '[Out] Speaker' >/dev/null &";
+        system(cmdstr.toLocal8Bit());
+
+        system("aplay /usr/hardwaretest/output.wav &");
     }else if(board == "AM335XBOARD"){   //need check again
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.wav");
@@ -627,6 +700,11 @@ void MainWindow::CueAudio()
         if(cpuplat == "pi") {
             cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" + " &";
             //cmdstr = "aplay " + cueaudiopath + " >/dev/null &";
+        }else if(cpuplat == "px30"){
+            system("killall -9 gst-play-1.0");
+            cmdstr = "pactl set-sink-port 1 '[Out] Headphone' && pactl set-sink-port 1 '[Out] Speaker' >/dev/null &";
+            system(cmdstr.toLocal8Bit());
+            cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
         }else{
             system("killall gst-play-1.0");
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
@@ -653,6 +731,8 @@ void MainWindow::ChangeVolume()
         else
             cmdstr = "pactl set-sink-volume 0 "+value+"% &";
         qDebug()<<"STR:"+cmdstr;
+    }else if(cpuplat =="px30"){
+        cmdstr = "pactl set-sink-volume 1 "+value+"% &";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }
@@ -710,6 +790,9 @@ void MainWindow::audioInit()
         else
             cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
         system(cmdstr.toLocal8Bit());
+    }else if (cpuplat == "px30"){
+        ui->horizontalSlider_audio_volume->setRange(0,100);
+        ui->horizontalSlider_audio_volume->setValue(100);
     }
     connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);
 
@@ -734,7 +817,12 @@ void MainWindow::VideoTest()
     QString cmdstr="";
     if(cpuplat == "pi") {
         cmdstr = "cvlc -f "+ videopath + " vlc://quit" +"&";
-    } else if(board == "AM335XBOARD"){
+    } else if(cpuplat == "px30"){
+        system("killall -9 gst-play-1.0");
+        cmdstr = "pactl set-sink-port 1 '[Out] Headphone' && pactl set-sink-port 1 '[Out] Speaker' >/dev/null &";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "gst-play-1.0 "+videopath+"&";
+    }else if(board == "AM335XBOARD"){
         cmdstr = "runMpeg4AacDec.sh &";
     }else{
         system("killall gst-play-1.0");
@@ -800,7 +888,7 @@ void MainWindow::LCDTest()
 
 void MainWindow::TouchTest()
 {
-    system("/usr/bin/ts_test > /dev/null");
+    system("/usr/bin/ts_test > /dev/null"); //cross-compile tslib https://github.com/libts/tslib
 }
 
 void MainWindow::displayInit()
@@ -1120,7 +1208,7 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
-    if(cpuplat == "pi"){
+    if(cpuplat == "pi" || cpuplat == "px30"){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
@@ -1490,7 +1578,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800PX101") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -1502,6 +1590,37 @@ void MainWindow::gpioInit()
         ui->pushButton_setAllHigh->setDisabled(true);
         ui->pushButton_setAllLow->setDisabled(true);
         ui->pushButton_gpioRefresh->setDisabled(true);
+
+        ui->label_gpio_out->setVisible(false);
+        ui->label_gpio_in->setVisible(false);
+        ui->label_out_1->setVisible(false);
+        ui->label_out_2->setVisible(false);
+        ui->label_out_3->setVisible(false);
+        ui->label_out_4->setVisible(false);
+        ui->label_high->setVisible(false);
+        ui->label_high_high->setVisible(false);
+        ui->label_low->setVisible(false);
+        ui->label_low_low->setVisible(false);
+        ui->radioButton_out_1_high->setVisible(false);
+        ui->radioButton_out_2_high->setVisible(false);
+        ui->radioButton_out_3_high->setVisible(false);
+        ui->radioButton_out_4_high->setVisible(false);
+        ui->radioButton_out_1_low->setVisible(false);
+        ui->radioButton_out_2_low->setVisible(false);
+        ui->radioButton_out_3_low->setVisible(false);
+        ui->radioButton_out_4_low->setVisible(false);
+        ui->label_in_->setVisible(false);
+        ui->label_in_1->setVisible(false);
+        ui->label_in_3->setVisible(false);
+        ui->label_in_4->setVisible(false);
+        ui->label_in_1_in->setVisible(false);
+        ui->label_in_2_in->setVisible(false);
+        ui->label_in_3_in->setVisible(false);
+        ui->label_in_4_in->setVisible(false);
+        ui->pushButton_gpioRefresh->setVisible(false);
+        ui->pushButton_setAllHigh->setVisible(false);
+        ui->pushButton_setAllLow->setVisible(false);
+
         ui->checkBox_Relay->setVisible(true);
         relayflag=true;
         ui->checkBox_Relay->setChecked(false);
@@ -1552,7 +1671,12 @@ void MainWindow::canStart()
     ui->comboBox_canNum->setDisabled(true);
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    QString cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    QString cmdstr = "";
+    if(cpuplat == "px30"){
+        cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    } else {
+        cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    }
     system(cmdstr.toLocal8Bit());
     canReceiveTimer->start(50);
     ui->textBrowser_can_text->clear();
@@ -1703,7 +1827,7 @@ void MainWindow::autoTest()
         EnableBuzzer();
         OpenLed();
         OpenLed2();
-        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800PX101"){
             RelayNO();
         }
 
@@ -1713,7 +1837,7 @@ void MainWindow::autoTest()
         DisableBuzzer();
         CloseLed();
         CloseLed2();
-        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800PX101"){
             RelayNC();
         }
 
@@ -1724,7 +1848,7 @@ void MainWindow::autoTest()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX") {
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
         networkautotest();
     }
 
@@ -1750,15 +1874,19 @@ void MainWindow::autoTest()
         port[i]->setParity(QSerialPort::NoParity);
         port[i]->setStopBits(QSerialPort::OneStop);
         port[i]->setFlowControl(QSerialPort::NoFlowControl);
-        //qDebug() << port[i]->portName();
+        qDebug() << port[i]->portName();
         i++;
         if(i>5)
             break;
-        qDebug() << port[i-1]->portName();
+        //qDebug() << port[i-1]->portName();
     }
 
     if(board == "CS12800RA4101" || board == "LRRA4-101"){
         port[5] = port[4];
+    }
+
+    if(board == "CS12800PX101"){
+        port[0] = port[1];
     }
 
     QString str("#################\n");
@@ -1825,6 +1953,38 @@ void MainWindow::autoTest()
 
     if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101BOX"){
         if(port[5] != NULL && port[5]->portName() == "ttyACM0")
+        {
+            qDebug() << "ZIGBEEISOK";
+            QString zigbeestr("ZIGBEEISOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(zigbeestr.toLatin1());
+
+                QTimer::singleShot(100, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        }else{
+            qDebug() << "ZIGBEEISNOTOK";
+            QString zigbeestr("ZIGBEEISNOTOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(zigbeestr.toLatin1());
+
+                QTimer::singleShot(100, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+
+        }
+    }
+
+    if(board == "CS12800PX101"){
+        if(port[3] != NULL && port[3]->portName() == "ttyACM0")
         {
             qDebug() << "ZIGBEEISOK";
             QString zigbeestr("ZIGBEEISOK\n");

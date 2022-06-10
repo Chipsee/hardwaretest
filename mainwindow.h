@@ -154,6 +154,7 @@ private:
     QString GetComResult(QString);
     QString GetPlat();
     QString GetPiBoard();
+    QString GetBoard();
     QString GetDebianCodeName();
     void Delay_MSec_Suspend(int);
     void fillPortsParameters();

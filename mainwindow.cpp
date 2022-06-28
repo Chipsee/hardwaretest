@@ -816,7 +816,7 @@ void MainWindow::VideoTest()
     QMessageBox::warning(this,"Tips","Press OK to Play Video!");
     QString cmdstr="";
     if(cpuplat == "pi") {
-        cmdstr = "cvlc -f "+ videopath + " vlc://quit" +"&";
+        cmdstr = "cvlc "+ videopath + " vlc://quit" +"&";
     } else if(cpuplat == "px30"){
         system("killall -9 gst-play-1.0");
         cmdstr = "pactl set-sink-port 1 '[Out] Headphone' && pactl set-sink-port 1 '[Out] Speaker' >/dev/null &";
@@ -1578,7 +1578,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800PX101") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800PX101" || board == "CS12720RA4050") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -1620,11 +1620,13 @@ void MainWindow::gpioInit()
         ui->pushButton_gpioRefresh->setVisible(false);
         ui->pushButton_setAllHigh->setVisible(false);
         ui->pushButton_setAllLow->setVisible(false);
-
-        ui->checkBox_Relay->setVisible(true);
-        relayflag=true;
-        ui->checkBox_Relay->setChecked(false);
-        connect(ui->checkBox_Relay,SIGNAL(toggled(bool)),this,SLOT(ChangeRelayState()));
+        ui->checkBox_Relay->setVisible(false);
+        if(board != "CS12720RA4050") {
+            ui->checkBox_Relay->setVisible(true);
+            relayflag=true;
+            ui->checkBox_Relay->setChecked(false);
+            connect(ui->checkBox_Relay,SIGNAL(toggled(bool)),this,SLOT(ChangeRelayState()));
+        }
     } else {
         ui->checkBox_Relay->setVisible(false);
         gpioOutStatuTimer = new QTimer(this);

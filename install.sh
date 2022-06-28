@@ -39,6 +39,10 @@ sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick/Window.2/qmldir usr/lib/arm
 sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/libqtquick2plugin.so usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/libqtquick2plugin.so
 sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/plugins.qmltypes usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/plugins.qmltypes
 sudo cp /usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/qmldir usr/lib/arm-linux-gnueabihf/qt5/qml/QtQuick.2/qmldir
+sudo cp /usr/lib/arm-linux-gnueabihf/libQt5Qml.so* usr/lib/arm-linux-gnueabihf/
+sudo cp /usr/lib/arm-linux-gnueabihf/libQt5Quick.so* usr/lib/arm-linux-gnueabihf/
+sudo cp /usr/lib/arm-linux-gnueabihf/libQt5QmlModels.so* usr/lib/arm-linux-gnueabihf/
+sudo cp /usr/lib/arm-linux-gnueabihf/libQt5QmlWorkerScript.so* usr/lib/arm-linux-gnueabihf/
 sync
 tar zcvf hardwaretest-app-${KVR}.tar.gz usr
 sync

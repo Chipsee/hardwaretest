@@ -599,14 +599,26 @@ void MainWindow::ledInit()
 /*
  *  Audio
  *
- *  AudioTest() RecordTest() CueAudio() ChangeVolume() EnableBuzzer() DisableBuzzer() ChangeBuzzerState() audioInit()
+ *  AudioLoop() AudioTest() RecordTest() CueAudio() ChangeVolume() EnableBuzzer() DisableBuzzer() ChangeBuzzerState() audioInit()
  *
  *
  */
 
+void MainWindow::AudioLoop()
+{
+    if(ui->checkBox_audioloop->isChecked()){
+        AudioTest();
+        audioloopTimer->start(20000);
+    }
+    else {
+        audioloopTimer->stop();
+        system("killall gst-play-1.0");
+    }
+}
+
 void MainWindow::AudioTest()
 {
-    QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
+    //QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
     QString cmdstr = "";
     if(cpuplat == "pi") {
         system("killall vlc");
@@ -772,12 +784,13 @@ void MainWindow::audioInit()
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::AudioTest);
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
     connect(ui->pushButton_record,&QPushButton::clicked,this,&MainWindow::RecordTest);
+    connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);
     if(board == "imx6q" || board == "imx6d" || board == "AM335XBOARD"){
         ui->horizontalSlider_audio_volume->setRange(60,127);
         ui->horizontalSlider_audio_volume->setValue(127);
     }else if(board == "imx6u"){
-        ui->horizontalSlider_audio_volume->setRange(60,100);
-        ui->horizontalSlider_audio_volume->setValue(100);
+        ui->horizontalSlider_audio_volume->setRange(60,127);
+        ui->horizontalSlider_audio_volume->setValue(127);
     }else if (board == "bbbexp"){
     }else if (cpuplat == "pi"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
@@ -794,10 +807,15 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
     }
-    connect(ui->horizontalSlider_audio_volume,&QSlider::valueChanged,this,&MainWindow::ChangeVolume);
 
     ui->checkBox_buzzer->setChecked(false);
     connect(ui->checkBox_buzzer,SIGNAL(toggled(bool)),this,SLOT(ChangeBuzzerState()));
+
+    audioloopTimer = new QTimer(this);
+    audioloopTimer->stop();
+    ui->checkBox_audioloop->setChecked(false);
+    connect(audioloopTimer,SIGNAL(timeout()),SLOT(AudioTest()));
+    connect(ui->checkBox_audioloop,SIGNAL(toggled(bool)),this,SLOT(AudioLoop()));
 }
 
 /*

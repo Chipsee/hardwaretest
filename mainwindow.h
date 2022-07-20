@@ -85,6 +85,7 @@ private slots:
     void autoTest();
     void getusbInfo();
     void getipInfo();
+    void AudioLoop();
 
 
 private:
@@ -124,6 +125,7 @@ private:
     QTimer * readTimer;
     QTimer * writeTimer;
     QTimer * gpsreadTimer;
+    QTimer * audioloopTimer;
     SlaveThread thread;
     bool buzzerflag;
     bool relayflag;

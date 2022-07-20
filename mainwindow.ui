@@ -172,6 +172,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBox_audioloop">
+             <property name="text">
+              <string>AudioLoop</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushButton_audio">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1177,11 +1184,11 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_out_3"/>
-  <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_out_1"/>
-  <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_out_2"/>
   <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_led1"/>
+  <buttongroup name="buttonGroup_out_4"/>
+  <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

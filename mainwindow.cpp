@@ -863,6 +863,10 @@ int MainWindow::MaxBacklighValue()
     if(cpuplat == "pi")
         return 1;
 #endif
+    if( GetFileValue(maxbacklightpath) == NULL) {
+        maxbacklightpath = "/dev/max_brightness";
+    }
+
     QString cmdstr = "cat "+maxbacklightpath+" >"+TEMPFILEPATH;
     system(cmdstr.toLocal8Bit());
     if(GetFileValue(TEMPFILEPATH)==NULL){
@@ -874,6 +878,10 @@ int MainWindow::MaxBacklighValue()
 
 int MainWindow::GetBacklightValue()
 {
+    if(GetFileValue(backlightpath)==NULL){
+        backlightpath = "/dev/brightness";
+    }
+
     if(GetFileValue(backlightpath)==NULL){
         QMessageBox::critical(this,"Error","Open Backlightpath Error!! Don't Get BacklightValue!! Return 0!!");
         return 0;
@@ -1423,7 +1431,11 @@ QString MainWindow::getGPIOValueRaw(QString gpionum)
 {
     QString gpiopath = QString("%1").arg("/sys/class/gpio/gpio")+gpionum+"/value";
     if(GetFileValue(gpiopath)==NULL){
-        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!!");
+        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!! Try use Libgpiod to control GPIO for kernel version more then 4.9");
+        // will disable MessageBox to display again
+        // only need to know once time
+        gpioInStatuTimer->stop();
+        gpioOutStatuTimer->stop();
         return NULL;
     }else
         return GetFileValue(gpiopath);
@@ -1447,7 +1459,11 @@ QString MainWindow::getGPIOValue(QString gpionum)
 {
     QString gpiopath = QString("%1").arg(GPIOBASEPATH)+gpionum;
     if(GetFileValue(gpiopath)==NULL){
-        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!!");
+        QMessageBox::critical(this,"Error","Open GpioPath Error!! Don't get GPIOValue!! Return NULL!! Try use Libgpiod to control GPIO for kernel version more then 4.9");
+        // will disable MessageBox to display again
+        // only need to know once time
+        gpioInStatuTimer->stop();
+        gpioOutStatuTimer->stop();
         return NULL;
     }else
         return GetFileValue(gpiopath);

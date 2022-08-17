@@ -80,7 +80,7 @@
 /* Industtrial Pi Define */
 #define PILED0PATH "/sys/class/leds/led0/brightness"
 #define PILED1PATH ""
-#define PIAUDIOPATH "/usr/hardwaretest/AudioTest.aac"
+#define PIAUDIOPATH "/usr/hardwaretest/AudioTest.wav"
 #define PICUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
 #define PIVOLUMEPATH "name='Master Playback Volume'"
 #define PIBUZZERPATH "/dev/buzzer"

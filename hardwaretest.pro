@@ -24,7 +24,8 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     timedialog.h \
-    slavethread.h
+    slavethread.h \
+    version.h
 
 FORMS    += mainwindow.ui \
     timedialog.ui

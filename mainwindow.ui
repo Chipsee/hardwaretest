@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1008</width>
+    <width>1107</width>
     <height>599</height>
    </rect>
   </property>
@@ -695,8 +695,15 @@
            </item>
           </layout>
          </item>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QTextBrowser" name="textBrowser_network_text"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="pushButton_AllTest">
+           <property name="text">
+            <string>PushButton</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -1184,11 +1191,11 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_out_2"/>
   <buttongroup name="buttonGroup_led2"/>
-  <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_out_4"/>
+  <buttongroup name="buttonGroup_led1"/>
   <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

@@ -86,6 +86,9 @@ private slots:
     void getusbInfo();
     void getipInfo();
     void AudioLoop();
+    void readalltestresult();
+    void alltest();
+    void alltestInit();
 
 
 private:
@@ -126,6 +129,7 @@ private:
     QTimer * writeTimer;
     QTimer * gpsreadTimer;
     QTimer * audioloopTimer;
+    QTimer * alltestTimer;
     SlaveThread thread;
     bool buzzerflag;
     bool relayflag;
@@ -155,6 +159,7 @@ private:
     QString GetFileValue(QString);
     QString GetComResult(QString);
     QString GetPlat();
+    QString GetResolution();
     QString GetPiBoard();
     QString GetBoard();
     QString GetDebianCodeName();

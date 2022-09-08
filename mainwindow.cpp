@@ -13,6 +13,8 @@
 #include <QLineEdit>
 #include <QNetworkInterface>
 #include <QtNetwork/QHostAddress>
+#include "version.h"
+#include <QDesktopWidget>
 
 /*
  * If you want to change the board,
@@ -115,6 +117,19 @@
 #define PX30MAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 #define PX30USBDEBUGFILEPATH USBDEBUGFILEPATH
 
+/* RK3399 Devices*/
+#define RK3399LED0PATH "/sys/class/leds/work-led/brightness"
+#define RK3399LED1PATH ""
+#define RK3399AUDIOPATH AUDIOPATH
+#define RK3399CUEAUDIOPATH CUEAUDIOPATH
+#define RK3399VOLUMEPATH "name='HP Playback Volume'"
+#define RK3399BUZZERPATH BUZZERPATH
+#define RK3399IPPATH IPPATH
+#define RK3399VIDEOPATH VIDEOPATH
+#define RK3399BACKLIGHTPATH "/sys/class/backlight/backlight/brightness"
+#define RK3399MAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
+#define RK3399USBDEBUGFILEPATH USBDEBUGFILEPATH
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -154,6 +169,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // CAN
     canInit();
+
+    // Alltest for self test board
+    alltestInit();
 
     // AutoTest, used for chipsee autotest
     //autotestInit();
@@ -227,6 +245,7 @@ QString MainWindow::GetPlat()
     QString pi4 = GetComResult("grep -c BCM2711 /proc/cpuinfo");
     QString am335x = GetComResult("grep -c AM33XX /proc/cpuinfo");
     QString px30 = GetComResult("grep -c px30 /proc/device-tree/compatible");
+    QString rk3399 = GetComResult("grep -c rk3399 /proc/device-tree/compatible");
 //    qDebug() << cpucore.left(1);
 //    qDebug() << imx6qdlul.left(1);
 
@@ -246,9 +265,20 @@ QString MainWindow::GetPlat()
         plat= "am335x";
     } else if(px30.left(1) == "2") {
         plat = "px30";
+    } else if(rk3399.left(1) == "2") {
+        plat = "rk3399";
     }
 
     return plat;
+}
+QString MainWindow::GetResolution()
+{
+    QDesktopWidget* desktopWidget = QApplication::desktop();
+    int width = desktopWidget->width();
+    int height = desktopWidget->height();
+    QString widthstr = QString::number(width,10);
+    QString heightstr = QString::number(height,10);
+    return widthstr+heightstr;
 }
 
 QString MainWindow::GetPiBoard()
@@ -279,6 +309,21 @@ QString MainWindow::GetBoard()
     } else
     {
         board = "NULL";
+    }
+
+    if(GetPlat() == "rk3399")
+    {
+        QString cs10600r070 = GetComResult("grep -c rk3399-eisd-1024600-mipi /proc/device-tree/compatible");
+        QString cs12800r101 = GetComResult("grep -c rk3399-eisd-1280800-lvds-linux /proc/device-tree/compatible");
+        QString cs12800r101p = GetComResult("grep -c pwm1 /proc/device-tree/compatible");
+        if(cs10600r070.left(1) == "1"){
+            board = "CS10600R070";
+        } else if(cs12800r101.left(1) == "1"){
+            board = "CS12800R101";
+        } else if(cs12800r101p.left(1) == "1"){
+            board = "CS12800R101P";
+        } else
+            board = "CS40230RB";
     }
 
     return board;
@@ -437,6 +482,26 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
+    }else if(GetPlat() == "rk3399"){
+        board = GetBoard();
+        ledpath = RK3399LED0PATH;
+        ledpath2 = RK3399LED1PATH;
+        audiopath = RK3399AUDIOPATH;
+        cueaudiopath = RK3399CUEAUDIOPATH;
+        volumepath = RK3399VOLUMEPATH;
+        buzzerpath = RK3399BUZZERPATH;
+        backlightpath = RK3399BACKLIGHTPATH;
+        maxbacklightpath = RK3399MAXBACKLIGHTPATH;
+        videopath = RK3399VIDEOPATH;
+        ipaddrpath = RK3399IPPATH;
+        gpioOutArray[0] = "1";
+        gpioOutArray[1] = "2";
+        gpioOutArray[2] = "3";
+        gpioOutArray[3] = "4";
+        gpioInArray[0] = "5";
+        gpioInArray[1] = "6";
+        gpioInArray[2] = "7";
+        gpioInArray[3] = "8";
     }
 }
 
@@ -505,7 +570,12 @@ void MainWindow::boardInit()
     } else if(cpuplat == "px30") {
         ui->labelBoard->setText(GetBoard());
         relaypath = "/dev/relay";
+    } else if(cpuplat == "rk3399") {
+        ui->labelBoard->setText(GetBoard());
     }
+
+
+    ui->labelVersion->setText(VERSION);
 
     BoardSetting();
     connect(ui->pushButton_exit,&QPushButton::clicked,this,&MainWindow::close);
@@ -527,6 +597,8 @@ void MainWindow::syncTime()
 {
     QMessageBox::warning(this,"Tips","Connect to Internet, Set the time closer to now time manual first.");
     QString cmdstr = "ntpdate-sync";
+    system(cmdstr.toLocal8Bit());
+    cmdstr = "ntpdate-debian";
     system(cmdstr.toLocal8Bit());
     QMessageBox::warning(this,"Tips","If the time not update, don't worry, press ok to Wait Complete.");
 }
@@ -701,6 +773,19 @@ void MainWindow::RecordTest()
 
         system("killall gst-play-1.0");
         system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
+    }else if(cpuplat =="rk3399"){   //need check again
+        system("killall gst-play-1.0");
+        system("rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(18000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        system("killall gst-play-1.0");
+        system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
     }
 }
 
@@ -745,6 +830,8 @@ void MainWindow::ChangeVolume()
         qDebug()<<"STR:"+cmdstr;
     }else if(cpuplat =="px30"){
         cmdstr = "pactl set-sink-volume 1 "+value+"% &";
+    }else if(cpuplat =="rk3399"){
+        cmdstr = "amixer cset "+volumepath+" "+value+"% &";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }
@@ -806,6 +893,9 @@ void MainWindow::audioInit()
     }else if (cpuplat == "px30"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
+    }else if (cpuplat == "rk3399"){
+        ui->horizontalSlider_audio_volume->setRange(0,100);
+        ui->horizontalSlider_audio_volume->setValue(70);
     }
 
     ui->checkBox_buzzer->setChecked(false);
@@ -1234,7 +1324,7 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
-    if(cpuplat == "pi" || cpuplat == "px30"){
+    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399"){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
@@ -1284,7 +1374,7 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
-    if(board == "AM335XBOARD"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399"){
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
@@ -1373,6 +1463,11 @@ void MainWindow::gpsDisable()
 
 void MainWindow::gpsInit()
 {
+    if(board == "AM335XBOARD" || cpuplat == "rk3399"){
+        ui->pushButton_GPSEnable->setVisible(false);
+        ui->pushButton_GPSDisable->setVisible(false);
+        return;
+    }
     atport = new QSerialPort(this);
     atport->setPortName("/dev/ttyUSB2");
     atport->setBaudRate(QSerialPort::Baud9600);
@@ -1398,6 +1493,52 @@ void MainWindow::gpsInit()
     gpsreadTimer = new QTimer(this);
     connect(gpsreadTimer,SIGNAL(timeout()),SLOT(readGPSData()));
 
+}
+
+/*
+ * AllTest
+ *
+ *  readalltestresult() alltest() alltestInit()
+ *
+ */
+
+void MainWindow::readalltestresult()
+{
+    QString result;
+    result = GetFileValue("/tmp/autotest.log");
+    if(result != "")
+        ui->textBrowser_network_text->setText(result);
+    if(result.contains("Test END")) {
+    alltestTimer->stop();
+    ui->pushButton_AllTest->setDisabled(false);
+    gpioOutStatuTimer->start(50);
+    }
+
+}
+
+void MainWindow::alltest()
+{
+    system("echo > /tmp/autotest.log");
+    system("/opt/test/alltest/autorun_test.sh &");
+    alltestTimer->start(500);
+    ui->textBrowser_network_text->setText("Starting All Test:");
+    ui->pushButton_AllTest->setDisabled(true);
+    gpioOutStatuTimer->stop();
+}
+
+void MainWindow::alltestInit()
+{
+    QString enable = GetComResult("grep -c ENABLE /opt/test/alltest/switch");
+    if (enable.left(1) == "1")
+    {
+        ui->pushButton_AllTest->setText("AllTest");
+        connect(ui->pushButton_AllTest,&QPushButton::clicked,this,&MainWindow::alltest);
+        alltestTimer = new QTimer(this);
+        connect(alltestTimer, SIGNAL(timeout()),SLOT(readalltestresult()));
+    }else
+    {
+        ui->pushButton_AllTest->setVisible(false);
+    }
 }
 
 /*
@@ -1795,7 +1936,7 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else if(board == "AM335XBOARD"){
@@ -1833,7 +1974,7 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
         ui->pushButton_canStart->setDisabled(true);
     }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);

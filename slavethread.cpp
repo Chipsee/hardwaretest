@@ -100,6 +100,17 @@ void SlaveThread::run()
             break;
     }
 
+    if(*board == "CS10600RA4070" || *board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101BOX"){
+        if(port[0] != NULL && port[0]->portName() == "ttyACM0"){
+            port[0] = port[1];
+            port[1] = port[2];
+            port[2] = port[3];
+            port[3] = port[4];
+            port[4] = port[5];
+        }
+
+    }
+
     if(*board == "CS10600RA4070" || *board == "AM335XBOARD" || *board == "CS12800RA4101BOX"){
         port[4] = port[3];
         port[3] = port[2];

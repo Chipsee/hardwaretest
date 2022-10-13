@@ -2025,7 +2025,7 @@ void MainWindow::autoTest()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
+    if(board !="CS12720RA4050" && board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
         networkautotest();
     }
 

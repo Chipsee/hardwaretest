@@ -541,7 +541,7 @@ void MainWindow::boardInit()
             maxbacklightpath = "/sys/class/gpio/gpio18/value";
         }
 
-        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101") {
+        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101" || GetPiBoard() == "CS12800RA4101A") {
             gpioExport("13");
             setGPIOModelRaw("13","out");
             setGPIOValueRaw("13","1");
@@ -554,7 +554,7 @@ void MainWindow::boardInit()
         }
 #endif
 	// Relay init
-        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101") {
+        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101" || GetPiBoard() == "CS12800RA4101A") {
             gpioExport("17");
             setGPIOModelRaw("17","out");
             setGPIOValueRaw("17","0");
@@ -1753,7 +1753,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800PX101" || board == "CS12720RA4050") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -1936,7 +1936,7 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else if(board == "AM335XBOARD"){
@@ -1974,7 +1974,7 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB"){
         ui->pushButton_canStart->setDisabled(true);
     }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);
@@ -2004,7 +2004,7 @@ void MainWindow::autoTest()
         EnableBuzzer();
         OpenLed();
         OpenLed2();
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800PX101"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101"){
             RelayNO();
         }
 
@@ -2014,7 +2014,7 @@ void MainWindow::autoTest()
         DisableBuzzer();
         CloseLed();
         CloseLed2();
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800PX101"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101"){
             RelayNC();
         }
 
@@ -2025,11 +2025,12 @@ void MainWindow::autoTest()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS12720RA4050" && board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
+    //if(board !="CS12720RA4050" && board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101A" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
+    if(cpuplat != "pi" && board !="CS12800PX101") {
         networkautotest();
     }
 
-    if(board != "CS12800RA4101" && board != "LRRA4-101" && board !="CS10600RA070") {
+    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070") {
         // Test Serial and CAN
         connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
     }
@@ -2058,7 +2059,7 @@ void MainWindow::autoTest()
         //qDebug() << port[i-1]->portName();
     }
 
-    if(board == "CS12800RA4101" || board == "LRRA4-101"){
+    if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A"){
         port[5] = port[4];
     }
 
@@ -2066,7 +2067,7 @@ void MainWindow::autoTest()
         port[0] = port[1];
     }
 
-    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101BOX"){
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX"){
         if(port[0] != NULL && port[0]->portName() == "ttyACM0"){
             port[0] = port[1];
             port[1] = port[2];
@@ -2095,7 +2096,7 @@ void MainWindow::autoTest()
     }
 
     if(cpuplat == "pi"){
-        if(board == "CS12800RA4101" || board == "LRRA4-101"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A"){
             QString audiostr("@@AUDIO\n");
             if(port[0]->isOpen())
                 port[0]->close();
@@ -2144,7 +2145,7 @@ void MainWindow::autoTest()
         port[0]->close();
     }
 
-    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101BOX"){
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX"){
         if(port[5] != NULL && port[5]->portName() == "ttyACM0")
         {
             qDebug() << "ZIGBEEISOK";
@@ -2289,7 +2290,7 @@ void MainWindow::autotestInit()
     if(cpuplat != "pi"){
         usbInit();
     }
-    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101BOX") {
+    if(board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101A" && board !="CS12800RA4101BOX") {
         networkautotest();
     }
 #endif

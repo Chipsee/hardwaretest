@@ -100,7 +100,7 @@ void SlaveThread::run()
             break;
     }
 
-    if(*board == "CS12720RA4050" || *board == "CS10600RA4070" || *board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101BOX"){
+    if(*board == "CS12720RA4050" || *board == "CS10600RA4070" || *board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A" || *board == "CS12800RA4101BOX"){
         if(port[0] != NULL && port[0]->portName() == "ttyACM0"){
             port[0] = port[1];
             port[1] = port[2];
@@ -133,7 +133,7 @@ void SlaveThread::run()
         qDebug() << port[4]->portName();
     }
 
-    if(*board == "CS12800RA4101" || *board == "LRRA4-101"){
+    if(*board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A"){
         port[5] = port[4];
         port[4] = port[3];
         port[3] = port[2];
@@ -164,7 +164,7 @@ void SlaveThread::run()
         qDebug() << port[4]->portName();
     }
 
-    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101"){
+    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A"){
         //CAN INIT
         system("echo >/tmp/can0.txt");
         system("canconfig can0 stop");
@@ -245,7 +245,7 @@ void SlaveThread::run()
             }
         }
 
-        if(*board !="CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101"){
+        if(*board !="CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" && *board != "CS12800RA4101A"){
             // CAN AutoTest
             // CAN0
             QFile file("/tmp/can0.txt");

@@ -2067,7 +2067,7 @@ void MainWindow::autoTest()
         port[0] = port[1];
     }
 
-    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX"){
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX" || board == "CS12800RA4101P" || board == "CS19108RA4133P" || board == "CS10768RA4150P" || board == "CS19108RA4156P" || board == "CS19108RA4215P"){
         if(port[0] != NULL && port[0]->portName() == "ttyACM0"){
             port[0] = port[1];
             port[1] = port[2];
@@ -2145,7 +2145,7 @@ void MainWindow::autoTest()
         port[0]->close();
     }
 
-    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX"){
+    if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX" || board == "CS12800RA4101P" || board == "CS19108RA4133P" || board == "CS10768RA4150P" || board == "CS19108RA4156P" || board == "CS19108RA4215P"){
         if(port[5] != NULL && port[5]->portName() == "ttyACM0")
         {
             qDebug() << "ZIGBEEISOK";

@@ -15,13 +15,15 @@ int main(int argc, char *argv[])
     qDebug() << "Screen is: " + widthstr + "x" + heightstr;
     QFont font = a.font();
 
+    MainWindow w;
+
     if(height <= 600 && width <= 1024){
         qDebug()<< "will use 6 font";
-        font.setPointSize(6);
-        a.setFont(font);
+        //font.setPointSize(6);
+        //a.setFont(font);
+	w.resize(800,500); //This will use min size
     }
 
-    MainWindow w;
     w.show();
     w.move((QApplication::desktop()->width()-w.width())/2,(QApplication::desktop()->height()-w.height())/2);
 

@@ -19,6 +19,13 @@ if ! check_commands; then
   exit 1;
 fi
 
+# if the user is not root, there is not point in going forward
+if [ $(id -u) -ne 0 ]; then
+    echo "This script requires root privilege"
+    exit 1
+fi
+
+
 head=`git rev-parse --verify --short HEAD 2>/dev/null`
 LAST_GIT_VERSION="+git$head"
 

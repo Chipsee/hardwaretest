@@ -1,6 +1,6 @@
 *.user
 .qmake.stash
-hardwaretest
+./hardwaretest
 Makefile
 *.tar.gz
 LCDTester/LCDTester

@@ -27,6 +27,7 @@
 #define GPIOBASEPATH "/dev/chipsee-gpio"
 #define GPIOEXPORTPATH "/sys/class/gpio/export"
 #define CANSENDDATA "0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88"
+#define CANSENDCANFRAMENEW "5A1#1122334455667788"
 #define CANTEMPFILEPATH "/tmp/cantmp.txt"
 #define SERIALTEMPFILEPATH "/tmp/serialtmp.txt"
 #define TEMPFILEPATH "/tmp/tmp.txt"
@@ -1849,8 +1850,11 @@ void MainWindow::canStart()
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
     QString cmdstr = "";
+    
     if(cpuplat == "px30"){
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
+        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     }
@@ -1863,20 +1867,32 @@ void MainWindow::canStart()
 
 void MainWindow::canSend()
 {
+    QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    QString cmdstr = "cansend "+ui->comboBox_canNum->currentText()+" "+QString("%1").arg(CANSENDDATA);
+    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye"){
+	canframe = CANSENDCANFRAMENEW;
+    } else {
+	canframe = CANSENDDATA;
+    }
+    QString cmdstr = "cansend "+ui->comboBox_canNum->currentText()+" "+QString("%1").arg(canframe);
+
     system(cmdstr.toLocal8Bit());
     ui->textBrowser_can_text->clear();
-    ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Sended: "+QString("%1").arg(CANSENDDATA));
+    ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Sended: "+QString("%1").arg(canframe));
     //QMessageBox::critical(this,"M",cmdstr);
 }
 
 void MainWindow::canStop()
 {
+    QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    QString cmdstr = "canconfig "+cannum+" stop";
+    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye"){
+        cmdstr = "ip link set "+cannum+" down";
+    } else {
+        cmdstr = "canconfig "+cannum+" stop";
+    }
     system(cmdstr.toLocal8Bit());
     canReceiveTimer->stop();
     ui->comboBox_canNum->setDisabled(false);

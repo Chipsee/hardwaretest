@@ -137,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     audioflag = true;
+    autoflag = false;
 
     // boardInit
     boardInit();
@@ -710,7 +711,10 @@ void MainWindow::AudioTest()
 
 void MainWindow::RecordTest()
 {
-    QMessageBox::warning(this,"Tips","Open Outside Audio First!!");
+    if(!autoflag){
+        QMessageBox::warning(this,"Tips","Open Outside Audio First!!");
+    }
+
     if(board == "imx6q"){
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.mp3");
@@ -777,7 +781,7 @@ void MainWindow::RecordTest()
     }else if(cpuplat =="rk3399"){   //need check again
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.wav");
-        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+        QString cmdstr = "arecord -f cd -c 1 -d 18 /usr/hardwaretest/output.wav & ";
 
         system(cmdstr.toLocal8Bit());
 
@@ -1554,14 +1558,18 @@ void MainWindow::getusbInfo()
 {
     QString line = GetFileValue(IMX6QUSBDEBUGFILEPATH);
     if(line.contains("USB Flash Disk")||
-            line.contains("Mass Storage Device")||
+            line.contains("Mass Storage")||
             line.contains("USB Receiver")||
             line.contains("Keyboard Mouse")||
+            line.contains("Mouse")||
+            line.contains("USB DISK")||
+            line.contains("Card Reader")||
             line.contains("Wireless Optical Mouse")||
             line.contains("MXT USB Device")||
             line.contains("Mass-Storage")||
             line.contains("USB2.0-CRW")||
             line.contains("DataTraveler 2.0")||
+            line.contains("DataTraveler 3.0")||
             line.contains("USB Storage"))
     {
         CueAudio();
@@ -1855,6 +1863,8 @@ void MainWindow::canStart()
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    } else if (board == "CS12800R101P"){
+        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     }
@@ -1870,7 +1880,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye"){
+    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye" || board == "CS12800R101P"){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -2012,6 +2022,7 @@ void MainWindow::canInit()
 
 void MainWindow::autoTest()
 {   
+    autoflag = true;
     autoTesttimer->stop();
     // Test Beeper And Led
     QEventLoop eventloop;
@@ -2042,7 +2053,7 @@ void MainWindow::autoTest()
         usbInit();
     }
     //if(board !="CS12720RA4050" && board !="CS10600RA4070" && board !="CS12800RA4101" && board != "LRRA4-101" && board !="CS12800RA4101A" && board !="CS12800RA4101BOX" && board !="CS12800PX101") {
-    if(cpuplat != "pi" && board !="CS12800PX101") {
+    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P") {
         networkautotest();
     }
 
@@ -2061,6 +2072,7 @@ void MainWindow::autoTest()
     QSerialPort * port[6] = {serial,serial1,serial2,serial3,serial4,serial5};
 
     int i = 0;
+    qDebug() << board + " Default Serial Port list: ";
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts()){
         port[i]->setPortName(info.portName());
         port[i]->setBaudRate(QSerialPort::Baud115200);
@@ -2154,11 +2166,13 @@ void MainWindow::autoTest()
         port[0]->close();
     if(port[0]->open(QIODevice::ReadWrite)) {
         port[0]->write(boardstr.toLatin1());
-
+        qDebug() << "send RTCISOK";
         QTimer::singleShot(100, &eventloop,SLOT(quit()));
         eventloop.exec();
+        qDebug() << "eventloop 100";
 
         port[0]->close();
+        qDebug() << "board port close";
     }
 
     if(board == "CS10600RA4070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101BOX" || board == "CS12800RA4101P" || board == "CS19108RA4133P" || board == "CS10768RA4150P" || board == "CS19108RA4156P" || board == "CS19108RA4215P"){
@@ -2233,11 +2247,12 @@ void MainWindow::autoTest()
             port[0]->close();
         if(port[0]->open(QIODevice::ReadWrite)) {
             port[0]->write(rtcstr.toLatin1());
-
+            qDebug() << "send RTCISOK";
             QTimer::singleShot(500, &eventloop,SLOT(quit()));
             eventloop.exec();
-
+            qDebug() << "eventloop 500";
             port[0]->close();
+            qDebug() << "rtc close port";
         }
     }
 
@@ -2275,6 +2290,43 @@ void MainWindow::autoTest()
                 port[0]->close();
             if(port[0]->open(QIODevice::ReadWrite)) {
                 port[0]->write(usbserialstr.toLatin1());
+
+                QTimer::singleShot(500, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        }
+    }
+
+    //For CS12800R101P /dev/ttyS2 Debug port self test.
+    if(board == "CS12800R101P"){
+        QString cmdstr = "/usr/hardwaretest/receive /dev/ttyS2 > /tmp/serial.txt &";
+        system(cmdstr.toLocal8Bit());
+        cmdstr = "/usr/hardwaretest/send /dev/ttyS2 &";
+        system(cmdstr.toLocal8Bit());
+        QTimer::singleShot(5000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+        if(GetFileValue("/tmp/serial.txt") == "/dev/ttyS2 Received 1000 data\n"){
+            qDebug() << "ttyS2 is OK.";
+            QString debugserialstr("TTYS2ISOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(debugserialstr.toLatin1());
+
+                QTimer::singleShot(500, &eventloop,SLOT(quit()));
+                eventloop.exec();
+
+                port[0]->close();
+            }
+        } else{
+            qDebug() << "ttyS2 is Not OK.";
+            QString debugserialstr("TTYS2ISNOK\n");
+            if(port[0]->isOpen())
+                port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+                port[0]->write(debugserialstr.toLatin1());
 
                 QTimer::singleShot(500, &eventloop,SLOT(quit()));
                 eventloop.exec();

@@ -135,6 +135,7 @@ private:
     bool relayflag;
     bool audioflag;
     bool canflag;
+    bool autoflag;
 
     struct serailSettings {
             QString name;

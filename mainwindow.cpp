@@ -346,8 +346,8 @@ QString MainWindow::GetBoard()
     if(GetPlat() == "rk3568")
     {
         QString CS12800_RK3568_101 = GetComResult("grep -c rk3568-eisd-1280800 /proc/device-tree/compatible");
-        QString CS10600_RK3568_070 = GetComResult("grep -c rk3399-eisd-1024600 /proc/device-tree/compatible");
-        QString CS12720_RK3568_050 = GetComResult("grep -c rk3399-eisd-1280720 /proc/device-tree/compatible");
+        QString CS10600_RK3568_070 = GetComResult("grep -c rk3568-eisd-1024600 /proc/device-tree/compatible");
+        QString CS12720_RK3568_050 = GetComResult("grep -c rk3568-eisd-1280720 /proc/device-tree/compatible");
         if(CS12800_RK3568_101.left(1) == "1"){
             board = "CS12800_RK3568_101";
         } else if(CS10600_RK3568_070.left(1) == "1"){

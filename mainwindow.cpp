@@ -1410,7 +1410,7 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
-    if(board == "AM335XBOARD" || cpuplat == "rk3399"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050"){
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
@@ -1499,7 +1499,7 @@ void MainWindow::gpsDisable()
 
 void MainWindow::gpsInit()
 {
-    if(board == "AM335XBOARD" || cpuplat == "rk3399"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050"){
         ui->pushButton_GPSEnable->setVisible(false);
         ui->pushButton_GPSDisable->setVisible(false);
         return;
@@ -1793,7 +1793,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -1836,7 +1836,7 @@ void MainWindow::gpioInit()
         ui->pushButton_setAllHigh->setVisible(false);
         ui->pushButton_setAllLow->setVisible(false);
         ui->checkBox_Relay->setVisible(false);
-        if(board != "CS12720RA4050") {
+        if(board != "CS12720RA4050" && board != "CS12720_RK3568_050") {
             ui->checkBox_Relay->setVisible(true);
             relayflag=true;
             ui->checkBox_Relay->setChecked(false);

@@ -710,10 +710,12 @@ void MainWindow::ledInit()
 void MainWindow::AudioLoop()
 {
     if(ui->checkBox_audioloop->isChecked()){
+	autoflag=true;
         AudioTest();
         audioloopTimer->start(20000);
     }
     else {
+	autoflag=false;
         audioloopTimer->stop();
         system("killall gst-play-1.0");
     }
@@ -721,7 +723,9 @@ void MainWindow::AudioLoop()
 
 void MainWindow::AudioTest()
 {
-    //QMessageBox::warning(this,"Tips","Press OK to Play Audio!");
+    if(!autoflag){
+	QMessageBox::information(this,"Tips","Press OK to Play Audio!");
+    }
     QString cmdstr = "";
     if(cpuplat == "pi") {
         system("killall vlc");
@@ -926,6 +930,9 @@ void MainWindow::audioInit()
         else
             cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
         system(cmdstr.toLocal8Bit());
+	if(board != "LRRA4-101" && board != "CS12800RA4101A" ) {
+		ui->pushButton_record->setVisible(false);
+	}
     }else if (cpuplat == "px30" || cpuplat == "rk3568"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
@@ -1893,7 +1900,7 @@ void MainWindow::canStart()
     if(cpuplat == "px30"){
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
-        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (board == "CS12800R101P" || cpuplat == "rk3568"){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {

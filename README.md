@@ -6,15 +6,21 @@ sudo apt install git qt5-default make g++ libqt5serialport5-dev qtdeclarative5-d
 
 # Supported boards
 This program only supports Chipsee follow platform products now:
- - IMX6Q
- - IMX6DL
- - IMX6UL
- - Industrial-Pi
- - AM335X
- - PX30
- - RK3399
+ - [IMX6QDL](https://chipsee.com/product-category/ipc/arm/?filter_cpu=nxp-imx6q&query_type_cpu=or)
+ - [IMX6UL](https://chipsee.com/product-category/ipc/arm/?query_type_cpu=or&filter_cpu=nxp-imx6ul)
+ - [Industrial-pi](https://chipsee.com/product-category/ipc/arm-raspberry-pi/)
+ - [AM335X](https://chipsee.com/product-category/ipc/arm/?filter_cpu=ti-am3354&query_type_cpu=or)
+ - [PX30](https://chipsee.com/product-category/ipc/arm/?filter_cpu=rockchip-px30&query_type_cpu=or)
+ - [RK3399](https://chipsee.com/product-category/ipc/arm/?query_type_cpu=or&filter_cpu=rockchip-rk3399)
+ - RK3568
 
 # Release notes
+
+**V5.1:**
+
+- Add RK3568 Platform products support.
+- Fix CAN bugs for Industrial-pi platform.
+
 
 **V5.0:**
 

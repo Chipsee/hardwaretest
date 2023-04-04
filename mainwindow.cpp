@@ -369,6 +369,11 @@ QString MainWindow::GetDebianCodeName()
         if(codename.contains("bullseye"))
             codename = "bullseye";
     }
+    if(GetPlat() == "rk3568"){
+        codename = GetComResult("lsb_release -c");
+        if(codename.contains("bullseye"))
+            codename = "bullseye";
+    }
     qDebug() << "CodeName is: " + codename;
     return codename;
 }
@@ -939,6 +944,11 @@ void MainWindow::audioInit()
     }else if (cpuplat == "rk3399"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(70);
+    }
+
+    if(cpuplat == "rk3568" && GetDebianCodeName() != "bullseye"){
+	ui->horizontalSlider_audio_volume->setVisible(false);
+	ui->label_audio_volume->setVisible(false);
     }
 
     ui->checkBox_buzzer->setChecked(false);

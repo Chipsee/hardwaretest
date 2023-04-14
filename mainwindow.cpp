@@ -38,6 +38,8 @@
 #define IPPATH "/usr/hardwaretest/ipaddr"
 #define VIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
 #define BUZZERPATH "/dev/buzzer"
+#define BACKLIGHTPATH "/sys/class/backlight/backlight/brightness"
+#define MAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 
 /* IMX6Q Define */
 #define IMX6QLED4PATH "/sys/class/leds/led0/brightness"
@@ -374,7 +376,12 @@ QString MainWindow::GetDebianCodeName()
         if(codename.contains("bullseye"))
             codename = "bullseye";
     }
-    qDebug() << "CodeName is: " + codename;
+    if(GetPlat() == "imx6q"){
+        codename = GetComResult("lsb_release -sc");
+        if(codename.contains("bionic"))
+            codename = "bionic";
+    }
+    //qDebug() << "CodeName is: " + codename;
     return codename;
 }
 
@@ -753,7 +760,7 @@ void MainWindow::RecordTest()
         QMessageBox::warning(this,"Tips","Open Outside Audio First!!");
     }
 
-    if(board == "imx6q"){
+    if(board == "imx6q" && GetDebianCodeName() != "bionic"){
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.mp3");
         QString cmdstr = "amixer cset numid=7,iface=MIXER,name='Mic Volume' 3 > /dev/null && "
@@ -829,6 +836,16 @@ void MainWindow::RecordTest()
 
         system("killall gst-play-1.0");
         system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
+    }else if(board == "imx6q" && GetDebianCodeName() == "bionic") {
+        system("test -f /usr/hardwaretest/output.wav && rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(16000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        system("aplay /usr/hardwaretest/output.wav &");
     }
 }
 
@@ -877,6 +894,8 @@ void MainWindow::ChangeVolume()
         cmdstr = "amixer cset "+volumepath+" "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
+    }else if(board == "imx6q" && GetDebianCodeName() == "bionic") {
+        cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }
@@ -949,6 +968,11 @@ void MainWindow::audioInit()
     if(cpuplat == "rk3568" && GetDebianCodeName() != "bullseye"){
 	ui->horizontalSlider_audio_volume->setVisible(false);
 	ui->label_audio_volume->setVisible(false);
+    }
+
+    if (board == "imx6q" && GetDebianCodeName() == "bionic"){
+        ui->horizontalSlider_audio_volume->setRange(0,100);
+        ui->horizontalSlider_audio_volume->setValue(100);
     }
 
     ui->checkBox_buzzer->setChecked(false);
@@ -1377,7 +1401,7 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
-    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || cpuplat == "rk3568"){
+    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
@@ -1911,7 +1935,7 @@ void MainWindow::canStart()
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (board == "CS12800R101P" || cpuplat == "rk3568"){
+    } else if (board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
@@ -1928,7 +1952,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye" || board == "CS12800R101P" || cpuplat == "rk3568"){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -1946,7 +1970,7 @@ void MainWindow::canStop()
     QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if(cpuplat == "pi" && GetDebianCodeName()=="bullseye"){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic") || board == "CS12800R101P" || cpuplat == "rk3568"){
         cmdstr = "ip link set "+cannum+" down";
     } else {
         cmdstr = "canconfig "+cannum+" stop";

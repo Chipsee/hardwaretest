@@ -89,6 +89,7 @@ private slots:
     void readalltestresult();
     void alltest();
     void alltestInit();
+    void displayInfo();
 
 
 private:
@@ -130,6 +131,7 @@ private:
     QTimer * gpsreadTimer;
     QTimer * audioloopTimer;
     QTimer * alltestTimer;
+    QTimer *displayinfotimer;
     SlaveThread thread;
     bool buzzerflag;
     bool relayflag;

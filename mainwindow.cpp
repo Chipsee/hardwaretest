@@ -2425,6 +2425,14 @@ void MainWindow::showcanRequest(const QString &s)
                                       +s);
 }
 
+void MainWindow::displayInfo()
+{
+    if(GetFileValue(DLANLOGFILE).contains("Found RTL8153B")) {
+        ui->textBrowser_network_text->clear();
+        ui->textBrowser_network_text->setText(GetFileValue(DLANLOGFILE));
+    }
+}
+
 void MainWindow::autotestInit()
 {
 #if 0
@@ -2443,4 +2451,8 @@ void MainWindow::autotestInit()
     autoTesttimer = new QTimer(this);
     connect(autoTesttimer,SIGNAL(timeout()),SLOT(autoTest()));
     autoTesttimer->start(2000);
+
+    displayinfotimer = new QTimer(this);
+    connect(displayinfotimer,SIGNAL(timeout()),SLOT(displayInfo()));
+    displayinfotimer->start(5000);
 }

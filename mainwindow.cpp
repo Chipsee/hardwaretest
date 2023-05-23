@@ -1387,6 +1387,8 @@ void MainWindow::getipInfo()
     QString cmdstr = "";
     if (cpuplat == "pi" || cpuplat == "am335x"){
         cmdstr = "echo `ifconfig eth0 | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
+    } else if (cpuplat == "rk3568"){
+        cmdstr = "echo `hostname -I` >"+ipaddrpath;
     } else {
         cmdstr = "echo `ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >"+ipaddrpath;
         cmdstr = "echo `ifconfig eth1 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{print $1}'` >>"+ipaddrpath;
@@ -2181,6 +2183,18 @@ void MainWindow::autoTest()
         {
             qDebug() << port[i]->portName();
         }
+    }
+
+    if(cpuplat == "rk3568"){
+        port[5] = port[0];
+        port[0] = port[1];
+        port[1] = port[5];
+        port[5] = port[4];
+        port[4] = port[3];
+        port[3] = port[2];
+        port[2] = port[1];
+        port[1] = port[5];
+        board = "RK3568";
     }
 
     QString str("#################\n");

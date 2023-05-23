@@ -178,9 +178,25 @@ void SlaveThread::run()
         }
     }
 
+    if(*board == "RK3568"){
+        port[5] = port[0];
+        port[0] = port[1];
+        port[1] = port[5];
+        port[5] = port[4];
+        port[4] = port[3];
+        port[3] = port[2];
+        port[2] = port[1];
+        port[1] = port[5];
+        qDebug() << *board + " New Serial Port list(thread): ";
+        for(i=0; i<6; i++)
+        {
+            qDebug() << port[i]->portName();
+        }
+    }
+
     if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A"){
         //CAN INIT
-        if(*board == "CS12800R101P"){
+        if(*board == "CS12800R101P" || *board == "RK3568"){
             system("echo >/tmp/can0.txt");
             system("ip link set can0 down");
             system("ip link set can0 type can bitrate 10000 triple-sampling on loopback off ");
@@ -198,10 +214,17 @@ void SlaveThread::run()
         }
         system("candump can0 > /tmp/can0.txt &");
         if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board !="CS12800R101P") {
-            system("echo >/tmp/can1.txt");
-            system("canconfig can1 stop");
-            system("canconfig can1 bitrate 10000 ctrlmode triple-sampling on loopback off ");
-            system("canconfig can1 start");
+            if(*board == "RK3568"){
+                system("echo >/tmp/can1.txt");
+                system("ip link set can1 down");
+                system("ip link set can1 type can bitrate 10000 triple-sampling on loopback off ");
+                system("ip link set can1 up");
+            }else{
+                system("echo >/tmp/can1.txt");
+                system("canconfig can1 stop");
+                system("canconfig can1 bitrate 10000 ctrlmode triple-sampling on loopback off ");
+                system("canconfig can1 start");
+            }
             system("candump can1 > /tmp/can1.txt &");
         }
     }
@@ -275,14 +298,14 @@ void SlaveThread::run()
                 //qDebug() << "read can file";
                 QTextStream in(&file);
                 QString line=in.readLine(); // The First Line
-                if(*board !="CS12800R101P")
+                if(*board !="CS12800R101P" || *board != "RK3568")
                     line = in.readLine();   // The Second Line
                 emit this->canrequest("can0\n"+line);
                 //qDebug() << line;
                 if(line.contains("11 22 33 44 55 66 77 88"))
                 {
                     //qDebug() << "have 11223344";
-                    if(*board == "CS12800R101P"){
+                    if(*board == "CS12800R101P" || *board == "RK3568"){
                         system("cansend can0 5A1#1122334455667788");
                         //qDebug() << "Cansend can0";
                     }else{
@@ -298,10 +321,17 @@ void SlaveThread::run()
                 if (file1.open(QIODevice::ReadWrite)){
                     QTextStream in(&file1);
                     QString line=in.readLine(); // The First Line
-                    line = in.readLine();   // The Second Line
+                    if(*board != "RK3568")
+                    	line = in.readLine();   // The Second Line
                     emit this->canrequest("can1\n"+line);
                     if(line.contains("11 22 33 44 55 66 77 88"))
-                        system("cansend can1 0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88");
+                    {
+                        if(*board == "RK3568"){
+                            system("cansend can1 5A1#1122334455667788");
+                        }else{
+                            system("cansend can1 0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88");
+                        }
+                    }
                 }
                 file1.close();
             }

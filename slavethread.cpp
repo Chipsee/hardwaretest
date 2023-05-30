@@ -298,7 +298,7 @@ void SlaveThread::run()
                 //qDebug() << "read can file";
                 QTextStream in(&file);
                 QString line=in.readLine(); // The First Line
-                if(*board !="CS12800R101P" || *board != "RK3568")
+                if(*board !="CS12800R101P" && *board != "RK3568")
                     line = in.readLine();   // The Second Line
                 emit this->canrequest("can0\n"+line);
                 //qDebug() << line;

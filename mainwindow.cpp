@@ -946,14 +946,14 @@ void MainWindow::audioInit()
     }else if (board == "bbbexp"){
     }else if (cpuplat == "pi"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
-        ui->horizontalSlider_audio_volume->setValue(50);
+        ui->horizontalSlider_audio_volume->setValue(100);
         if(GetDebianCodeName() == "bullseye"){
             //cmdstr = "amixer cset "+volumepath+" 50%";
             ui->horizontalSlider_audio_volume->setVisible(false);
             ui->label_audio_volume->setVisible(false);
         }
         else
-            cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 50%";
+            cmdstr = "pactl set-sink-mute 0 false; pactl set-sink-volume 0 100%";
         system(cmdstr.toLocal8Bit());
 	if(board != "LRRA4-101" && board != "CS12800RA4101A" ) {
 		ui->pushButton_record->setVisible(false);

@@ -1429,7 +1429,11 @@ void MainWindow::mobile4gEnable()
     ui->pushButton_4gDisable->setDisabled(false);
     ui->comboBox_4g->setDisabled(true);
     QString nettype = ui->comboBox_4g->currentText();
-    QString cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
+    QString cmdstr;
+    if (cpuplat == "rk3568")
+        cmdstr = "ifconfig wwan0 down && /opt/chipsee/test/gsm/linux-ppp-scripts/quectel-pppd.sh /dev/ttyUSB3 " + nettype + "&";
+    else
+        cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
     system(cmdstr.toLocal8Bit());
     ui->textBrowser_network_text->setText("4G Disabling, press 'Netinfo' to know status.");
 }
@@ -1439,7 +1443,11 @@ void MainWindow::mobile4gDisable()
     ui->pushButton_4gDisable->setDisabled(true);
     ui->pushButton_4gEnable->setDisabled(false);
     ui->comboBox_4g->setDisabled(false);
-    QString cmdstr = "killall -9 quectel-CM";
+    QString cmdstr;
+    if (cpuplat == "rk3568")
+        cmdstr = "/opt/chipsee/test/gsm/linux-ppp-scripts/quectel-ppp-kill";
+    else
+        cmdstr = "killall -9 quectel-CM";
     system(cmdstr.toLocal8Bit());
     ui->textBrowser_network_text->setText("4G Disabled");
 }

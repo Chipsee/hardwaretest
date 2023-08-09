@@ -6,14 +6,14 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QCoreApplication::setAttribute(Qt::AA_SynthesizeTouchForUnhandledMouseEvents, true);
     QApplication a(argc, argv);
 
     QDesktopWidget* desktopWidget = QApplication::desktop();
     int width = desktopWidget->width();
     int height = desktopWidget->height();
-    QString widthstr = QString::number(width,10);
-    QString heightstr = QString::number(height,10);
-    qDebug() << "Screen is: " + widthstr + "x" + heightstr;
+    qDebug() << "Desktop is: " + QString::number(QApplication::desktop()->width()) + "x" + QString::number(QApplication::desktop()->height());
+    qDebug() << "Screen is: " + QString::number(width,10) + "x" + QString::number(height,10);
     QFont font = a.font();
 
     MainWindow w;

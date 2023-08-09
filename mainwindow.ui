@@ -305,6 +305,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBox_videoloop">
+             <property name="text">
+              <string>VideoLoop</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushButton_lcdtest">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -634,6 +641,13 @@
               </widget>
              </item>
             </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_BluetoothTest">
+             <property name="text">
+              <string>Bluetooth Test</string>
+             </property>
+            </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_4G">
@@ -1191,11 +1205,11 @@
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="buttonGroup_led1"/>
   <buttongroup name="buttonGroup_led2"/>
-  <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_out_2"/>
   <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_led1"/>
+  <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

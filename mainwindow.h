@@ -6,6 +6,8 @@
 #include <QtSerialPort/QSerialPort>
 #include <QDateTime>
 #include "slavethread.h"
+#include "device.h"
+#include "lcdtester.h"
 
 namespace Ui {
 class MainWindow;
@@ -13,6 +15,8 @@ class MainWindow;
 
 class timedialog;
 class QIntValidator;
+class DeviceDiscoveryDialog;
+class LCDTester;
 
 class MainWindow : public QMainWindow
 {
@@ -57,6 +61,7 @@ private slots:
     void rs485SendEnable(bool);
     void readDate();
     void writeDate();
+    void BluetoothTest();
     void wifiEnable();
     void wifiDisable();
     void wifiInfoDisplay();
@@ -86,6 +91,7 @@ private slots:
     void getusbInfo();
     void getipInfo();
     void AudioLoop();
+    void VideoLoop();
     void readalltestresult();
     void alltest();
     void alltestInit();
@@ -111,6 +117,8 @@ private:
     QByteArray autodata;
     QIntValidator *intValidator;
     timedialog *timeset;
+    DeviceDiscoveryDialog *bluetoothdialog;
+    LCDTester *lcd;
     QTimer *setTimeTimer;
     QTimer *gpioInStatuTimer;
     QTimer *gpioOutStatuTimer;
@@ -130,6 +138,7 @@ private:
     QTimer * writeTimer;
     QTimer * gpsreadTimer;
     QTimer * audioloopTimer;
+    QTimer * videoloopTimer;
     QTimer * alltestTimer;
     QTimer *displayinfotimer;
     SlaveThread thread;
@@ -138,6 +147,9 @@ private:
     bool audioflag;
     bool canflag;
     bool autoflag;
+    bool vautoflag;
+    int lcdwidth;
+    int lcdheight;
 
     struct serailSettings {
             QString name;
@@ -166,9 +178,11 @@ private:
     QString GetPiBoard();
     QString GetBoard();
     QString GetDebianCodeName();
+    QString GetKernelVersion();
     void Delay_MSec_Suspend(int);
     void fillPortsParameters();
     void gpioExport(QString);
+    void screenInit();
     void boardInit();
     void dateTimeInit();
     void ledInit();

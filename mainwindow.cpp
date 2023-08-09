@@ -15,6 +15,12 @@
 #include <QtNetwork/QHostAddress>
 #include "version.h"
 #include <QDesktopWidget>
+#include "device.h"
+#include <QScreen>
+#include <QMediaPlayer>
+#include <QVideoWidget>
+#include <QSoundEffect>
+
 
 /*
  * If you want to change the board,
@@ -154,6 +160,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     audioflag = true;
     autoflag = false;
+    vautoflag = false;
+
+    // Screen init
+    screenInit();
 
     // boardInit
     boardInit();
@@ -209,9 +219,17 @@ MainWindow::~MainWindow()
 /*
  *  Global Function
  *
- *  GetTempFileValue() GetFileValue() GetComResult() GetPlat()
+ *  screenInit() GetTempFileValue() GetFileValue() GetComResult() GetPlat()
  *
  */
+void MainWindow::screenInit()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect screenGeometry = screen->geometry();
+    lcdwidth = screenGeometry.width();
+    lcdheight = screenGeometry.height();
+    //qDebug() << "Screen is:" + QString::number(lcdwidth) + "x" +QString::number(lcdheight);
+}
 
 QString MainWindow::GetTempFileValue()
 {
@@ -362,6 +380,15 @@ QString MainWindow::GetBoard()
 
     return board;
 
+}
+
+QString MainWindow::GetKernelVersion()
+{
+    QString kvr="";
+    kvr = GetComResult("uname -r");
+    if(kvr.contains("5.10.52"))
+        kvr="5.10.52";
+    return kvr;
 }
 
 QString MainWindow::GetDebianCodeName()
@@ -737,8 +764,17 @@ void MainWindow::AudioLoop()
 void MainWindow::AudioTest()
 {
     if(!autoflag){
-	QMessageBox::information(this,"Tips","Press OK to Play Audio!");
+        QMessageBox::information(this,"Tips","Press OK to Play Audio!");
     }
+
+    if(board == "imx6q" && GetKernelVersion() == "5.10.52") {
+        QSoundEffect *effect = new QSoundEffect(this);
+        effect->setSource(QUrl("qrc:/medias/AudioTest.wav"));
+        effect->setVolume(1.0);   //0.0 ~ 1.0 0% ~ 100%
+        effect->play();
+        return;
+    }
+
     QString cmdstr = "";
     if(cpuplat == "pi") {
         system("killall vlc");
@@ -883,6 +919,13 @@ void MainWindow::ChangeVolume()
     int volumevalue = ui->horizontalSlider_audio_volume->value();
     QString value = QString::number(volumevalue,10); // int to string
     QString cmdstr = "";
+
+    if(board == "imx6q" && GetKernelVersion() == "5.10.52") {
+        cmdstr = "amixer cset name='Headphone Playback Volume' "+value+"% &";
+        popen(cmdstr.toLocal8Bit(),"r");
+        return;
+    }
+
     if(cpuplat == "pi"){
         if(GetDebianCodeName()=="bullseye")
             cmdstr = "amixer cset "+volumepath+" "+value+"% &";
@@ -989,9 +1032,22 @@ void MainWindow::audioInit()
 /*
  *  Display
  *
- *  VideoTest() ChangeBacklight() MaxBacklightValue() GetBacklightValue() LCDTest() TouchTest() displayInit()
+ *  VideoLoop() VideoTest() ChangeBacklight() MaxBacklightValue() GetBacklightValue() LCDTest() TouchTest() displayInit()
  *
  */
+
+void MainWindow::VideoLoop()
+{
+    if(ui->checkBox_videoloop->isChecked()){
+        vautoflag=true;
+        VideoTest();
+        videoloopTimer->start(25000);
+    }
+    else {
+        vautoflag=false;
+        videoloopTimer->stop();
+    }
+}
 
 void MainWindow::VideoTest()
 {
@@ -999,7 +1055,32 @@ void MainWindow::VideoTest()
         QMessageBox::critical(this,"ERROR","IMX6U is Can't play video well!!");
         return;
     }
-    QMessageBox::warning(this,"Tips","Press OK to Play Video!");
+
+    if(!vautoflag){
+        QMessageBox::warning(this,"Tips","Press OK to Play Video!");
+    }
+
+    if(board == "imx6q" && GetKernelVersion() == "5.10.52")
+    {
+
+        QMediaPlayer *player = new QMediaPlayer(this);
+        QVideoWidget *videoWidget = new QVideoWidget(this);
+        videoWidget->setFixedSize(360,210);
+        player->setVideoOutput(videoWidget);
+        connect(player, &QMediaPlayer::stateChanged, [=](QMediaPlayer::State state) {
+        if (state == QMediaPlayer::StoppedState) {
+            player->stop();
+            videoWidget->close();
+        }
+        });
+
+        player->setMedia(QUrl("qrc:/medias/VideoTest.mp4"));
+        player->setVolume(100);
+        videoWidget->show();
+        player->play();
+        return;
+    }
+
     QString cmdstr="";
     if(cpuplat == "pi") {
         cmdstr = "cvlc "+ videopath + " vlc://quit" +"&";
@@ -1077,7 +1158,12 @@ int MainWindow::GetBacklightValue()
 
 void MainWindow::LCDTest()
 {
-    system("/usr/bin/LCDTester");
+    //system("/usr/bin/LCDTester");
+
+    //QQmlApplicationEngine engine;
+    //engine.load(QUrl(QStringLiteral("qrc:/lcdtest.qml")));
+    //engine.load(QUrl(QStringLiteral("qrc:/lcdtest.qml")));
+    qDebug() << "here";
 }
 
 void MainWindow::TouchTest()
@@ -1088,7 +1174,13 @@ void MainWindow::TouchTest()
 void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
-    connect(ui->pushButton_lcdtest,&QPushButton::clicked,this,&MainWindow::LCDTest);
+    // try to use inter LCDTester class to test LCD
+    if(board == "imx6q" && GetKernelVersion() == "5.10.52"){
+        lcd = new LCDTester;
+        connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
+    } else {
+        connect(ui->pushButton_lcdtest,&QPushButton::clicked,this,&MainWindow::LCDTest);
+    }
     //connect(ui->pushButton_touchtest,&QPushButton::clicked,this,&MainWindow::TouchTest);
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
 
@@ -1104,8 +1196,13 @@ void MainWindow::displayInit()
     if(cpuplat == "am335x"){
         ui->pushButton_video->setVisible(false);
     }
-
     connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
+
+    videoloopTimer = new QTimer(this);
+    videoloopTimer->stop();
+    ui->checkBox_videoloop->setChecked(false);
+    connect(videoloopTimer,SIGNAL(timeout()),SLOT(VideoTest()));
+    connect(ui->checkBox_videoloop,SIGNAL(toggled(bool)),this,SLOT(VideoLoop()));
 }
 
 /*
@@ -1320,26 +1417,26 @@ void MainWindow::serialInit()
 /*
  *  NetWork
  *
- *  wifiEnable() wifiDisable() wifiDisplayInfo() networkInit() getipInfo() networkautotest()
+ *  BluetoothTest() wifiEnable() wifiDisable() wifiDisplayInfo() networkInit() getipInfo() networkautotest()
  *
  */
+
+void MainWindow::BluetoothTest()
+{
+    bluetoothdialog = new DeviceDiscoveryDialog();
+    bluetoothdialog->showBluetoothDialog();
+}
 
 void MainWindow::wifiEnable()
 {
     ui->textBrowser_network_text->clear();
-#if 0
-    ui->textBrowser_network_text->setText("WIFI Enabling!!");
-    system("ifconfig wlan0 up &");
-    system("wifienable.sh &");
-    QMessageBox::warning(this,"Tips","Need Time to complete, Press OK to wait.");
-    this->ui->textBrowser_network_text->setText("WIFI Enabled!");
-#else
     popen("ifconfig wlan0 up","r");
     popen("wifienable.sh","r");
     this->ui->textBrowser_network_text->setText("WIFI will be open in background, press \"Network Info\" to check\n\n\n\n*NOTE:\nUsing follow command to config YOURS wifi ssid and password first\n\n#wpa_passphrase \"wifi_ssid\" \"wifi_password\" >> /etc/wpa_supplicant.conf\n\nExample:\nctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nctrl_interface_group=0\nnetwork={\n        ssid=\"wifi_ssid\"\n        #psk=\"wifi_password\"\n        psk=0fbbe9e700815707d38305d89e3260f3b2334d0a0979c61be8eeea6ca9b0cd64\n}");
     this->ui->pushButton_netInfo->setText("Network Info");
+    this->ui->pushButton_wifiEnable->setDisabled(true);
+    this->ui->pushButton_wifiDisable->setDisabled(false);
     QMessageBox::warning(this,"Tips","Need Time to complete, Press OK to wait.");
-#endif
 }
 
 void MainWindow::wifiDisable()
@@ -1347,6 +1444,10 @@ void MainWindow::wifiDisable()
     ui->textBrowser_network_text->clear();
     ui->textBrowser_network_text->setText("WIFI Disabling!!");
     system("ifconfig wlan0 down");
+    system("killall wpa_supplicant");
+    system("killall udhcpc");
+    this->ui->pushButton_wifiEnable->setDisabled(false);
+    this->ui->pushButton_wifiDisable->setDisabled(true);
     ui->textBrowser_network_text->setText("WIFI Disabled!!");
     this->ui->pushButton_netInfo->setText("Network Info");
 }
@@ -1404,10 +1505,13 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiEnable,&QPushButton::clicked,this,&MainWindow::wifiEnable);
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
+    connect(ui->pushButton_BluetoothTest,&QPushButton::clicked,this,&MainWindow::BluetoothTest);
+    ui->pushButton_wifiDisable->setDisabled(true);
     if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
+
 }
 
 void MainWindow::networkautotest()
@@ -1946,7 +2050,7 @@ void MainWindow::canStart()
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
+    } else if (board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")  || (board == "imx6q" && GetKernelVersion() == "5.10.52")){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
@@ -1963,7 +2067,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52")){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -1981,7 +2085,7 @@ void MainWindow::canStop()
     QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic") || board == "CS12800R101P" || cpuplat == "rk3568"){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52") || board == "CS12800R101P" || cpuplat == "rk3568"){
         cmdstr = "ip link set "+cannum+" down";
     } else {
         cmdstr = "canconfig "+cannum+" stop";

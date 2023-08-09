@@ -4,5 +4,9 @@
         <file>images/IO_high.png</file>
         <file>images/IO_low.png</file>
         <file>resourcefiles/hardwaretest/ipaddr</file>
+        <file>medias/AudioTest.aac</file>
+        <file>medias/AudioTest.wav</file>
+        <file>medias/AutoTestFinish.aac</file>
+        <file>medias/VideoTest.mp4</file>
     </qresource>
 </RCC>

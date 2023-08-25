@@ -20,7 +20,8 @@
 #include <QMediaPlayer>
 #include <QVideoWidget>
 #include <QSoundEffect>
-
+#include <QSettings>
+#include <QtGui/QCloseEvent>
 
 /*
  * If you want to change the board,
@@ -161,6 +162,11 @@ MainWindow::MainWindow(QWidget *parent) :
     audioflag = true;
     autoflag = false;
     vautoflag = false;
+
+    // Read the window position from QSettings
+    // config file is located in .config/Chipsee/hardwaretest.conf
+    QSettings settings("Chipsee", "hardwaretest");
+    restoreGeometry(settings.value("windowGeometry").toByteArray());
 
     // Screen init
     screenInit();
@@ -2581,4 +2587,22 @@ void MainWindow::autotestInit()
     displayinfotimer = new QTimer(this);
     connect(displayinfotimer,SIGNAL(timeout()),SLOT(displayInfo()));
     displayinfotimer->start(5000);
+}
+
+// Override the closeEvent method
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // Write the window position to QSettings
+    QSettings settings("Chipsee", "hardwaretest");
+    settings.setValue("windowGeometry", saveGeometry());
+    event->accept();
+}
+
+// Override the showEvent method
+void MainWindow::showEvent(QShowEvent *event)
+{
+    // Read the window position from QSettings
+    QSettings settings("Chipsee", "hardwaretest");
+    restoreGeometry(settings.value("windowGeometry").toByteArray());
+    event->accept();
 }

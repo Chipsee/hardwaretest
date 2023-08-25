@@ -1164,12 +1164,9 @@ int MainWindow::GetBacklightValue()
 
 void MainWindow::LCDTest()
 {
-    //system("/usr/bin/LCDTester");
+    system("/usr/bin/LCDTester");
 
-    //QQmlApplicationEngine engine;
-    //engine.load(QUrl(QStringLiteral("qrc:/lcdtest.qml")));
-    //engine.load(QUrl(QStringLiteral("qrc:/lcdtest.qml")));
-    qDebug() << "here";
+    //qDebug() << "here";
 }
 
 void MainWindow::TouchTest()

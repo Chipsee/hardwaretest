@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     w.move((QApplication::desktop()->width()-w.width())/2,(QApplication::desktop()->height()-w.height())/2);
 
     if(width==1024)
-        w.showFullScreen();
+        w.move(0,0);
 
     return a.exec();
 }

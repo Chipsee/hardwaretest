@@ -353,7 +353,7 @@ QString MainWindow::GetBoard()
         board.remove(QChar('\n'),Qt::CaseInsensitive);
     } else
     {
-        board = "NULL";
+        board = "Chipsee Board";
     }
 
     if(GetPlat() == "rk3399")
@@ -375,12 +375,18 @@ QString MainWindow::GetBoard()
         QString CS12800_RK3568_101 = GetComResult("grep -c rk3568-eisd-1280800 /proc/device-tree/compatible");
         QString CS10600_RK3568_070 = GetComResult("grep -c rk3568-eisd-1024600 /proc/device-tree/compatible");
         QString CS12720_RK3568_050 = GetComResult("grep -c rk3568-eisd-1280720 /proc/device-tree/compatible");
+        QString CS12720_RK3568_120_150 = GetComResult("grep -c rk3568-eisd-1024768 /proc/device-tree/compatible");
+        QString CS12720_RK3568_133_156_215_236 = GetComResult("grep -c rk3568-eisd-19201080 /proc/device-tree/compatible");
         if(CS12800_RK3568_101.left(1) == "1"){
             board = "CS12800_RK3568_101";
         } else if(CS10600_RK3568_070.left(1) == "1"){
             board = "CS10600_RK3568_070";
         } else if(CS12720_RK3568_050.left(1) == "1"){
             board = "CS12720_RK3568_050";
+        } else if(CS12720_RK3568_120_150.left(1) == "1"){
+            board = "CS12720_RK3568_120_150";
+        } else if(CS12720_RK3568_133_156_215_236.left(1) == "1"){
+            board = "CS12720_RK3568_133_156_215_236";
         }
     }
 
@@ -1510,11 +1516,10 @@ void MainWindow::networkInit()
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
     connect(ui->pushButton_BluetoothTest,&QPushButton::clicked,this,&MainWindow::BluetoothTest);
     ui->pushButton_wifiDisable->setDisabled(true);
-    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
+    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && GetDebianCodeName() == "bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
-
 }
 
 void MainWindow::networkautotest()

@@ -416,6 +416,11 @@ QString MainWindow::GetDebianCodeName()
         if(codename.contains("bullseye"))
             codename = "bullseye";
     }
+    if(GetPlat() == "rk3568"){
+        codename = GetComResult("lsb_release -c");
+        if(codename.contains("focal"))
+            codename = "focal";
+    }
     if(GetPlat() == "imx6q"){
         codename = GetComResult("lsb_release -sc");
         if(codename.contains("bionic"))
@@ -1516,7 +1521,7 @@ void MainWindow::networkInit()
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
     connect(ui->pushButton_BluetoothTest,&QPushButton::clicked,this,&MainWindow::BluetoothTest);
     ui->pushButton_wifiDisable->setDisabled(true);
-    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && GetDebianCodeName() == "bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic")){
+    if(cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && GetDebianCodeName() == "focal") || (cpuplat == "rk3568" && GetDebianCodeName() == "bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
     }
@@ -1615,7 +1620,8 @@ void MainWindow::readGPSData()
 
 void MainWindow::gpsEnable()
 {
-    QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\r\n");
+    //QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\r\n");
+    QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",31\r\n");
     QString startcmd("AT+QGPS=1\r\n");
     if(atport->isOpen())
         atport->close();

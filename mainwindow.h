@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtGlobal>
 #include <QMainWindow>
 #include <QTimer>
 #include <QtSerialPort/QSerialPort>
@@ -8,6 +9,7 @@
 #include "slavethread.h"
 #include "device.h"
 #include "lcdtester.h"
+#include "utils.h"
 
 namespace Ui {
 class MainWindow;
@@ -121,6 +123,7 @@ private:
     timedialog *timeset;
     DeviceDiscoveryDialog *bluetoothdialog;
     LCDTester *lcd;
+    Utils utils;
     QTimer *setTimeTimer;
     QTimer *gpioInStatuTimer;
     QTimer *gpioOutStatuTimer;
@@ -175,6 +178,9 @@ private:
     QString GetTempFileValue();
     QString GetFileValue(QString);
     QString GetComResult(QString);
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    QString executeShellCommand(const QString &command, const QStringList &arguments);
+#endif
     QString GetPlat();
     QString GetResolution();
     QString GetPiBoard();

@@ -1,4 +1,5 @@
 *.user
+*.user.*
 .qmake.stash
 ./hardwaretest
 Makefile
@@ -12,3 +13,4 @@ LCDTester/qrc_*
 moc_*
 qrc_*
 ui_*
+.qtc_clangd/

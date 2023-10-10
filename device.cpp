@@ -134,10 +134,12 @@ void DeviceDiscoveryDialog::scanFinished()
 
 void DeviceDiscoveryDialog::setGeneralUnlimited(bool unlimited)
 {
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
     if (unlimited)
         discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
     else
         discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
+#endif
 }
 
 void DeviceDiscoveryDialog::itemActivated(QListWidgetItem *item)

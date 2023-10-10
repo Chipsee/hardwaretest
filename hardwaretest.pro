@@ -23,11 +23,13 @@ SOURCES += main.cpp\
     slavethread.cpp \
     device.cpp \
     service.cpp \
-    lcdtester.cpp
+    lcdtester.cpp \
+    utils.cpp
 
 HEADERS  += mainwindow.h \
     timedialog.h \
     slavethread.h \
+    utils.h \
     version.h \
     device.h \
     service.h \

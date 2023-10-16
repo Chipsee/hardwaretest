@@ -8,5 +8,6 @@
         <file>medias/AudioTest.wav</file>
         <file>medias/AutoTestFinish.aac</file>
         <file>medias/VideoTest.mp4</file>
+        <file>medias/h264.mp4</file>
     </qresource>
 </RCC>

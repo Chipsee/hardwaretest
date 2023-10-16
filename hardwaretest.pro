@@ -15,9 +15,12 @@ TEMPLATE = app
 target.path = /usr/bin
 INSTALLS += target
 
+LIBS += -lgpiod
+
 #include(qextserialport/src/qextserialport.pri)
 
 SOURCES += main.cpp\
+    gpiocontroller.cpp \
         mainwindow.cpp \
     timedialog.cpp \
     slavethread.cpp \
@@ -27,6 +30,7 @@ SOURCES += main.cpp\
     utils.cpp
 
 HEADERS  += mainwindow.h \
+    gpiocontroller.h \
     timedialog.h \
     slavethread.h \
     utils.h \

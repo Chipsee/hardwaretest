@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
     MainWindow w;
 
     if(height <= 600 && width <= 1024){
-        qDebug()<< "will use 6 font";
-        //font.setPointSize(6);
-        //a.setFont(font);
-	w.resize(800,500); //This will use min size
+        //qDebug()<< "will use 6 font";
+        font.setPointSize(6);
+        a.setFont(font);
+        w.resize(800,500); //This will use min size
     }
 
     w.show();

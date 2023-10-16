@@ -166,7 +166,7 @@
 #define IMX8MPVOLUMEPATH "name='Headphone Volume'"
 #define IMX8MPBUZZERPATH BUZZERPATH
 #define IMX8MPIPPATH IPPATH
-#define IMX8MPVIDEOPATH VIDEOPATH
+#define IMX8MPVIDEOPATH "/usr/hardwaretest/h264.mp4"
 #define IMX8MPBACKLIGHTPATH "/sys/class/backlight/backlight/brightness"
 #define IMX8MPMAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 #define IMX8MPUSBDEBUGFILEPATH USBDEBUGFILEPATH
@@ -180,6 +180,14 @@ MainWindow::MainWindow(QWidget *parent) :
     audioflag = true;
     autoflag = false;
     vautoflag = false;
+
+    // Libgpiod
+    for (int i=0; i<4; i++){
+        out.push_back(new GpioController());
+        in.push_back(new GpioController());
+    }
+
+    buzzer = new GpioController();
 
     // Read the window position from QSettings
     // config file is located in .config/Chipsee/hardwaretest.conf
@@ -681,19 +689,19 @@ void MainWindow::BoardSetting()
         audiopath = IMX8MPAUDIOPATH;
         cueaudiopath = IMX8MPCUEAUDIOPATH;
         volumepath = IMX8MPVOLUMEPATH;
-        buzzerpath = IMX8MPBUZZERPATH;
+        buzzerpath = "gpiochip2 22";
         backlightpath = IMX8MPBACKLIGHTPATH;
         maxbacklightpath = IMX8MPMAXBACKLIGHTPATH;
         videopath = IMX8MPVIDEOPATH;
         ipaddrpath = IMX8MPIPPATH;
-        gpioOutArray[0] = "1";
-        gpioOutArray[1] = "2";
-        gpioOutArray[2] = "3";
-        gpioOutArray[3] = "4";
-        gpioInArray[0] = "5";
-        gpioInArray[1] = "6";
-        gpioInArray[2] = "7";
-        gpioInArray[3] = "8";
+        gpioOutArray[0] = "gpiochip0 8";
+        gpioOutArray[1] = "gpiochip0 14";
+        gpioOutArray[2] = "gpiochip0 13";
+        gpioOutArray[3] = "gpiochip0 12";
+        gpioInArray[0] = "gpiochip0 11";
+        gpioInArray[1] = "gpiochip0 7";
+        gpioInArray[2] = "gpiochip0 6";
+        gpioInArray[3] = "gpiochip0 5";
     }
 }
 
@@ -888,7 +896,7 @@ void MainWindow::AudioTest()
         QMessageBox::information(this,"Tips","Press OK to Play Audio!");
     }
 
-    if(board == "imx6q" && GetKernelVersion() == "5.10.52") {
+    if((board == "imx6q" && GetKernelVersion() == "5.10.52") || cpuplat == "imx8mp") {
         QSoundEffect *effect = new QSoundEffect(this);
         effect->setSource(QUrl("qrc:/medias/AudioTest.wav"));
         effect->setVolume(1.0);   //0.0 ~ 1.0 0% ~ 100%
@@ -1077,7 +1085,7 @@ void MainWindow::ChangeVolume()
         cmdstr = "amixer cset "+volumepath+" "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
-    }else if(board == "imx6q" && GetDebianCodeName() == "bionic") {
+    }else if((board == "imx6q" && GetDebianCodeName() == "bionic") || cpuplat == "imx8mp") {
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
@@ -1087,24 +1095,22 @@ void MainWindow::ChangeVolume()
 
 void MainWindow::EnableBuzzer()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    QString cmdstr = "gpioset 2 22=1";
-    utils.executeCommand(cmdstr);
-#else
-    QString cmdstr = "echo 1 >"+buzzerpath+"&";
-    system(cmdstr.toLocal8Bit());
-#endif
+    if(cpuplat == "imx8mp"){
+        buzzer->writeGpioValue(1);
+    } else {
+        QString cmdstr = "echo 1 >"+buzzerpath+"&";
+        system(cmdstr.toLocal8Bit());
+    }
 }
 
 void MainWindow::DisableBuzzer()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    QString cmdstr = "gpioset 2 22=0";
-    utils.executeCommand(cmdstr);
-#else
-    QString cmdstr = "echo 0 >"+buzzerpath+"&";
-    system(cmdstr.toLocal8Bit());
-#endif
+    if(cpuplat == "imx8mp") {
+        buzzer->writeGpioValue(0);
+    } else {
+        QString cmdstr = "echo 0 >"+buzzerpath+"&";
+        system(cmdstr.toLocal8Bit());
+    }
 }
 
 void MainWindow::ChangeBuzzerState()
@@ -1153,7 +1159,7 @@ void MainWindow::audioInit()
             ui->pushButton_record->setVisible(false);
         }
 
-    }else if ( cpuplat == "px30" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
+    }else if ( cpuplat == "imx8mp" || cpuplat == "px30" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
     }else if (cpuplat == "rk3399"){
@@ -1161,9 +1167,14 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(70);
     }
 
-    if(cpuplat == "imx8mp" || (cpuplat == "rk3568" && GetDebianCodeName() != "bullseye")){
+    if((cpuplat == "rk3568" && GetDebianCodeName() != "bullseye")){
         ui->horizontalSlider_audio_volume->setVisible(false);
         ui->label_audio_volume->setVisible(false);
+    }
+
+    if(cpuplat == "imx8mp"){
+        buzzer->initializeGpio(buzzerpath.split(" ").at(0).toUtf8().constData(),buzzerpath.split(" ").at(1).toInt());
+        buzzer->setGpioDirection(true);
     }
 
     ui->checkBox_buzzer->setChecked(false);
@@ -1198,8 +1209,8 @@ void MainWindow::VideoLoop()
 
 void MainWindow::VideoTest()
 {
-    if(board == "imx6u" || cpuplat == "imx8mp"){
-        QMessageBox::critical(this,"ERROR","IMX6U and IMX8MP Can't play video well!!");
+    if(board == "imx6u"){
+        QMessageBox::critical(this,"ERROR","IMX6U Can't play video well!!");
         return;
     }
 
@@ -1207,7 +1218,7 @@ void MainWindow::VideoTest()
         QMessageBox::warning(this,"Tips","Press OK to Play Video!");
     }
 
-    if(board == "imx6q" && GetKernelVersion() == "5.10.52")
+    if((board == "imx6q" && GetKernelVersion() == "5.10.52"))
     {
 
         QMediaPlayer *player = new QMediaPlayer(this);
@@ -1215,8 +1226,8 @@ void MainWindow::VideoTest()
         videoWidget->setFixedSize(360,210);
         player->setVideoOutput(videoWidget);
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-        connect(player, &QMediaPlayer::playbackStateChanged, this, [=](QMediaPlayer::PlaybackState state) {
-            if (state == QMediaPlayer::StoppedState) {
+        connect(player, &QMediaPlayer::mediaStatusChanged, this, [=](QMediaPlayer::MediaStatus state) {
+            if (state == QMediaPlayer::EndOfMedia) {
                 player->stop();
                 videoWidget->close();
             }
@@ -1714,7 +1725,7 @@ void MainWindow::mobile4gEnable()
     else
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
     system(cmdstr.toLocal8Bit());
-    ui->textBrowser_network_text->setText("4G Disabling, press 'Netinfo' to know status.");
+    ui->textBrowser_network_text->setText("4G Enabling, press 'Netinfo' to know status.");
 }
 
 void MainWindow::mobile4gDisable()
@@ -2033,6 +2044,28 @@ void MainWindow::setGPIOModel(QString gpionum, QString model)
 
 void MainWindow::setGPIOInStatu()
 {
+    if(cpuplat == "imx8mp"){
+        if(in[0]->readGpioValue() == 1)
+            ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
+        else
+            ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_low.png"));
+        if(in[1]->readGpioValue() == 1)
+            ui->label_in_2_in->setPixmap(QPixmap(":/images/IO_high.png"));
+        else
+            ui->label_in_2_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+        if(in[2]->readGpioValue() == 1)
+            ui->label_in_3_in->setPixmap(QPixmap(":/images/IO_high.png"));
+        else
+            ui->label_in_3_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+        if(in[3]->readGpioValue() == 1)
+            ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_high.png"));
+        else
+            ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
+        return;
+    }
+
    if(getGPIOValue(gpioInArray[0])=="1\n")
        ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
    else
@@ -2056,6 +2089,28 @@ void MainWindow::setGPIOInStatu()
 
 void MainWindow::setGPIOOutStatu()
 {
+    if(cpuplat == "imx8mp"){
+        if(ui->radioButton_out_1_high->isChecked())
+            out[0]->writeGpioValue(1);
+        else
+            out[0]->writeGpioValue(0);
+
+        if(ui->radioButton_out_2_high->isChecked())
+            out[1]->writeGpioValue(1);
+        else
+            out[1]->writeGpioValue(0);
+
+        if(ui->radioButton_out_3_high->isChecked())
+            out[2]->writeGpioValue(1);
+        else
+            out[2]->writeGpioValue(0);
+
+        if(ui->radioButton_out_4_high->isChecked())
+            out[3]->writeGpioValue(1);
+        else
+            out[3]->writeGpioValue(0);
+        return;
+    }
     if(ui->radioButton_out_1_high->isChecked())
         setGPIOValue(gpioOutArray[0],"1");
     else
@@ -2142,7 +2197,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || cpuplat == "imx8mp") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -2208,6 +2263,18 @@ void MainWindow::gpioInit()
         connect(gpioInStatuTimer,SIGNAL(timeout()),this,SLOT(setGPIOInStatu()));
         gpioInStatuTimer->start(50);
         connect(ui->pushButton_gpioRefresh,&QPushButton::clicked,this,&MainWindow::setGPIOInStatu);
+    }
+
+    if(cpuplat == "imx8mp") {
+        QStringList list;
+        for(int i=0; i<4; i++){
+            list = gpioOutArray[i].split(" ");
+            out[i]->initializeGpio(list.at(0).toUtf8().constData(),list.at(1).toInt());
+            out[i]->setGpioDirection(true);
+            list = gpioInArray[i].split(" ");
+            in[i] ->initializeGpio(list.at(0).toUtf8().constData(),list.at(1).toInt());
+            in[i]->setGpioDirection(false);
+        }
     }
 }
 

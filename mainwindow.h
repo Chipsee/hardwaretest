@@ -10,6 +10,7 @@
 #include "device.h"
 #include "lcdtester.h"
 #include "utils.h"
+#include "gpiocontroller.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,6 +20,7 @@ class timedialog;
 class QIntValidator;
 class DeviceDiscoveryDialog;
 class LCDTester;
+class GpioController;
 
 class MainWindow : public QMainWindow
 {
@@ -147,6 +149,9 @@ private:
     QTimer * alltestTimer;
     QTimer *displayinfotimer;
     SlaveThread thread;
+    QVector<GpioController*> out;
+    QVector<GpioController*> in;
+    GpioController *buzzer;
     bool buzzerflag;
     bool relayflag;
     bool audioflag;

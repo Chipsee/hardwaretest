@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1107</width>
-    <height>599</height>
+    <height>623</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -643,6 +643,13 @@
             </layout>
            </item>
            <item>
+            <widget class="QPushButton" name="pushButton_cmst">
+             <property name="text">
+              <string>Connman System [WiFi/Ethernet]</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushButton_BluetoothTest">
              <property name="text">
               <string>Bluetooth Test</string>
@@ -1206,10 +1213,10 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_out_3"/>
   <buttongroup name="buttonGroup_out_2"/>
   <buttongroup name="buttonGroup_out_4"/>
+  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_1"/>
-  <buttongroup name="buttonGroup_out_3"/>
  </buttongroups>
 </ui>

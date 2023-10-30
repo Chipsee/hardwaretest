@@ -68,6 +68,7 @@ private slots:
     void readDate();
     void writeDate();
     void BluetoothTest();
+    void ConnmanTest();
     void wifiEnable();
     void wifiDisable();
     void wifiInfoDisplay();

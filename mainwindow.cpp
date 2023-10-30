@@ -1601,9 +1601,13 @@ void MainWindow::serialInit()
 /*
  *  NetWork
  *
- *  BluetoothTest() wifiEnable() wifiDisable() wifiDisplayInfo() networkInit() getipInfo() networkautotest()
+ *  ConnmanTest() BluetoothTest() wifiEnable() wifiDisable() wifiDisplayInfo() networkInit() getipInfo() networkautotest()
  *
  */
+void MainWindow::ConnmanTest()
+{
+    utils.executeCommand("cmst -d -M");
+}
 
 void MainWindow::BluetoothTest()
 {
@@ -1693,10 +1697,17 @@ void MainWindow::networkInit()
     connect(ui->pushButton_wifiDisable,&QPushButton::clicked,this,&MainWindow::wifiDisable);
     connect(ui->pushButton_netInfo,&QPushButton::clicked,this,&MainWindow::wifiInfoDisplay);
     connect(ui->pushButton_BluetoothTest,&QPushButton::clicked,this,&MainWindow::BluetoothTest);
+    connect(ui->pushButton_cmst,&QPushButton::clicked,this,&MainWindow::ConnmanTest);
     ui->pushButton_wifiDisable->setDisabled(true);
+    ui->pushButton_cmst->setVisible(false);
+
     if(cpuplat == "imx8mp" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && GetDebianCodeName() == "focal") || (cpuplat == "rk3568" && GetDebianCodeName() == "bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
+    }
+
+    if(cpuplat == "imx8mp"){
+        ui->pushButton_cmst->setVisible(true);
     }
 }
 

@@ -432,13 +432,22 @@ QString MainWindow::GetBoard()
     {
         QString cs10600r070 = GetComResult("grep -c rk3399-eisd-1024600-mipi /proc/device-tree/compatible");
         QString cs12800r101 = GetComResult("grep -c rk3399-eisd-1280800-lvds-linux /proc/device-tree/compatible");
-        QString cs12800r101p = GetComResult("grep -c pwm1 /proc/device-tree/compatible");
+        QString cs12800r101p = GetComResult("grep -c rk3399-eisd-1280800-lvds-pwm1 /proc/device-tree/compatible");
+        QString cs10768r121_150p = GetComResult("grep -c rk3399-eisd-1024768-lvds-pwm1 /proc/device-tree/compatible");
+        QString cs19108r133_156p = GetComResult("grep -c rk3399-eisd-19201080-lvds-pwm1 /proc/device-tree/compatible");
+        QString cs19108r215_236p = GetComResult("grep -c rk3399-eisd-19201080-lvds-pwm1-invert-backlight /proc/device-tree/compatible");
         if(cs10600r070.left(1) == "1"){
             board = "CS10600R070";
         } else if(cs12800r101.left(1) == "1"){
             board = "CS12800R101";
         } else if(cs12800r101p.left(1) == "1"){
             board = "CS12800R101P";
+        } else if(cs10768r121_150p.left(1) == "1"){
+            board = "CS10768R121_150P";
+        } else if(cs19108r133_156p.left(1) == "1"){
+            board = "CS19108R133_156P";
+        } else if(cs19108r215_236p.left(1) == "1"){
+            board = "CS19108R215_236P";
         } else
             board = "CS40230RB";
     }
@@ -674,6 +683,26 @@ void MainWindow::BoardSetting()
         maxbacklightpath = RK3568MAXBACKLIGHTPATH;
         videopath = RK3568VIDEOPATH;
         ipaddrpath = RK3568IPPATH;
+        gpioOutArray[0] = "1";
+        gpioOutArray[1] = "2";
+        gpioOutArray[2] = "3";
+        gpioOutArray[3] = "4";
+        gpioInArray[0] = "5";
+        gpioInArray[1] = "6";
+        gpioInArray[2] = "7";
+        gpioInArray[3] = "8";
+    }else if(GetPlat() == "rk3399"){
+        board = GetBoard();
+        ledpath = RK3399LED0PATH;
+        ledpath2 = RK3399LED1PATH;
+        audiopath = RK3399AUDIOPATH;
+        cueaudiopath = RK3399CUEAUDIOPATH;
+        volumepath = RK3399VOLUMEPATH;
+        buzzerpath = RK3399BUZZERPATH;
+        backlightpath = RK3399BACKLIGHTPATH;
+        maxbacklightpath = RK3399MAXBACKLIGHTPATH;
+        videopath = RK3399VIDEOPATH;
+        ipaddrpath = RK3399IPPATH;
         gpioOutArray[0] = "1";
         gpioOutArray[1] = "2";
         gpioOutArray[2] = "3";
@@ -991,10 +1020,23 @@ void MainWindow::RecordTest()
 
         system("killall gst-play-1.0");
         system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
-    }else if(cpuplat == "rk3399" || cpuplat == "rk3568"){   //need check again
+    }else if(cpuplat == "rk3568"){   //need check again
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.wav");
         QString cmdstr = "arecord -f cd -c 1 -d 18 /usr/hardwaretest/output.wav & ";
+
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(18000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+
+        system("killall gst-play-1.0");
+        system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
+    }else if(cpuplat == "rk3399"){
+        system("killall gst-play-1.0");
+        system("rm /usr/hardwaretest/output.wav");
+        QString cmdstr = "arecord -Dhw:0,0 -f cd -c 2 -d 18 /usr/hardwaretest/output.wav & ";
 
         system(cmdstr.toLocal8Bit());
 
@@ -1082,7 +1124,8 @@ void MainWindow::ChangeVolume()
     }else if(cpuplat =="px30"){
         cmdstr = "pactl set-sink-volume 1 "+value+"% &";
     }else if(cpuplat =="rk3399"){
-        cmdstr = "amixer cset "+volumepath+" "+value+"% &";
+        //cmdstr = "amixer cset "+volumepath+" "+value+"% &";
+        cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
     }else if((board == "imx6q" && GetDebianCodeName() == "bionic") || cpuplat == "imx8mp") {
@@ -2325,7 +2368,7 @@ void MainWindow::canStart()
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "pi" && GetDebianCodeName()=="bullseye") {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")  || (board == "imx6q" && GetKernelVersion() == "5.10.52") || cpuplat == "imx8mp"){
+    } else if (cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic")  || (board == "imx6q" && GetKernelVersion() == "5.10.52") || cpuplat == "imx8mp"){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
@@ -2342,7 +2385,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || board == "CS12800R101P" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52")  || cpuplat == "imx8mp"){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52")  || cpuplat == "imx8mp"){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -2360,7 +2403,7 @@ void MainWindow::canStop()
     QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52") || board == "CS12800R101P" || cpuplat == "rk3568"  || cpuplat == "imx8mp"){
+    if((cpuplat == "pi" && GetDebianCodeName()=="bullseye") || (board == "imx6q" && GetDebianCodeName() == "bionic") || (board == "imx6q" && GetKernelVersion() == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp"){
         cmdstr = "ip link set "+cannum+" down";
     } else {
         cmdstr = "canconfig "+cannum+" stop";

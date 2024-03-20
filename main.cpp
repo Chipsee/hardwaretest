@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     MainWindow w;
 
-    if(height <= 600 && width <= 1024){
+    if(width <= 1024){
         //qDebug()<< "will use 6 font";
         font.setPointSize(6);
         a.setFont(font);
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     w.move((QApplication::desktop()->width()-w.width())/2,(QApplication::desktop()->height()-w.height())/2);
 #endif
 
-    if(width==1024)
+    if(width==1024 && height==600)
         w.move(0,0);
 
     return a.exec();

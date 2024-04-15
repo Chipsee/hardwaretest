@@ -7,6 +7,7 @@
 #include <QDesktopWidget>
 #endif
 #include <QDebug>
+#include <QSettings>
 
 int main(int argc, char *argv[])
 {
@@ -34,6 +35,11 @@ int main(int argc, char *argv[])
         font.setPointSize(6);
         a.setFont(font);
         w.resize(800,500); //This will use min size
+    } else {
+        // Read the window position from QSettings
+        // config file is located in .config/Chipsee/hardwaretest.conf
+        QSettings settings("Chipsee", "hardwaretest");
+        w.restoreGeometry(settings.value("windowGeometry").toByteArray());
     }
 
     w.show();

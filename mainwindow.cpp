@@ -191,8 +191,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Read the window position from QSettings
     // config file is located in .config/Chipsee/hardwaretest.conf
-    QSettings settings("Chipsee", "hardwaretest");
-    restoreGeometry(settings.value("windowGeometry").toByteArray());
+    //QSettings settings("Chipsee", "hardwaretest");
+    //restoreGeometry(settings.value("windowGeometry").toByteArray());
 
     // Screen init
     screenInit();
@@ -643,14 +643,27 @@ void MainWindow::BoardSetting()
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
-        gpioOutArray[0] = "1";
-        gpioOutArray[1] = "2";
-        gpioOutArray[2] = "3";
-        gpioOutArray[3] = "4";
-        gpioInArray[0] = "5";
-        gpioInArray[1] = "6";
-        gpioInArray[2] = "7";
-        gpioInArray[3] = "8";
+        if(board == "CS19108RA4156PISO") {
+            gpioOutArray[0] = "1";
+            gpioOutArray[1] = "2";
+            gpioInArray[0] = "3";
+            gpioInArray[1] = "4";
+            gpioInArray[2] = "5";
+            gpioInArray[3] = "6";
+            gpioInArray[4] = "7";
+            gpioInArray[5] = "8";
+            gpioInArray[6] = "9";
+            gpioInArray[7] = "10";
+        } else {
+            gpioOutArray[0] = "1";
+            gpioOutArray[1] = "2";
+            gpioOutArray[2] = "3";
+            gpioOutArray[3] = "4";
+            gpioInArray[0] = "5";
+            gpioInArray[1] = "6";
+            gpioInArray[2] = "7";
+            gpioInArray[3] = "8";
+        }
     }else if(GetPlat() == "px30"){
         board = GetPiBoard();
         ledpath = PX30LED0PATH;
@@ -943,7 +956,8 @@ void MainWindow::AudioTest()
         system(cmdstr.toLocal8Bit());
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
     }else if(cpuplat == "imx8mp"){
-        utils.executeCommand("aplay -Dhw:1,0 /usr/hardwaretest/WavTest.wav");
+        //utils.executeCommand("aplay -Dhw:1,0 /usr/hardwaretest/WavTest.wav");
+        utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /usr/hardwaretest/WavTest.wav");
     }else{
         system("killall gst-play-1.0");
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
@@ -1058,7 +1072,8 @@ void MainWindow::RecordTest()
         system("aplay /usr/hardwaretest/output.wav &");
     }else if(cpuplat == "imx8mp") {
         system("test -f /tmp/output.wav && rm /tmp/output.wav");
-        QString cmdstr = "arecord -D hw:1,0 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
+        //QString cmdstr = "arecord -D hw:1,0 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
+        QString cmdstr = "arecord -D sysdefault:CARD=imx8mpnau8822 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
         system(cmdstr.toLocal8Bit());
 
         QEventLoop eventloop;
@@ -1069,7 +1084,8 @@ void MainWindow::RecordTest()
 
         QTimer::singleShot(3000, &eventloop,SLOT(quit()));
         eventloop.exec();
-        utils.executeCommand("aplay -Dhw:1,0 /tmp/output.wav");
+        //utils.executeCommand("aplay -Dhw:1,0 /tmp/output.wav");
+        utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /tmp/output.wav");
     }
 }
 
@@ -1087,7 +1103,8 @@ void MainWindow::CueAudio()
             system(cmdstr.toLocal8Bit());
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
         }else if(cpuplat == "imx8mp"){
-            cmdstr = "aplay -Dhw:1,0 "+cueaudiopath+" >/dev/null &";
+            //cmdstr = "aplay -Dhw:1,0 "+cueaudiopath+" >/dev/null &";
+            cmdstr = "aplay -D sysdefault:CARD=imx8mpnau8822 "+cueaudiopath+" >/dev/null &";
         }else{
             system("killall gst-play-1.0");
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
@@ -2139,6 +2156,27 @@ void MainWindow::setGPIOInStatu()
    else
        ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
+   if(board == "CS19108RA4156PISO") {
+       if(getGPIOValue(gpioInArray[4])=="1\n")
+           ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_low.png"));
+       if(getGPIOValue(gpioInArray[5])=="1\n")
+           ui->label_in_6_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_6_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+       if(getGPIOValue(gpioInArray[6])=="1\n")
+           ui->label_in_7_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_7_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+       if(getGPIOValue(gpioInArray[7])=="1\n")
+           ui->label_in_8_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_8_in->setPixmap(QPixmap(":/images/IO_low.png"));
+   }
+
 }
 
 void MainWindow::setGPIOOutStatu()
@@ -2165,6 +2203,7 @@ void MainWindow::setGPIOOutStatu()
             out[3]->writeGpioValue(0);
         return;
     }
+
     if(ui->radioButton_out_1_high->isChecked())
         setGPIOValue(gpioOutArray[0],"1");
     else
@@ -2175,15 +2214,17 @@ void MainWindow::setGPIOOutStatu()
     else
         setGPIOValue(gpioOutArray[1],"0");
 
-    if(ui->radioButton_out_3_high->isChecked())
-        setGPIOValue(gpioOutArray[2],"1");
-    else
-        setGPIOValue(gpioOutArray[2],"0");
+    if(board != "CS19108RA4156PISO") {
+        if(ui->radioButton_out_3_high->isChecked())
+            setGPIOValue(gpioOutArray[2],"1");
+        else
+            setGPIOValue(gpioOutArray[2],"0");
 
-    if(ui->radioButton_out_4_high->isChecked())
-        setGPIOValue(gpioOutArray[3],"1");
-    else
-        setGPIOValue(gpioOutArray[3],"0");
+        if(ui->radioButton_out_4_high->isChecked())
+            setGPIOValue(gpioOutArray[3],"1");
+        else
+            setGPIOValue(gpioOutArray[3],"0");
+    }
 }
 
 void MainWindow::setGPIOOutAllHigh()
@@ -2250,6 +2291,29 @@ void MainWindow::gpioInit()
     ui->radioButton_out_2_low->setChecked(true);
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
+
+    // GPIO_IN 5 ~ 8
+    if(board != "CS19108RA4156PISO") {
+        ui->label_in_5->setVisible(false);
+        ui->label_in_6->setVisible(false);
+        ui->label_in_6->setVisible(false);
+        ui->label_in_8->setVisible(false);
+        ui->label_in_5_in->setVisible(false);
+        ui->label_in_6_in->setVisible(false);
+        ui->label_in_7_in->setVisible(false);
+        ui->label_in_8_in->setVisible(false);
+    } else {
+        ui->radioButton_out_3_high->setCheckable(false);
+        ui->radioButton_out_4_high->setCheckable(false);
+        ui->radioButton_out_3_low->setCheckable(false);
+        ui->radioButton_out_4_low->setCheckable(false);
+        ui->radioButton_out_3_high->setVisible(false);
+        ui->radioButton_out_4_high->setVisible(false);
+        ui->radioButton_out_3_low->setVisible(false);
+        ui->radioButton_out_4_low->setVisible(false);
+        ui->label_out_3->setVisible(false);
+        ui->label_out_4->setVisible(false);
+    }
 
     if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050") {
         ui->radioButton_out_1_high->setCheckable(false);

@@ -650,10 +650,10 @@ void MainWindow::BoardSetting()
             gpioInArray[1] = "4";
             gpioInArray[2] = "5";
             gpioInArray[3] = "6";
-            gpioInArray[5] = "7";
-            gpioInArray[6] = "8";
-            gpioInArray[7] = "9";
-            gpioInArray[8] = "10";
+            gpioInArray[4] = "7";
+            gpioInArray[5] = "8";
+            gpioInArray[6] = "9";
+            gpioInArray[7] = "10";
         } else {
             gpioOutArray[0] = "1";
             gpioOutArray[1] = "2";
@@ -2156,6 +2156,27 @@ void MainWindow::setGPIOInStatu()
    else
        ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
+   if(board == "CS19108RA4156PISO") {
+       if(getGPIOValue(gpioInArray[4])=="1\n")
+           ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_low.png"));
+       if(getGPIOValue(gpioInArray[5])=="1\n")
+           ui->label_in_6_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_6_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+       if(getGPIOValue(gpioInArray[6])=="1\n")
+           ui->label_in_7_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_7_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+       if(getGPIOValue(gpioInArray[7])=="1\n")
+           ui->label_in_8_in->setPixmap(QPixmap(":/images/IO_high.png"));
+       else
+           ui->label_in_8_in->setPixmap(QPixmap(":/images/IO_low.png"));
+   }
+
 }
 
 void MainWindow::setGPIOOutStatu()
@@ -2182,6 +2203,7 @@ void MainWindow::setGPIOOutStatu()
             out[3]->writeGpioValue(0);
         return;
     }
+
     if(ui->radioButton_out_1_high->isChecked())
         setGPIOValue(gpioOutArray[0],"1");
     else
@@ -2192,15 +2214,17 @@ void MainWindow::setGPIOOutStatu()
     else
         setGPIOValue(gpioOutArray[1],"0");
 
-    if(ui->radioButton_out_3_high->isChecked())
-        setGPIOValue(gpioOutArray[2],"1");
-    else
-        setGPIOValue(gpioOutArray[2],"0");
+    if(board != "CS19108RA4156PISO") {
+        if(ui->radioButton_out_3_high->isChecked())
+            setGPIOValue(gpioOutArray[2],"1");
+        else
+            setGPIOValue(gpioOutArray[2],"0");
 
-    if(ui->radioButton_out_4_high->isChecked())
-        setGPIOValue(gpioOutArray[3],"1");
-    else
-        setGPIOValue(gpioOutArray[3],"0");
+        if(ui->radioButton_out_4_high->isChecked())
+            setGPIOValue(gpioOutArray[3],"1");
+        else
+            setGPIOValue(gpioOutArray[3],"0");
+    }
 }
 
 void MainWindow::setGPIOOutAllHigh()

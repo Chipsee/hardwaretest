@@ -643,14 +643,28 @@ void MainWindow::BoardSetting()
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
-        gpioOutArray[0] = "1";
-        gpioOutArray[1] = "2";
-        gpioOutArray[2] = "3";
-        gpioOutArray[3] = "4";
-        gpioInArray[0] = "5";
-        gpioInArray[1] = "6";
-        gpioInArray[2] = "7";
-        gpioInArray[3] = "8";
+	if (board)
+        if(board == "CS19108RA4156PISO") {
+            gpioOutArray[0] = "1";
+            gpioOutArray[1] = "2";
+            gpioInArray[0] = "3";
+            gpioInArray[1] = "4";
+            gpioInArray[2] = "5";
+            gpioInArray[3] = "6";
+            gpioInArray[5] = "7";
+            gpioInArray[6] = "8";
+            gpioInArray[7] = "9";
+            gpioInArray[8] = "10";
+        } else {
+            gpioOutArray[0] = "1";
+            gpioOutArray[1] = "2";
+            gpioOutArray[2] = "3";
+            gpioOutArray[3] = "4";
+            gpioInArray[0] = "5";
+            gpioInArray[1] = "6";
+            gpioInArray[2] = "7";
+            gpioInArray[3] = "8";
+        }
     }else if(GetPlat() == "px30"){
         board = GetPiBoard();
         ledpath = PX30LED0PATH;
@@ -2254,6 +2268,29 @@ void MainWindow::gpioInit()
     ui->radioButton_out_2_low->setChecked(true);
     ui->radioButton_out_3_low->setChecked(true);
     ui->radioButton_out_4_low->setChecked(true);
+
+    // GPIO_IN 5 ~ 8
+    if(board != "CS19108RA4156PISO") {
+        ui->label_in_5->setVisible(false);
+        ui->label_in_6->setVisible(false);
+        ui->label_in_6->setVisible(false);
+        ui->label_in_8->setVisible(false);
+        ui->label_in_5_in->setVisible(false);
+        ui->label_in_6_in->setVisible(false);
+        ui->label_in_7_in->setVisible(false);
+        ui->label_in_8_in->setVisible(false);
+    } else {
+        ui->radioButton_out_3_high->setCheckable(false);
+        ui->radioButton_out_4_high->setCheckable(false);
+        ui->radioButton_out_3_low->setCheckable(false);
+        ui->radioButton_out_4_low->setCheckable(false);
+        ui->radioButton_out_3_high->setVisible(false);
+        ui->radioButton_out_4_high->setVisible(false);
+        ui->radioButton_out_3_low->setVisible(false);
+        ui->radioButton_out_4_low->setVisible(false);
+        ui->label_out_3->setVisible(false);
+        ui->label_out_4->setVisible(false);
+    }
 
     if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050") {
         ui->radioButton_out_1_high->setCheckable(false);

@@ -2296,7 +2296,7 @@ void MainWindow::gpioInit()
     if(board != "CS19108RA4156PISO") {
         ui->label_in_5->setVisible(false);
         ui->label_in_6->setVisible(false);
-        ui->label_in_6->setVisible(false);
+        ui->label_in_7->setVisible(false);
         ui->label_in_8->setVisible(false);
         ui->label_in_5_in->setVisible(false);
         ui->label_in_6_in->setVisible(false);

@@ -7,6 +7,7 @@
 #include <QDesktopWidget>
 #endif
 #include <QDebug>
+#include <QSettings>
 
 int main(int argc, char *argv[])
 {
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
         // Read the window position from QSettings
         // config file is located in .config/Chipsee/hardwaretest.conf
         QSettings settings("Chipsee", "hardwaretest");
-        restoreGeometry(settings.value("windowGeometry").toByteArray());
+        w.restoreGeometry(settings.value("windowGeometry").toByteArray());
     }
 
     w.show();

@@ -643,7 +643,6 @@ void MainWindow::BoardSetting()
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
-	if (board)
         if(board == "CS19108RA4156PISO") {
             gpioOutArray[0] = "1";
             gpioOutArray[1] = "2";

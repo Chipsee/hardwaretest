@@ -936,23 +936,33 @@
          </item>
          <item>
           <layout class="QGridLayout" name="gridLayout_gpio_2">
-           <item row="1" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_gpio_1">
-             <item>
-              <widget class="QLabel" name="label_high">
-               <property name="text">
-                <string>HIGH</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_high_high">
-               <property name="text">
-                <string>high</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_in_3">
+             <property name="text">
+              <string>IN_3</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QLabel" name="label_gpio_in">
+             <property name="text">
+              <string>GPIO_IN</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_in_">
+             <property name="text">
+              <string>IN_2</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="label_in_4_in">
+             <property name="text">
+              <string>in</string>
+             </property>
+            </widget>
            </item>
            <item row="1" column="1">
             <layout class="QHBoxLayout" name="horizontalLayout_gpio_2">
@@ -972,24 +982,10 @@
              </item>
             </layout>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_in_1">
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_in_5">
              <property name="text">
-              <string>IN_1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="label_in_1_in">
-             <property name="text">
-              <string>in</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_in_">
-             <property name="text">
-              <string>IN_2</string>
+              <string>IN_5</string>
              </property>
             </widget>
            </item>
@@ -1000,35 +996,46 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_in_3">
+           <item row="8" column="0">
+            <widget class="QLabel" name="label_in_7">
              <property name="text">
-              <string>IN_3</string>
+              <string>IN_7</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
-            <widget class="QLabel" name="label_in_3_in">
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_in_6">
+             <property name="text">
+              <string>IN_6</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_gpio_1">
+             <item>
+              <widget class="QLabel" name="label_high">
+               <property name="text">
+                <string>HIGH</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_high_high">
+               <property name="text">
+                <string>high</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="label_in_1_in">
              <property name="text">
               <string>in</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_in_4">
-             <property name="text">
-              <string>IN_4</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QLabel" name="label_in_4_in">
-             <property name="text">
-              <string>in</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0" colspan="2">
+           <item row="10" column="0" colspan="2">
             <widget class="QPushButton" name="pushButton_gpioRefresh">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1041,10 +1048,59 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QLabel" name="label_gpio_in">
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_in_4">
              <property name="text">
-              <string>GPIO_IN</string>
+              <string>IN_4</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="label_in_3_in">
+             <property name="text">
+              <string>in</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_in_1">
+             <property name="text">
+              <string>IN_1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="label_in_8">
+             <property name="text">
+              <string>IN_8</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QLabel" name="label_in_5_in">
+             <property name="text">
+              <string>in</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QLabel" name="label_in_6_in">
+             <property name="text">
+              <string>in</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QLabel" name="label_in_7_in">
+             <property name="text">
+              <string>in</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QLabel" name="label_in_8_in">
+             <property name="text">
+              <string>in</string>
              </property>
             </widget>
            </item>
@@ -1213,10 +1269,10 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_led1"/>
-  <buttongroup name="buttonGroup_out_3"/>
   <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_out_3"/>
   <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_led2"/>
  </buttongroups>
 </ui>

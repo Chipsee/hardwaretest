@@ -177,7 +177,7 @@ private:
         };
     serailSettings currentSettings;
 
-    QString gpioInArray[4];
+    QString gpioInArray[8];
     QString gpioOutArray[4];
 
     void BoardSetting();

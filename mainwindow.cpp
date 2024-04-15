@@ -191,8 +191,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Read the window position from QSettings
     // config file is located in .config/Chipsee/hardwaretest.conf
-    QSettings settings("Chipsee", "hardwaretest");
-    restoreGeometry(settings.value("windowGeometry").toByteArray());
+    //QSettings settings("Chipsee", "hardwaretest");
+    //restoreGeometry(settings.value("windowGeometry").toByteArray());
 
     // Screen init
     screenInit();
@@ -943,7 +943,8 @@ void MainWindow::AudioTest()
         system(cmdstr.toLocal8Bit());
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
     }else if(cpuplat == "imx8mp"){
-        utils.executeCommand("aplay -Dhw:1,0 /usr/hardwaretest/WavTest.wav");
+        //utils.executeCommand("aplay -Dhw:1,0 /usr/hardwaretest/WavTest.wav");
+        utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /usr/hardwaretest/WavTest.wav");
     }else{
         system("killall gst-play-1.0");
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
@@ -1058,7 +1059,8 @@ void MainWindow::RecordTest()
         system("aplay /usr/hardwaretest/output.wav &");
     }else if(cpuplat == "imx8mp") {
         system("test -f /tmp/output.wav && rm /tmp/output.wav");
-        QString cmdstr = "arecord -D hw:1,0 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
+        //QString cmdstr = "arecord -D hw:1,0 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
+        QString cmdstr = "arecord -D sysdefault:CARD=imx8mpnau8822 -V mono -c 1 -f S16_LE -r 48000 -d 18 -t wav /tmp/mic.wav & ";
         system(cmdstr.toLocal8Bit());
 
         QEventLoop eventloop;
@@ -1069,7 +1071,8 @@ void MainWindow::RecordTest()
 
         QTimer::singleShot(3000, &eventloop,SLOT(quit()));
         eventloop.exec();
-        utils.executeCommand("aplay -Dhw:1,0 /tmp/output.wav");
+        //utils.executeCommand("aplay -Dhw:1,0 /tmp/output.wav");
+        utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /tmp/output.wav");
     }
 }
 
@@ -1087,7 +1090,8 @@ void MainWindow::CueAudio()
             system(cmdstr.toLocal8Bit());
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";
         }else if(cpuplat == "imx8mp"){
-            cmdstr = "aplay -Dhw:1,0 "+cueaudiopath+" >/dev/null &";
+            //cmdstr = "aplay -Dhw:1,0 "+cueaudiopath+" >/dev/null &";
+            cmdstr = "aplay -D sysdefault:CARD=imx8mpnau8822 "+cueaudiopath+" >/dev/null &";
         }else{
             system("killall gst-play-1.0");
             cmdstr = "gst-play-1.0 "+cueaudiopath+" >/dev/null &";

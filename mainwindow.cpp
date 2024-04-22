@@ -1823,7 +1823,7 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO"){
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
@@ -1916,7 +1916,7 @@ void MainWindow::gpsInit()
     QString atportname="/dev/ttyUSB2";
     QString gpsportname="/dev/ttyUSB1";
 
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO"){
         ui->pushButton_GPSEnable->setVisible(false);
         ui->pushButton_GPSDisable->setVisible(false);
         return;

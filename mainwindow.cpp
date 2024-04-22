@@ -643,7 +643,7 @@ void MainWindow::BoardSetting()
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
-        if(board == "CS19108RA4156PISO") {
+        if(board == "CS19108RA4133PISO") {
             gpioOutArray[0] = "1";
             gpioOutArray[1] = "2";
             gpioInArray[0] = "3";
@@ -2156,7 +2156,7 @@ void MainWindow::setGPIOInStatu()
    else
        ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
-   if(board == "CS19108RA4156PISO") {
+   if(board == "CS19108RA4133PISO") {
        if(getGPIOValue(gpioInArray[4])=="1\n")
            ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
        else
@@ -2214,7 +2214,7 @@ void MainWindow::setGPIOOutStatu()
     else
         setGPIOValue(gpioOutArray[1],"0");
 
-    if(board != "CS19108RA4156PISO") {
+    if(board != "CS19108RA4133PISO") {
         if(ui->radioButton_out_3_high->isChecked())
             setGPIOValue(gpioOutArray[2],"1");
         else
@@ -2293,7 +2293,7 @@ void MainWindow::gpioInit()
     ui->radioButton_out_4_low->setChecked(true);
 
     // GPIO_IN 5 ~ 8
-    if(board != "CS19108RA4156PISO") {
+    if(board != "CS19108RA4133PISO") {
         ui->label_in_5->setVisible(false);
         ui->label_in_6->setVisible(false);
         ui->label_in_7->setVisible(false);

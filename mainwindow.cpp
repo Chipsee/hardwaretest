@@ -1408,9 +1408,9 @@ int MainWindow::MaxBacklighValue()
         return 1;
 #endif
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    if( GetFileValue(maxbacklightpath) == QString()) {
+    if( GetFileValue(maxbacklightpath) == QString() && machine != "PPC-A76-BOX") {
 #else
-    if( GetFileValue(maxbacklightpath) == NULL) {
+    if( GetFileValue(maxbacklightpath) == NULL && machine != "PPC-A76-BOX") {
 #endif
         maxbacklightpath = "/dev/max_brightness";
     }
@@ -1418,9 +1418,9 @@ int MainWindow::MaxBacklighValue()
     QString cmdstr = "cat "+maxbacklightpath+" >"+TEMPFILEPATH;
     system(cmdstr.toLocal8Bit());
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    if(GetFileValue(TEMPFILEPATH)==QString()){
+    if(GetFileValue(TEMPFILEPATH)==QString() && machine != "PPC-A76-BOX"){
 #else
-    if(GetFileValue(TEMPFILEPATH)==NULL){
+    if(GetFileValue(TEMPFILEPATH)==NULL && machine != "PPC-A76-BOX"){
 #endif
         QMessageBox::critical(this,"Error","Open TempPath Error!! Don't Get MaxBacklighValue!! Return 0!!");
         return 0;
@@ -1431,17 +1431,17 @@ int MainWindow::MaxBacklighValue()
 int MainWindow::GetBacklightValue()
 {
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    if(GetFileValue(backlightpath)==QString()){
+    if(GetFileValue(backlightpath)==QString() && machine != "PPC-A76-BOX"){
 #else
-    if(GetFileValue(backlightpath)==NULL){
+    if(GetFileValue(backlightpath)==NULL && machine != "PPC-A76-BOX"){
 #endif
         backlightpath = "/dev/brightness";
     }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    if(GetFileValue(backlightpath)==QString()){
+    if(GetFileValue(backlightpath)==QString() && machine != "PPC-A76-BOX"){
 #else
-    if(GetFileValue(backlightpath)==NULL){
+    if(GetFileValue(backlightpath)==NULL && machine != "PPC-A76-BOX"){
 #endif
         QMessageBox::critical(this,"Error","Open Backlightpath Error!! Don't Get BacklightValue!! Return 0!!");
         return 0;

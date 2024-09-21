@@ -120,6 +120,9 @@ private:
     QString maxbacklightpath;
     QString board;
     QString cpuplat;
+    QString debiancodename;
+    QString kernelversion;
+    QString machine;
     QString ipaddrpath;
     QByteArray autodata;
     QIntValidator *intValidator;
@@ -191,6 +194,7 @@ private:
     QString GetResolution();
     QString GetPiBoard();
     QString GetBoard();
+    QString GetMachine();
     QString GetDebianCodeName();
     QString GetKernelVersion();
     void Delay_MSec_Suspend(int);

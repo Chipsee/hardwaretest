@@ -509,8 +509,12 @@ QString MainWindow::GetBoard()
     if(GetPlat() == "rk3588")
     {
         QString CS10600_RK3588_070 = GetComResult("grep -c CS10600-RK3588-070 /sys/devices/platform/board/info");
+        QString CS12800_RK3588_101 = GetComResult("grep -c CS12800-RK3588-101 /sys/devices/platform/board/info");
         if(CS10600_RK3588_070.left(1) == "1") {
             board = "CS10600_RK3588_070";
+        }
+        if(CS12800_RK3588_101.left(1) == "1") {
+            board = "CS12800_RK3588_101";
         }
     }
 
@@ -524,11 +528,15 @@ QString MainWindow::GetMachine()
     if(GetPlat() == "rk3588") {
         QString PPC_A76_BOX = GetComResult("grep -c PPC-A76-BOX /sys/devices/platform/board/info");
         QString PPC_A76_070 = GetComResult("grep -c PPC-A76-070 /sys/devices/platform/board/info");
+        QString PPC_A76_101 = GetComResult("grep -c PPC-A76-101 /sys/devices/platform/board/info");
         if(PPC_A76_BOX.left(1) == "1") {
             machine = "PPC-A76-BOX";
         }
         if(PPC_A76_070.left(1) == "1") {
             machine = "PPC-A76-070";
+        }
+        if(PPC_A76_101.left(1) == "1") {
+            machine = "PPC-A76-101";
         }
     }
 

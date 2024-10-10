@@ -206,9 +206,21 @@ void SlaveThread::run()
         }
     }
 
+    if(*board == "IMX8MP"){
+        port[0] = port[2];
+        port[2] = port[3];
+        port[3] = port[1];
+        port[1] = port[5];
+        qDebug() << *board + " New Serial Port list(thread): ";
+        for(i=0; i<6; i++)
+        {
+            qDebug() << port[i]->portName();
+        }
+    }
+
     if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A"){
         //CAN INIT
-        if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588"){
+        if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
             system("echo >/tmp/can0.txt");
             system("ip link set can0 down");
             system("ip link set can0 type can bitrate 100000 triple-sampling on loopback off ");
@@ -226,7 +238,7 @@ void SlaveThread::run()
         }
         system("candump can0 > /tmp/can0.txt &");
         if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS10600RA4070D" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board !="CS12800R101P") {
-            if(*board == "RK3568" || *board == "RK3588"){
+            if(*board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
                 system("echo >/tmp/can1.txt");
                 system("ip link set can1 down");
                 system("ip link set can1 type can bitrate 100000 triple-sampling on loopback off ");
@@ -311,14 +323,14 @@ void SlaveThread::run()
                 QTextStream in(&file);
                 QString line=in.readLine(); // The First Line
                 //qDebug() << "1" + line;
-                if(*board !="CS12800R101P" && *board != "RK3568" && *board !="RK3588")
+                if(*board !="CS12800R101P" && *board != "RK3568" && *board !="RK3588" && *board != "IMX8MP")
                     line = in.readLine();   // The Second Line
                 emit this->canrequest("can0\n"+line);
                 //qDebug() << "2" + line;
                 if(line.contains("11 22 33 44 55 66 77 88"))
                 {
                     //qDebug() << "have 11223344";
-                    if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588"){
+                    if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
                         system("cansend can0 5A1#1122334455667788");
                         //qDebug() << "Cansend can0";
                     }else{
@@ -335,14 +347,14 @@ void SlaveThread::run()
                     QTextStream in(&file1);
                     QString line=in.readLine(); // The First Line
                     //qDebug() << "1" + line;
-                    if(*board != "RK3568" && *board != "RK3588")
+                    if(*board != "RK3568" && *board != "RK3588" && *board != "IMX8MP")
                     	line = in.readLine();   // The Second Line
                     emit this->canrequest("can1\n"+line);
                     //qDebug() << "2" + line;
                     if(line.contains("11 22 33 44 55 66 77 88"))
                     {
                         //qDebug() << "have 11223344";
-                        if(*board == "RK3568" || *board == "RK3588"){
+                        if(*board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
                             system("cansend can1 5A1#1122334455667788");
                             //qDebug() << "Cansend can1";
                         }else{

@@ -2692,11 +2692,11 @@ void MainWindow::autoTest()
         eventloop.exec();
     }
 
-    if(cpuplat != "pi"){
+    if(cpuplat != "pi" && cpuplat != "imx8mp"){
         usbInit();
     }
 
-    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P") {
+    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P"  && cpuplat != "imx8mp") {
         networkautotest();
     }
 
@@ -2766,11 +2766,19 @@ void MainWindow::autoTest()
     }
 
     if(cpuplat == "rk3588"){
-	port[5] = port[4];
-	port[4] = port[0];
-	port[0] = port[2];
-	port[2] = port[5];
+        port[5] = port[4];
+        port[4] = port[0];
+        port[0] = port[2];
+        port[2] = port[5];
         board = "RK3588";
+    }
+
+    if(cpuplat == "imx8mp"){
+        port[0] = port[2];
+        port[2] = port[3];
+        port[3] = port[1];
+        port[1] = port[5];
+        board = "IMX8MP";
     }
 
     QString str("#################\n");

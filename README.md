@@ -2,7 +2,8 @@
 One Qt program which is used by Chipsee to test hardware.
 
 # Required Packages
-sudo apt install git qt5-default make g++ libqt5serialport5-dev qtdeclarative5-dev qml-module-qtquick2 qml-module-qtquick-controls qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev
+sudo apt install qt5-default  // some platform doesn't have this packages, ignore it
+sudo apt install git make g++ libqt5serialport5-dev qtdeclarative5-dev qml-module-qtquick2 qml-module-qtquick-controls qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev qml-module-qtquick-controls2
 
 # Supported boards
 This program only supports Chipsee follow platform products now:

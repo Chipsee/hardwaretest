@@ -696,7 +696,14 @@ void MainWindow::BoardSetting()
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
-        if(board == "CS19108RA4133PISO") {
+        if(board == "CS19108RA4133PISO" || 
+	   board == "CS19108RA4133PR2P" || 
+	   board == "CS19108RA4156PR2P" || 
+	   board == "CS12800RA4101PR2P" || 
+	   board == "CS12800RA4101PR2PBOX" || 
+	   board == "CS10768RA4121PR2P" || 
+	   board == "CS10768RA4150PR2P"
+	) {
             gpioOutArray[0] = "1";
             gpioOutArray[1] = "2";
             gpioInArray[0] = "3";
@@ -1893,7 +1900,14 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||
+	   board == "CS19108RA4133PR2P" ||
+           board == "CS19108RA4156PR2P" ||
+           board == "CS12800RA4101PR2P" ||
+           board == "CS12800RA4101PR2PBOX" ||
+           board == "CS10768RA4121PR2P" ||
+           board == "CS10768RA4150PR2P"
+    ){
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
@@ -1986,7 +2000,14 @@ void MainWindow::gpsInit()
     QString atportname="/dev/ttyUSB2";
     QString gpsportname="/dev/ttyUSB1";
 
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO"){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" ||
+           board == "CS19108RA4133PR2P" ||
+           board == "CS19108RA4156PR2P" ||
+           board == "CS12800RA4101PR2P" ||
+           board == "CS12800RA4101PR2PBOX" ||
+           board == "CS10768RA4121PR2P" ||
+           board == "CS10768RA4150PR2P"
+    ){
         ui->pushButton_GPSEnable->setVisible(false);
         ui->pushButton_GPSDisable->setVisible(false);
         return;
@@ -2226,7 +2247,14 @@ void MainWindow::setGPIOInStatu()
    else
        ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
-   if(board == "CS19108RA4133PISO") {
+   if(board == "CS19108RA4133PISO" ||
+           board == "CS19108RA4133PR2P" ||
+           board == "CS19108RA4156PR2P" ||
+           board == "CS12800RA4101PR2P" ||
+           board == "CS12800RA4101PR2PBOX" ||
+           board == "CS10768RA4121PR2P" ||
+           board == "CS10768RA4150PR2P"
+    ) {
        if(getGPIOValue(gpioInArray[4])=="1\n")
            ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
        else
@@ -2284,7 +2312,14 @@ void MainWindow::setGPIOOutStatu()
     else
         setGPIOValue(gpioOutArray[1],"0");
 
-    if(board != "CS19108RA4133PISO") {
+    if(board != "CS19108RA4133PISO" &&
+           board != "CS19108RA4133PR2P" &&
+           board != "CS19108RA4156PR2P" &&
+           board != "CS12800RA4101PR2P" &&
+           board != "CS12800RA4101PR2PBOX" &&
+           board != "CS10768RA4121PR2P" &&
+           board != "CS10768RA4150PR2P"
+    ) {
         if(ui->radioButton_out_3_high->isChecked())
             setGPIOValue(gpioOutArray[2],"1");
         else
@@ -2363,7 +2398,14 @@ void MainWindow::gpioInit()
     ui->radioButton_out_4_low->setChecked(true);
 
     // GPIO_IN 5 ~ 8
-    if(board != "CS19108RA4133PISO") {
+    if(board != "CS19108RA4133PISO" &&
+           board != "CS19108RA4133PR2P" &&
+           board != "CS19108RA4156PR2P" &&
+           board != "CS12800RA4101PR2P" &&
+           board != "CS12800RA4101PR2PBOX" &&
+           board != "CS10768RA4121PR2P" &&
+           board != "CS10768RA4150PR2P"
+    ) {
         ui->label_in_5->setVisible(false);
         ui->label_in_6->setVisible(false);
         ui->label_in_7->setVisible(false);

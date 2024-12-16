@@ -5,6 +5,11 @@ One Qt program which is used by Chipsee to test hardware.
 sudo apt install qt5-default  // some platform doesn't have this packages, ignore it
 sudo apt install git make g++ libqt5serialport5-dev qtdeclarative5-dev qml-module-qtquick2 qml-module-qtquick-controls qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev qml-module-qtquick-controls2
 
+# Build system DDR limited
+Need at least 4GB DDR to build this source.
+You can use swap if your hardware's DDR is less than 4GB.
+For Industril Pi product, you can setting CONF_SWAPSIZE=2048 in /etc/dphys-swapfile and reboot
+
 # Supported boards
 This program only supports Chipsee follow platform products now:
  - [IMX6QDL](https://chipsee.com/product-category/ipc/arm/?filter_cpu=nxp-imx6q&query_type_cpu=or)
@@ -16,6 +21,20 @@ This program only supports Chipsee follow platform products now:
  - RK3568
 
 # Release notes
+**V5.7:**
+
+- Add CS12800RA4101AV4 support
+- Add R2P Product support
+- Add AutoTest support for IMX8MP products
+- Add CS12800_RK3588_101 board and machine support
+- Bug fix: BOX product doesn't have backlight
+
+
+**V5.6:**
+
+- Add RK3588 070 BOX product support
+
+
 **V5.5:**
 
 - Add CS19108RA4156P products support.

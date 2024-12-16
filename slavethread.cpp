@@ -100,7 +100,7 @@ void SlaveThread::run()
             break;
     }
 
-    if(*board == "CS12720RA4050" || *board == "CS10600RA4070" || *board == "CS10600RA4070D" || *board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A" || *board == "CS12800RA4101BOX" || *board == "CS12800RA4101P" || *board == "CS19108RA4133P" || *board == "CS10768RA4150P" || *board == "CS19108RA4156P" || *board == "CS19108RA4215P"){
+    if(*board == "CS12720RA4050" || *board == "CS10600RA4070" || *board == "CS10600RA4070D" || *board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A" || *board == "CS12800RA4101BOX" || *board == "CS12800RA4101P" || *board == "CS19108RA4133P" || *board == "CS10768RA4150P" || *board == "CS19108RA4156P" || *board == "CS19108RA4215P" || *board == "CS12800RA4101AV4"){
         if(port[0] != NULL && port[0]->portName() == "ttyACM0"){
             port[0] = port[1];
             port[1] = port[2];
@@ -133,7 +133,7 @@ void SlaveThread::run()
         qDebug() << port[4]->portName();
     }
 
-    if(*board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A"){
+    if(*board == "CS12800RA4101" || *board == "LRRA4-101" || *board == "CS12800RA4101A" || *board == "CS12800RA4101AV4"){
         port[5] = port[4];
         port[4] = port[3];
         port[3] = port[2];
@@ -218,7 +218,7 @@ void SlaveThread::run()
         }
     }
 
-    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A"){
+    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A" || *board != "CS12800RA4101AV4"){
         //CAN INIT
         if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
             system("echo >/tmp/can0.txt");
@@ -313,7 +313,7 @@ void SlaveThread::run()
             }
         }
 
-        if(*board !="CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" && *board != "CS12800RA4101A"){
+        if(*board !="CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" && *board != "CS12800RA4101A" && *board != "CS12800RA4101AV4"){
             // CAN AutoTest
             // CAN0
             //qDebug() <<"test can";

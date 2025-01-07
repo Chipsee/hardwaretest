@@ -1053,11 +1053,11 @@ void MainWindow::RecordTest()
 
     }else if(cpuplat == "pi"){
         system("test -f /usr/hardwaretest/output.wav && rm /usr/hardwaretest/output.wav");
-        QString cmdstr = "arecord -f cd -d 18 /usr/hardwaretest/output.wav & ";
+        QString cmdstr = "arecord -f cd -d 8 /usr/hardwaretest/output.wav & ";
         system(cmdstr.toLocal8Bit());
 
         QEventLoop eventloop;
-        QTimer::singleShot(20000, &eventloop,SLOT(quit()));
+        QTimer::singleShot(8000, &eventloop,SLOT(quit()));
         eventloop.exec();
 
         utils.executeCommand("aplay /usr/hardwaretest/output.wav");
@@ -2848,6 +2848,9 @@ void MainWindow::autoTest()
 
                 port[0]->close();
             }
+
+            QTimer::singleShot(12000, &eventloop,SLOT(quit()));
+            eventloop.exec();
             RecordTest();
         }
     } else if(board == "AM335XBOARD"){

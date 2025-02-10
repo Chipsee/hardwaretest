@@ -27,6 +27,11 @@ This program only support the following Chipsee products now:
  - [RK3588](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=rockchip-rk3588&query_type_cpu=or)
 
 # Release notes
+**V5.8:**
+
+- Add CS10600RA5070P support
+- Add CS12800RA5101P support
+
 **V5.7:**
 
 - Add CS12800RA4101AV4 support

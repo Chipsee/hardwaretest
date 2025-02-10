@@ -103,7 +103,7 @@ private slots:
     void alltest();
     void alltestInit();
     void displayInfo();
-
+    bool has4GModule();
 
 private:
     Ui::MainWindow *ui;
@@ -144,6 +144,7 @@ private:
     QSerialPort *serial4;
     QSerialPort *atport;
     QSerialPort *gpsport;
+    QSerialPort *fgport;
     QTimer *autoTesttimer;
     QTimer * readTimer;
     QTimer * writeTimer;
@@ -164,6 +165,9 @@ private:
     bool vautoflag;
     int lcdwidth;
     int lcdheight;
+    bool ispifive;
+    bool fgisquetel;
+    bool fgissimcom;
 
     struct serailSettings {
             QString name;
@@ -187,12 +191,11 @@ private:
     QString GetTempFileValue();
     QString GetFileValue(QString);
     QString GetComResult(QString);
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
     QString executeShellCommand(const QString &command, const QStringList &arguments);
 #endif
     QString GetPlat();
     QString GetResolution();
-    QString GetPiBoard();
     QString GetBoard();
     QString GetMachine();
     QString GetDebianCodeName();

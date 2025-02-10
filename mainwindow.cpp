@@ -26,6 +26,7 @@
 #include <QSoundEffect>
 #include <QSettings>
 #include <QtGui/QCloseEvent>
+#include <QDir>
 
 /*
  * If you want to change the board,
@@ -97,9 +98,11 @@
 /* Industtrial Pi Define */
 #define PILED0PATH "/sys/class/leds/led0/brightness"
 #define PILED1PATH ""
+#define PILEDACTPATH "/sys/class/leds/ACT/brightness"
 #define PIAUDIOPATH "/usr/hardwaretest/AudioTest.wav"
 #define PICUEAUDIOPATH "/usr/hardwaretest/AutoTestFinish.aac"
 #define PIVOLUMEPATH "name='Master Playback Volume'"
+#define PIVOLUMEPATH2 "name='PCM Playback Volume'"
 #define PIBUZZERPATH "/dev/buzzer"
 #define PIIPPATH "/usr/hardwaretest/ipaddr"
 #define PIVIDEOPATH "/usr/hardwaretest/VideoTest.mp4"
@@ -314,7 +317,7 @@ QString MainWindow::GetFileValue(QString filePath)
     }
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
 QString MainWindow::executeShellCommand(const QString &command, const QStringList &arguments)
 {
     QProcess process;
@@ -329,7 +332,7 @@ QString MainWindow::executeShellCommand(const QString &command, const QStringLis
 QString MainWindow::GetComResult(QString cmd)
 {
     QProcess process;
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
     QStringList list = cmd.split(" ");
     QString firstElement;
     QStringList otherElements;
@@ -338,7 +341,11 @@ QString MainWindow::GetComResult(QString cmd)
     }
     if(list.size() > 1) {
         otherElements = list.mid(1);
+    } else {
+        otherElements = QStringList() << "-c" << firstElement;
+        firstElement = "/bin/sh";
     }
+
     process.start(firstElement, otherElements);
 
     // Or we can use startCommand method in QT_VERSION >= 6.0.0.
@@ -354,11 +361,15 @@ QString MainWindow::GetComResult(QString cmd)
 
 QString MainWindow::GetPlat()
 {
+    if (system ("raspi-config nonint is_pifive") == 0) {
+        return "pi";
+    }
     QString plat;
     QString cpucore = GetComResult("grep -c processor /proc/cpuinfo");
     QString imx6qdlul = GetComResult("grep -c Freescale /proc/cpuinfo");
     QString pi3 = GetComResult("grep -c BCM2835 /proc/cpuinfo");
     QString pi4 = GetComResult("grep -c BCM2711 /proc/cpuinfo");
+    QString pi5 = GetComResult("grep -c 'Compute Module 5' /proc/cpuinfo");
     QString am335x = GetComResult("grep -c AM33XX /proc/cpuinfo");
     QString px30 = GetComResult("grep -c px30 /proc/device-tree/compatible");
     QString rk3399 = GetComResult("grep -c rk3399 /proc/device-tree/compatible");
@@ -414,26 +425,17 @@ QString MainWindow::GetResolution()
     return widthstr+heightstr;
 }
 
-QString MainWindow::GetPiBoard()
-{
-    QString board;
-    if(GetPlat() == "pi" || GetPlat() == "px30")
-    {
-        board = GetFileValue("/opt/chipsee/.board");
-        // Remove "\n" from board
-        board.remove(QChar('\n'),Qt::CaseInsensitive);
-    } else
-    {
-        board = "NULL";
-    }
-
-    return board;
-
-}
-
 QString MainWindow::GetBoard()
 {
     QString board;
+
+    if (system ("raspi-config nonint is_pifive") == 0) {
+	board = GetComResult("cspn");
+        // Remove "\n" from board
+        board.remove(QChar('\n'),Qt::CaseInsensitive);
+        return board;
+    }
+
     if(GetPlat() == "pi" || GetPlat() == "px30")
     {
         board = GetFileValue("/opt/chipsee/.board");
@@ -559,6 +561,8 @@ QString MainWindow::GetDebianCodeName()
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
+        if(codename.contains("bookworm"))
+            codename = "bookworm";
     }
     if(GetPlat() == "rk3568"){
         codename = GetComResult("lsb_release -c");
@@ -580,7 +584,7 @@ QString MainWindow::GetDebianCodeName()
         if(codename.contains("bionic"))
             codename = "bionic";
     }
-    //qDebug() << "CodeName is: " + codename;
+    qDebug() << "CodeName is: " + codename;
     return codename;
 }
 
@@ -687,12 +691,17 @@ void MainWindow::BoardSetting()
     }else if(GetPlat() == "bbbexp"){
         board = "bbbexp";
     }else if(GetPlat() == "pi"){
-        board = GetPiBoard();
-        ledpath = PILED0PATH;
+        //board = GetBoard(); //board will be fill in boardInit() function.
+        if (ispifive) {
+            ledpath = PILEDACTPATH;
+            volumepath = PIVOLUMEPATH2;
+        } else {
+            ledpath = PILED0PATH;
+            volumepath = PIVOLUMEPATH;
+        }
         ledpath2 = PILED1PATH;
         audiopath = PIAUDIOPATH;
         cueaudiopath = PICUEAUDIOPATH;
-        volumepath = PIVOLUMEPATH;
         buzzerpath = PIBUZZERPATH;
         videopath = PIVIDEOPATH;
         ipaddrpath = PIIPPATH;
@@ -725,7 +734,7 @@ void MainWindow::BoardSetting()
             gpioInArray[3] = "8";
         }
     }else if(GetPlat() == "px30"){
-        board = GetPiBoard();
+        board = GetBoard();
         ledpath = PX30LED0PATH;
         ledpath2 = PX30LED1PATH;
         audiopath = PX30AUDIOPATH;
@@ -833,12 +842,18 @@ void MainWindow::boardInit()
     debiancodename = GetDebianCodeName();
     kernelversion = GetKernelVersion();
     machine = GetMachine();
+    board = GetBoard();
 
     //qDebug() << cpuplat;
+    //qDebug() << "BOARD is " + board;
 
     if (cpuplat == "imx6q" || cpuplat =="imx6dl" || cpuplat == "imx6ul") {
         ui->labelBoard->setText("IMX6QDLUL");
     } else if (cpuplat == "pi"){
+        if (system ("raspi-config nonint is_pifive") == 0)
+            ispifive = true;
+        else
+            ispifive = false;
 
         /*change vlc to allow run for root*/
         QString cmdstr = "cp /usr/bin/vlc /usr/bin/vlc.bak && sync";
@@ -846,10 +861,10 @@ void MainWindow::boardInit()
         cmdstr = "chmod a+w /usr/bin/vlc && sed 's/geteuid/getppid/g' /usr/bin/vlc > /tmp/vlc && cp /tmp/vlc /usr/bin/vlc";
         system(cmdstr.toLocal8Bit());
 
-        ui->labelBoard->setText(GetPiBoard());
+        ui->labelBoard->setText(board);
 
         // Relay init
-        if(GetPiBoard() == "CS12800RA4101" || GetPiBoard() == "LRRA4-101" || GetPiBoard() == "CS12800RA4101A" || GetPiBoard() == "CS12800RA4101AV4") {
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4") {
             gpioExport("17");
             setGPIOModelRaw("17","out");
             setGPIOValueRaw("17","0");
@@ -863,13 +878,27 @@ void MainWindow::boardInit()
     } else if(cpuplat == "am335x"){
         ui->labelBoard->setText("AM335XBOARD");
     } else if(cpuplat == "px30") {
-        ui->labelBoard->setText(GetBoard());
+        ui->labelBoard->setText(board);
         relaypath = "/dev/relay";
     } else {
         ui->labelBoard->setText(GetBoard());
     }
 
     ui->labelVersion->setText(VERSION);
+
+    if(ispifive && has4GModule()) {
+        if (QFile::exists("/dev/ttyUSB6"))
+            fgisquetel = true;
+        else if (QFile::exists("/dev/ttyUSB2"))
+            fgisquetel = true;
+        else
+            fgisquetel = false;
+
+        if (QFile::exists("/dev/ttyACM0"))
+            fgissimcom = true;
+        else
+            fgissimcom = false;
+    }
 
     BoardSetting();
     connect(ui->pushButton_exit,&QPushButton::clicked,this,&MainWindow::close);
@@ -919,19 +948,29 @@ void MainWindow::dateTimeInit()
  */
 void MainWindow::OpenLed()
 {
-    QString cmdstr = "echo 1 >"+ledpath+"&";
+    QString cmdstr;
+    if(cpuplat == "pi"){
+        cmdstr = "echo 0 >"+ledpath+"&";
+    } else {
+        cmdstr = "echo 1 >"+ledpath+"&";
+    }
     system(cmdstr.toLocal8Bit());
 }
 
 void MainWindow::CloseLed()
 {
-    QString cmdstr = "echo 0 >"+ledpath+"&";
+    QString cmdstr;
+    if(cpuplat == "pi"){
+        cmdstr = "echo 1 >"+ledpath+"&";
+    } else {
+        cmdstr = "echo 0 >"+ledpath+"&";
+    }
     system(cmdstr.toLocal8Bit());
 }
 
 void MainWindow::OpenLed2()
 {
-    QString cmdstr = "echo 1 >"+ledpath2+"&";
+    QString cmdstr = "echo 1 >"+ledpath+"&";
     system(cmdstr.toLocal8Bit());
 }
 
@@ -1195,7 +1234,7 @@ void MainWindow::ChangeVolume()
     }
 
     if(cpuplat == "pi"){
-        if(debiancodename =="bullseye")
+        if(debiancodename =="bullseye" || ispifive)
             cmdstr = "amixer cset "+volumepath+" "+value+"% &";
         else
             cmdstr = "pactl set-sink-volume 0 "+value+"% &";
@@ -1264,6 +1303,10 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(127);
     }else if (board == "bbbexp"){
     }else if (cpuplat == "pi"){
+        //if(ispifive){
+        //    ui->horizontalSlider_audio_volume->setVisible(false);
+        //    ui->label_audio_volume->setVisible(false);
+        //}
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
         if(debiancodename == "bullseye"){
@@ -1480,7 +1523,7 @@ void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
     // try to use inter LCDTester class to test LCD
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || ispifive){
         lcd = new LCDTester;
         connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
     } else {
@@ -1858,9 +1901,38 @@ void MainWindow::networkautotest()
 /*
  * 4G
  *
- * mobile4gEnable() mobile4gDisable() checkCustom4gNumPolicy(int idx) mobile4gInit()
+ * has4GModule() mobile4gEnable() mobile4gDisable() checkCustom4gNumPolicy(int idx) mobile4gInit()
  *
  */
+bool MainWindow::has4GModule()
+{
+    QDir netDir("/sys/class/net/");
+    QStringList interfaces = netDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+    foreach (const QString &interface, interfaces) {
+        if (interface.startsWith("wwan") || interface.startsWith("usb")) {
+            qDebug() << "4G module detected:" << interface;
+            return true;
+        }
+    }
+
+    QProcess process;
+    process.start("nmcli", {"-t", "-f", "DEVICE,TYPE", "dev"});
+    process.waitForFinished();
+
+    if (process.exitCode() == 0) {
+        QString output = process.readAllStandardOutput();
+        if (output.contains("gsm") || output.contains("cdma")) {
+            qDebug() << "4G module detected.";
+            return true;
+        }
+    } else {
+        qDebug() << "Failed to check for 4G module:" << process.readAllStandardError();
+    }
+
+    return false;
+}
+
 void MainWindow::mobile4gEnable()
 {
     ui->pushButton_4gEnable->setDisabled(true);
@@ -1872,7 +1944,38 @@ void MainWindow::mobile4gEnable()
         cmdstr = "ifconfig wwan0 down && /opt/chipsee/test/gsm/linux-ppp-scripts/quectel-pppd.sh /dev/ttyUSB3 " + nettype + "&";
     else
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
-    system(cmdstr.toLocal8Bit());
+
+    if(ispifive && fgissimcom) {
+        QString cfg1cmd("AT+DIALMODE=0\r\n");
+        QString cfg2cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
+
+        fgport = new QSerialPort(this);
+        fgport->setPortName("/dev/ttyACM0");
+        fgport->setBaudRate(QSerialPort::Baud9600);
+        fgport->setDataBits(QSerialPort::Data8);
+        fgport->setParity(QSerialPort::NoParity);
+        fgport->setStopBits(QSerialPort::OneStop);
+        fgport->setFlowControl(QSerialPort::NoFlowControl);
+
+        if(fgport->isOpen())
+            fgport->close();
+        if(fgport->open(QIODevice::ReadWrite)){
+            ui->pushButton_4gEnable->setDisabled(true);
+            fgport->write(cfg1cmd.toLatin1());
+            while(fgport->waitForReadyRead(100));
+            fgport->write(cfg2cmd.toLatin1());
+            while(fgport->waitForReadyRead(100));
+            fgport->close();
+            qDebug() << "SIMCOM 4G Enabled";
+        }else
+        {
+            QMessageBox::critical(this, tr("Error"), "SIMCOM 4G Open fail");
+            return;
+        }
+    } else {
+        system(cmdstr.toLocal8Bit());
+    }
+
     ui->textBrowser_network_text->setText("4G Enabling, press 'Netinfo' to know status.");
 }
 
@@ -1900,6 +2003,13 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
+    if(ispifive && !has4GModule()) {
+        ui->comboBox_4g->setVisible(false);
+        ui->pushButton_4gDisable->setVisible(false);
+        ui->pushButton_4gEnable->setVisible(false);
+        return;
+    }
+
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||
 	   board == "CS19108RA4133PR2P" ||
            board == "CS19108RA4156PR2P" ||
@@ -1920,6 +2030,11 @@ void MainWindow::mobile4gInit()
     ui->comboBox_4g->addItem("Custome");
     ui->pushButton_4gEnable->setDisabled(false);
     ui->pushButton_4gDisable->setDisabled(true);
+
+    if(ispifive && fgissimcom) {
+        ui->comboBox_4g->setVisible(false);
+        ui->pushButton_4gDisable->setVisible(false);
+    }
     connect(ui->comboBox_4g, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),this,&MainWindow::checkCustom4gNumPolicy);
     ui->pushButton_4gDisable->setDisabled(true);
     connect(ui->pushButton_4gEnable,&QPushButton::clicked,this,&MainWindow::mobile4gEnable);
@@ -1999,6 +2114,16 @@ void MainWindow::gpsInit()
 {
     QString atportname="/dev/ttyUSB2";
     QString gpsportname="/dev/ttyUSB1";
+
+    if(ispifive && !has4GModule()) {
+        ui->pushButton_GPSEnable->setVisible(false);
+        ui->pushButton_GPSDisable->setVisible(false);
+        return;
+    } else if (ispifive && fgissimcom){
+        ui->pushButton_GPSEnable->setVisible(false);
+        ui->pushButton_GPSDisable->setVisible(false);
+        return;
+    }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" ||
            board == "CS19108RA4133PR2P" ||

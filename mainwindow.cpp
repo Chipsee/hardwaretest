@@ -1461,8 +1461,8 @@ void MainWindow::ChangeBacklight()
 
 int MainWindow::MaxBacklighValue()
 {
-#if 0
-    if(cpuplat == "pi")
+#if 1
+    if(ispifive)
         return 1;
 #endif
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
@@ -1488,6 +1488,10 @@ int MainWindow::MaxBacklighValue()
 
 int MainWindow::GetBacklightValue()
 {
+#if 1
+    if(ispifive)
+        return 1;
+#endif
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     if(GetFileValue(backlightpath)==QString() && machine != "PPC-A76-BOX"){
 #else
@@ -1546,7 +1550,7 @@ void MainWindow::displayInit()
     }
     connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
 
-    if(machine == "PPC-A76-BOX") {
+    if(machine == "PPC-A76-BOX" || ispifive) {
     	ui->horizontalSlider_backlight->setVisible(false);
 	ui->label_backlight->setVisible(false);
     }

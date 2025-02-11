@@ -433,7 +433,11 @@ QString MainWindow::GetBoard()
 	board = GetComResult("cspn");
         // Remove "\n" from board
         board.remove(QChar('\n'),Qt::CaseInsensitive);
-        return board;
+        if (board.startsWith("CS")) {
+            return board;
+        } else {
+            return "CS10600RA5070P";
+        }
     }
 
     if(GetPlat() == "pi" || GetPlat() == "px30")
@@ -2853,7 +2857,7 @@ void MainWindow::autoTest()
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
        	    OpenLed2();
 	}
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
             RelayNO();
         }
 
@@ -2865,7 +2869,7 @@ void MainWindow::autoTest()
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
             CloseLed2();
 	}
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
             RelayNC();
         }
 
@@ -2881,7 +2885,7 @@ void MainWindow::autoTest()
         networkautotest();
     }
 
-    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4") {
+    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4" && board != "CS12800RA5101A") {
         // Test Serial and CAN
         connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
     }
@@ -2910,7 +2914,7 @@ void MainWindow::autoTest()
             break;
     }
 
-    if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4"){
+    if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
         port[5] = port[4];
     }
 
@@ -2975,7 +2979,7 @@ void MainWindow::autoTest()
     }
 
     if(cpuplat == "pi"){
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
             QString audiostr("@@AUDIO\n");
             if(port[0]->isOpen())
                 port[0]->close();
@@ -3224,6 +3228,13 @@ void MainWindow::autotestInit()
         networkautotest();
     }
 #endif
+
+    // CM5 use CS10600RA5070P to test.
+    // Fix board version.
+    if(ispifive) {
+        board = "CS10600RA5070P";
+    }
+
     if(GetFileValue(DLANLOGFILE).contains("Found RTL8153B")) {
         ui->textBrowser_network_text->clear();
         ui->textBrowser_network_text->setText(GetFileValue(DLANLOGFILE));

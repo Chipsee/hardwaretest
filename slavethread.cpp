@@ -63,7 +63,26 @@ void SlaveThread::enablePi485Receive()
 QString SlaveThread::GetComResult(QString cmd)
 {
     QProcess process;
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
+    QStringList list = cmd.split(" ");
+    QString firstElement;
+    QStringList otherElements;
+    if(!list.isEmpty()){
+        firstElement = list.first();
+    }
+    if(list.size() > 1) {
+        otherElements = list.mid(1);
+    } else {
+        otherElements = QStringList() << "-c" << firstElement;
+        firstElement = "/bin/sh";
+    }
+
+    process.start(firstElement, otherElements);
+    // Or we can use startCommand method in QT_VERSION >= 6.0.0.
+    //process.startCommand(cmd);
+#else
     process.start(cmd);
+#endif
     process.waitForFinished();
     QByteArray output = process.readAllStandardOutput();
     QString result = output;
@@ -218,7 +237,7 @@ void SlaveThread::run()
         }
     }
 
-    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" || *board != "CS12800RA4101A" || *board != "CS12800RA4101AV4"){
+    if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" && *board != "CS12800RA4101A" && *board != "CS12800RA4101AV4"){
         //CAN INIT
         if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
             system("echo >/tmp/can0.txt");

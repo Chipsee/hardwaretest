@@ -14,6 +14,21 @@ void Utils::executeCommand(const QString &command) {
             this, &Utils::onError);
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     process->startCommand(command);
+#elif QT_VERSION >= QT_VERSION_CHECK(5,15,8)
+    QStringList list = command.split(" ");
+    QString firstElement;
+    QStringList otherElements;
+    if(!list.isEmpty()){
+        firstElement = list.first();
+    }
+    if(list.size() > 1) {
+        otherElements = list.mid(1);
+    } else {
+        otherElements = QStringList() << "-c" << firstElement;
+        firstElement = "/bin/sh";
+    }
+
+    process->start(firstElement, otherElements);
 #else
     process->start(command);
 #endif

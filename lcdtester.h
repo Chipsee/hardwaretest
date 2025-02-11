@@ -28,8 +28,8 @@ public slots:
 private:
     // Declare a list of colors to test
     QList<QColor> colors;
-    int index;
     Ui::LCDTester *ui;
+    int index;
     int lcdwidth;
     int lcdheight;
 };

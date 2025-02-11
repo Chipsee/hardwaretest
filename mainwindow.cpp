@@ -694,7 +694,15 @@ void MainWindow::BoardSetting()
         //board = GetBoard(); //board will be fill in boardInit() function.
         if (ispifive) {
             ledpath = PILEDACTPATH;
-            volumepath = PIVOLUMEPATH2;
+            if(GetComResult("amixer controls").contains("PCM Playback")) {
+                volumepath = PIVOLUMEPATH2;
+                qDebug() << "==PCM Playback";
+            } else if (GetComResult("amixer controls").contains("Master Playback")) {
+                volumepath = PIVOLUMEPATH;
+                qDebug() << "==Master Playback";
+            } else {
+                volumepath = PIVOLUMEPATH;
+            }
         } else {
             ledpath = PILED0PATH;
             volumepath = PIVOLUMEPATH;
@@ -2675,6 +2683,8 @@ void MainWindow::canStart()
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic")  || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588"){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    } else if (ispifive) {
+        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     }
@@ -2690,7 +2700,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52")  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52")  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -2708,7 +2718,7 @@ void MainWindow::canStop()
     QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
         cmdstr = "ip link set "+cannum+" down";
     } else {
         cmdstr = "canconfig "+cannum+" stop";
@@ -2772,7 +2782,7 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else if(board == "AM335XBOARD"){
@@ -2810,7 +2820,7 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
         ui->pushButton_canStart->setDisabled(true);
     }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);

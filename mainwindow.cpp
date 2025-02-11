@@ -250,7 +250,7 @@ MainWindow::MainWindow(QWidget *parent) :
     alltestInit();
 
     // AutoTest, used for chipsee autotest
-    //autotestInit();
+    autotestInit();
 }
 
 MainWindow::~MainWindow()

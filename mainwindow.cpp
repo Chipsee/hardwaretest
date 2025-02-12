@@ -187,15 +187,19 @@
 #define IMX8MPMAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 #define IMX8MPUSBDEBUGFILEPATH USBDEBUGFILEPATH
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QString executableName, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    exeName(executableName)
 {
     ui->setupUi(this);
     this->setWindowIcon(QIcon(":/images/chipsee.png"));
+    this->setWindowTitle(exeName);
     audioflag = true;
     autoflag = false;
     vautoflag = false;
+
+    qDebug() << "Executable Name:" << exeName;
 
     // Libgpiod
     for (int i=0; i<4; i++){
@@ -3228,6 +3232,9 @@ void MainWindow::autotestInit()
         networkautotest();
     }
 #endif
+    if(exeName != "hardwaretest_auto") {
+        return;
+    }
 
     // CM5 use CS10600RA5070P to test.
     // Fix board version.

@@ -37,7 +37,8 @@ sleep 1
 qmake -o Makefile hardwaretest.pro
 make -j4
 cp resourcefiles/hardwaretest /usr/ -rf
-cp hardwaretest /usr/hardwaretest/
+cp hardwaretest /usr/hardwaretest/hardwaretest
+cp hardwaretest /usr/hardwaretest/hardwaretest_auto
 ln -sf /usr/hardwaretest/hardwaretest /usr/bin/hardwaretest
 cp /usr/hardwaretest/hardwaretest.desktop /usr/share/applications/
 cp /usr/hardwaretest/hardwaretest.png /usr/share/pixmaps/

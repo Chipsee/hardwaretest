@@ -27,7 +27,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QString executableName, QWidget *parent = 0);
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     ~MainWindow();
@@ -168,6 +168,7 @@ private:
     bool ispifive;
     bool fgisquetel;
     bool fgissimcom;
+    QString exeName;
 
     struct serailSettings {
             QString name;

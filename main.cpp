@@ -8,12 +8,16 @@
 #endif
 #include <QDebug>
 #include <QSettings>
+#include <QFileInfo>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setAttribute(Qt::AA_SynthesizeTouchForUnhandledMouseEvents, true);
     QApplication a(argc, argv);
+
+    QString executableName = QFileInfo(QCoreApplication::applicationFilePath()).fileName();
+
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     //QGuiApplication a(argc, argv);
     QRect screenRect = QGuiApplication::primaryScreen()->geometry();
@@ -28,7 +32,7 @@ int main(int argc, char *argv[])
 #endif
     QFont font = a.font();
 
-    MainWindow w;
+    MainWindow w(executableName);
 
     if(width <= 1024){
         //qDebug()<< "will use 6 font";

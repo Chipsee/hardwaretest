@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
     } else {
         // Read the window position from QSettings
         // config file is located in .config/Chipsee/hardwaretest.conf
-        QSettings settings("Chipsee", "hardwaretest");
-        w.restoreGeometry(settings.value("windowGeometry").toByteArray());
+        //QSettings settings("Chipsee", "hardwaretest");
+        w.restoreGeometry(w.settings->value("windowGeometry").toByteArray());
     }
 
     w.show();

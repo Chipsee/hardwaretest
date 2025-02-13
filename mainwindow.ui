@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1107</width>
-    <height>623</height>
+    <height>666</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1256,6 +1256,13 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_setting_device_size">
+           <property name="text">
+            <string>Setting Device Size(CM5 Only)</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -1268,11 +1275,11 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_led1"/>
   <buttongroup name="buttonGroup_out_2"/>
-  <buttongroup name="buttonGroup_out_3"/>
   <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_out_3"/>
+  <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_led1"/>
  </buttongroups>
 </ui>

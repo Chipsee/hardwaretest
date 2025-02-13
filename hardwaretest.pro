@@ -20,6 +20,7 @@ LIBS += -lgpiod
 #include(qextserialport/src/qextserialport.pri)
 
 SOURCES += main.cpp\
+    epflash.cpp \
     gpiocontroller.cpp \
         mainwindow.cpp \
     timedialog.cpp \
@@ -30,6 +31,7 @@ SOURCES += main.cpp\
     utils.cpp
 
 HEADERS  += mainwindow.h \
+    epflash.h \
     gpiocontroller.h \
     timedialog.h \
     slavethread.h \
@@ -40,6 +42,7 @@ HEADERS  += mainwindow.h \
     lcdtester.h
 
 FORMS    += mainwindow.ui \
+    epflash.ui \
     timedialog.ui \
     device.ui \
     service.ui \

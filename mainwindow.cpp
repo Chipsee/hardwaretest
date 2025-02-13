@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "timedialog.h"
+#include "epflash.h"
 #include <QDateTime>
 #include <QMessageBox>
 #include <QProcess>
@@ -190,7 +191,8 @@
 MainWindow::MainWindow(QString executableName, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    exeName(executableName)
+    exeName(executableName),
+    settings(new QSettings("Chipsee", "hardwaretest", this))
 {
     ui->setupUi(this);
     this->setWindowIcon(QIcon(":/images/chipsee.png"));
@@ -211,8 +213,7 @@ MainWindow::MainWindow(QString executableName, QWidget *parent) :
 
     // Read the window position from QSettings
     // config file is located in .config/Chipsee/hardwaretest.conf
-    //QSettings settings("Chipsee", "hardwaretest");
-    //restoreGeometry(settings.value("windowGeometry").toByteArray());
+    // closeEvent and showEvent
 
     // Screen init
     screenInit();
@@ -3232,6 +3233,8 @@ void MainWindow::autotestInit()
         networkautotest();
     }
 #endif
+    ui->pushButton_setting_device_size->setVisible(false);
+
     if(exeName != "hardwaretest_auto") {
         return;
     }
@@ -3240,6 +3243,17 @@ void MainWindow::autotestInit()
     // Fix board version.
     if(ispifive) {
         board = "CS10600RA5070P";
+        ui->pushButton_setting_device_size->setVisible(true);
+        epflashdialog = new epflash;
+        connect(ui->pushButton_setting_device_size,&QPushButton::clicked,epflashdialog,&epflash::ShowEpflashDiaManual);
+        if(settings->value("Ispifive","").toString() != "YES") {
+            settings->setValue("Ispifive","YES");
+        }
+        epflashdialog->ShowEpflashDia();
+    } else {
+        if(settings->value("Ispifive","").toString() != "NO") {
+            settings->setValue("Ispifive","NO");
+        }
     }
 
     if(GetFileValue(DLANLOGFILE).contains("Found RTL8153B")) {
@@ -3260,8 +3274,8 @@ void MainWindow::autotestInit()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     // Write the window position to QSettings
-    QSettings settings("Chipsee", "hardwaretest");
-    settings.setValue("windowGeometry", saveGeometry());
+    //.config/Chipsee/hardwaretest.conf
+    settings->setValue("windowGeometry", saveGeometry());
     event->accept();
 }
 
@@ -3269,7 +3283,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::showEvent(QShowEvent *event)
 {
     // Read the window position from QSettings
-    QSettings settings("Chipsee", "hardwaretest");
-    restoreGeometry(settings.value("windowGeometry").toByteArray());
+    //.config/Chipsee/hardwaretest.conf
+    restoreGeometry(settings->value("windowGeometry").toByteArray());
     event->accept();
 }

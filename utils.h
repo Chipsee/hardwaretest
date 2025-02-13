@@ -3,6 +3,15 @@
 
 #include <QObject>
 #include <QProcess>
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+#include <QGuiApplication>
+#include <QScreen>
+#else
+#include <QApplication>
+#include <QDesktopWidget>
+#endif
+#include <QMessageBox>
+#include <QDebug>
 
 class Utils : public QObject
 {
@@ -10,6 +19,9 @@ class Utils : public QObject
 public:
     explicit Utils(QObject *parent = nullptr);
     void executeCommand(const QString &command);
+    void showCustomMessage(const QString &msgtype, const QString &title,const QString &message, int width, int height);
+    int lcdWidth;
+    int lcdHeight;
 
 signals:
     void commandFinished(bool success, const QString &errorString);

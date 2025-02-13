@@ -11,6 +11,7 @@
 #include "lcdtester.h"
 #include "utils.h"
 #include "gpiocontroller.h"
+#include <QSettings>
 
 namespace Ui {
 class MainWindow;
@@ -21,6 +22,7 @@ class QIntValidator;
 class DeviceDiscoveryDialog;
 class LCDTester;
 class GpioController;
+class epflash;
 
 class MainWindow : public QMainWindow
 {
@@ -169,6 +171,7 @@ private:
     bool fgisquetel;
     bool fgissimcom;
     QString exeName;
+    epflash *epflashdialog;
 
     struct serailSettings {
             QString name;
@@ -222,6 +225,8 @@ private:
     void showRequest(const QString &s);
     void showcanRequest(const QString &s);
 
+public:
+    QSettings *settings;
 };
 
 #endif // MAINWINDOW_H

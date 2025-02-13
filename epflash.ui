@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>epflash</class>
+ <widget class="QDialog" name="epflash">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>195</width>
+    <height>271</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetMinimumSize</enum>
+   </property>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Select one for your device</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <item row="0" column="0">
+      <widget class="QRadioButton" name="radioButton_050">
+       <property name="text">
+        <string>5</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QRadioButton" name="radioButton_150">
+       <property name="text">
+        <string>15</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QRadioButton" name="radioButton_070">
+       <property name="text">
+        <string>7</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QRadioButton" name="radioButton_156">
+       <property name="text">
+        <string>15.6</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QRadioButton" name="radioButton_070D">
+       <property name="text">
+        <string>7d</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QRadioButton" name="radioButton_170">
+       <property name="text">
+        <string>17</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QRadioButton" name="radioButton_101">
+       <property name="text">
+        <string>10.1</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QRadioButton" name="radioButton_185">
+       <property name="text">
+        <string>18.5</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QRadioButton" name="radioButton_101A">
+       <property name="text">
+        <string>10a</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QRadioButton" name="radioButton_190">
+       <property name="text">
+        <string>19</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QRadioButton" name="radioButton_121">
+       <property name="text">
+        <string>12.1</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QRadioButton" name="radioButton_215">
+       <property name="text">
+        <string>21.5</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QRadioButton" name="radioButton_133">
+       <property name="text">
+        <string>13.3</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QRadioButton" name="radioButton_236">
+       <property name="text">
+        <string>23.6</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBox_same_device">
+     <property name="text">
+      <string>Same Device</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>epflash</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>epflash</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup_device_size"/>
+ </buttongroups>
+</ui>

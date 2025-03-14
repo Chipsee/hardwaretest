@@ -582,6 +582,8 @@ QString MainWindow::GetDebianCodeName()
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
+        if(codename.contains("focal"))
+            codename = "focal";
     }
     if(GetPlat() == "rk3568"){
         codename = GetComResult("lsb_release -c");
@@ -1901,7 +1903,7 @@ void MainWindow::networkInit()
     ui->pushButton_wifiDisable->setDisabled(true);
     ui->pushButton_cmst->setVisible(false);
 
-    if(cpuplat == "imx8mp" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") ||  (board == "imx6q" && debiancodename == "bionic")){
+    if(cpuplat == "imx8mp" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (board == "imx6q" && debiancodename == "bionic")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
         ui->pushButton_BluetoothTest->setVisible(false);

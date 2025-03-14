@@ -72,7 +72,11 @@ void epflash::ShowEpflashDiaManual()
     modifyButtonId(ui->radioButton_215, 13);
     modifyButtonId(ui->radioButton_236, 14);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
     connect(ui->buttonGroup_device_size, QOverload<int>::of(&QButtonGroup::idClicked), this, &epflash::onButtonClicked);
+#else
+    connect(ui->buttonGroup_device_size, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &epflash::onButtonClicked);
+#endif
 }
 
 void epflash::ShowEpflashDia()

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>195</width>
-    <height>271</height>
+    <height>358</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -51,30 +51,10 @@
        </attribute>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QRadioButton" name="radioButton_150">
-       <property name="text">
-        <string>15</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QRadioButton" name="radioButton_070">
        <property name="text">
         <string>7</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QRadioButton" name="radioButton_156">
-       <property name="text">
-        <string>15.6</string>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup_device_size</string>
@@ -91,30 +71,10 @@
        </attribute>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QRadioButton" name="radioButton_170">
-       <property name="text">
-        <string>17</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
      <item row="3" column="0">
       <widget class="QRadioButton" name="radioButton_101">
        <property name="text">
         <string>10.1</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QRadioButton" name="radioButton_185">
-       <property name="text">
-        <string>18.5</string>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup_device_size</string>
@@ -131,30 +91,10 @@
        </attribute>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QRadioButton" name="radioButton_190">
-       <property name="text">
-        <string>19</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
      <item row="5" column="0">
       <widget class="QRadioButton" name="radioButton_121">
        <property name="text">
         <string>12.1</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup_device_size</string>
-       </attribute>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QRadioButton" name="radioButton_215">
-       <property name="text">
-        <string>21.5</string>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup_device_size</string>
@@ -171,7 +111,14 @@
        </attribute>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="7" column="0">
+      <widget class="QRadioButton" name="radioButton_133H">
+       <property name="text">
+        <string>13.3h</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
       <widget class="QRadioButton" name="radioButton_236">
        <property name="text">
         <string>23.6</string>
@@ -179,6 +126,80 @@
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup_device_size</string>
        </attribute>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QRadioButton" name="radioButton_215">
+       <property name="text">
+        <string>21.5</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QRadioButton" name="radioButton_150">
+       <property name="text">
+        <string>15</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QRadioButton" name="radioButton_150H">
+       <property name="text">
+        <string>15h</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QRadioButton" name="radioButton_156">
+       <property name="text">
+        <string>15.6</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QRadioButton" name="radioButton_190">
+       <property name="text">
+        <string>19</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QRadioButton" name="radioButton_185">
+       <property name="text">
+        <string>18.5</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QRadioButton" name="radioButton_170">
+       <property name="text">
+        <string>17</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup_device_size</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QRadioButton" name="radioButton_156H">
+       <property name="text">
+        <string>15.6h</string>
+       </property>
       </widget>
      </item>
     </layout>

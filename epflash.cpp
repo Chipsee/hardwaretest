@@ -57,20 +57,23 @@ void epflash::ShowEpflashDiaManual()
 {
     this->show();
 
-    modifyButtonId(ui->radioButton_050, 1);
-    modifyButtonId(ui->radioButton_070, 2);
-    modifyButtonId(ui->radioButton_070D, 3);
-    modifyButtonId(ui->radioButton_101, 4);
-    modifyButtonId(ui->radioButton_101A, 5);
-    modifyButtonId(ui->radioButton_121, 6);
-    modifyButtonId(ui->radioButton_133, 7);
-    modifyButtonId(ui->radioButton_150, 8);
-    modifyButtonId(ui->radioButton_156, 9);
-    modifyButtonId(ui->radioButton_170, 10);
-    modifyButtonId(ui->radioButton_185, 11);
-    modifyButtonId(ui->radioButton_190, 12);
-    modifyButtonId(ui->radioButton_215, 13);
-    modifyButtonId(ui->radioButton_236, 14);
+    //modifyButtonId(ui->radioButton_050, 1);
+    //modifyButtonId(ui->radioButton_070, 2);
+    //modifyButtonId(ui->radioButton_070D, 3);
+    //modifyButtonId(ui->radioButton_101, 4);
+    //modifyButtonId(ui->radioButton_101A, 5);
+    //modifyButtonId(ui->radioButton_121, 6);
+    //modifyButtonId(ui->radioButton_133, 7);
+    //modifyButtonId(ui->radioButton_133H, 8);
+    //modifyButtonId(ui->radioButton_150, 9);
+    //modifyButtonId(ui->radioButton_150H, 10);
+    //modifyButtonId(ui->radioButton_156, 11);
+    //modifyButtonId(ui->radioButton_156H, 12);
+    //modifyButtonId(ui->radioButton_170, 13);
+    //modifyButtonId(ui->radioButton_185, 14);
+    //modifyButtonId(ui->radioButton_190, 15);
+    //modifyButtonId(ui->radioButton_215, 16);
+    //modifyButtonId(ui->radioButton_236, 17);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
     connect(ui->buttonGroup_device_size, QOverload<int>::of(&QButtonGroup::idClicked), this, &epflash::onButtonClicked);

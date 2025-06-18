@@ -2892,7 +2892,7 @@ void MainWindow::autoTest()
         networkautotest();
     }
 
-    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4" && board != "CS12800RA5101A") {
+    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4" && board != "CS12800RA5101A" && board != "CS19108RA4133PISO") {
         // Test Serial and CAN
         connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
     }
@@ -2923,6 +2923,11 @@ void MainWindow::autoTest()
 
     if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
         port[5] = port[4];
+    }
+
+    if(board == "CS19108RA4133PISO") {
+        port[4] = port[3];
+        port[5] = port[3];
     }
 
     if(board == "CS12800PX101"){

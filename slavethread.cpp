@@ -141,6 +141,18 @@ void SlaveThread::run()
         qDebug() << port[4]->portName();
     }
 
+    if(*board == "CS19108RA4133PISO") {
+        port[5] = port[2];
+        port[4] = port[2];
+        port[3] = port[2];
+        port[2] = port[1];
+        qDebug() << port[0]->portName();
+        qDebug() << port[1]->portName();
+        qDebug() << port[2]->portName();
+        qDebug() << port[3]->portName();
+        qDebug() << port[4]->portName();
+    }
+
     if(*board == "CS12800RA101"){
         port[3] = port[4];
         port[4] = port[5];
@@ -261,7 +273,7 @@ void SlaveThread::run()
             system("canconfig can0 start");
         }
         system("candump can0 > /tmp/can0.txt &");
-        if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS10600RA4070D" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board !="CS12800R101P" && *board != "CS10600RA5070P") {
+        if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS10600RA4070D" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board !="CS12800R101P" && *board != "CS10600RA5070P" && *board != "CS19108RA4133PISO") {
             if(*board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
                 system("echo >/tmp/can1.txt");
                 system("ip link set can1 down");
@@ -365,7 +377,7 @@ void SlaveThread::run()
             file.close();
 
             // CAN1
-            if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS10600RA4070D" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board != "CS12800R101P" && *board != "CS10600RA5070P") {
+            if(*board != "CS12720RA4050" && *board != "CS10600RA4070" && *board != "CS10600RA4070D" && *board != "CS12800RA4101BOX" && *board != "CS12800RA4101P" && *board != "CS19108RA4133P" && *board != "CS10768RA4150P" && *board != "CS19108RA4156P" && *board != "CS19108RA4215P" && *board != "CS12800PX101" && *board != "CS12800R101P" && *board != "CS10600RA5070P" && *board != "CS19108RA4133PISO") {
                 QFile file1("/tmp/can1.txt");
                 if (file1.open(QIODevice::ReadWrite)){
                     QTextStream in(&file1);

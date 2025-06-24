@@ -19,6 +19,21 @@ LIBS += -lgpiod
 
 #include(qextserialport/src/qextserialport.pri)
 
+# Get libgpiod version
+LIBGPIOD_VERSION = $$system(pkg-config --modversion libgpiod)
+
+message(LIBGPIOD_VERSION = $$LIBGPIOD_VERSION)
+
+equals(find(LIBGPIOD_VERSION, "2."), -1){
+    message("Using libgpiod v1")
+    DEFINES += USE_GPIOD_V1
+} else {
+    message("Using libgpiod v2")
+    DEFINES += USE_GPIOD_V2
+}
+
+message(DEFINES = $$DEFINES)
+
 SOURCES += main.cpp\
     epflash.cpp \
     gpiocontroller.cpp \

@@ -29,6 +29,7 @@
 #include <QtGui/QCloseEvent>
 #include <QDir>
 
+#include <QDebug>
 /*
  * If you want to change the board,
  * 如果需要修改底板
@@ -188,6 +189,19 @@
 #define IMX8MPMAXBACKLIGHTPATH "/sys/class/backlight/backlight/max_brightness"
 #define IMX8MPUSBDEBUGFILEPATH USBDEBUGFILEPATH
 
+/* STM32MP25 Devices*/
+#define STM32MP25LED0PATH "/sys/class/leds/red:heartbeat/brightness"
+#define STM32MP25LED1PATH ""
+#define STM32MP25AUDIOPATH AUDIOPATH
+#define STM32MP25CUEAUDIOPATH CUEAUDIOPATH
+#define STM32MP25VOLUMEPATH "name='Headphone Volume'"
+#define STM32MP25BUZZERPATH BUZZERPATH
+#define STM32MP25IPPATH IPPATH
+#define STM32MP25VIDEOPATH "/usr/hardwaretest/h264.mp4"
+#define STM32MP25BACKLIGHTPATH "/sys/class/backlight/panel-dsi-backlight/brightness"
+#define STM32MP25MAXBACKLIGHTPATH "/sys/class/backlight/panel-dsi-backlight/max_brightness"
+#define STM32MP25USBDEBUGFILEPATH USBDEBUGFILEPATH
+
 MainWindow::MainWindow(QString executableName, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -205,12 +219,11 @@ MainWindow::MainWindow(QString executableName, QWidget *parent) :
 
     // Libgpiod
     for (int i=0; i<4; i++){
-        out.push_back(new GpioController());
-        in.push_back(new GpioController());
+        out.push_back(new GpioController(this));
+        in.push_back(new GpioController(this));
     }
 
-    buzzer = new GpioController();
-
+    buzzer = new GpioController(this);
     // Read the window position from QSettings
     // config file is located in .config/Chipsee/hardwaretest.conf
     // closeEvent and showEvent
@@ -381,7 +394,7 @@ QString MainWindow::GetPlat()
     QString rk3568 = GetComResult("grep -c rk3568 /proc/device-tree/compatible");    
     QString imx8mp = GetComResult("grep -c imx8mp /proc/device-tree/compatible");
     QString rk3588 = GetComResult("grep -c rk3588 /proc/device-tree/compatible");
-
+    QString stm32mp25 = GetComResult("grep -c stm32mp25 /proc/device-tree/compatible");
     //qDebug() << cpucore.left(1);
     //qDebug() << imx6qdlul.left(1);
     //qDebug() << "TEST QString is: " + imx8mp;
@@ -410,6 +423,8 @@ QString MainWindow::GetPlat()
         plat = "imx8mp";
     }else if(rk3588.left(1) == "2"){
         plat = "rk3588";
+    }else if(stm32mp25.left(1) == "2"){
+        plat = "stm32mp25";
     }
 
     return plat;
@@ -445,7 +460,7 @@ QString MainWindow::GetBoard()
         }
     }
 
-    if(GetPlat() == "pi" || GetPlat() == "px30")
+    if(cpuplat == "pi" || cpuplat == "px30")
     {
         board = GetFileValue("/opt/chipsee/.board");
         // Remove "\n" from board
@@ -455,7 +470,7 @@ QString MainWindow::GetBoard()
         board = "Chipsee Board";
     }
 
-    if(GetPlat() == "rk3399")
+    if(cpuplat == "rk3399")
     {
         QString cs10600r070 = GetComResult("grep -c rk3399-eisd-1024600-mipi /proc/device-tree/compatible");
         QString cs12800r101 = GetComResult("grep -c rk3399-eisd-1280800-lvds-linux /proc/device-tree/compatible");
@@ -478,7 +493,7 @@ QString MainWindow::GetBoard()
         } else
             board = "CS40230RB";
     }
-    if(GetPlat() == "rk3568")
+    if(cpuplat == "rk3568")
     {
         QString CS12800_RK3568_101 = GetComResult("grep -c rk3568-eisd-1280800 /proc/device-tree/compatible");
         QString CS10600_RK3568_070 = GetComResult("grep -c rk3568-eisd-1024600 /proc/device-tree/compatible");
@@ -498,7 +513,7 @@ QString MainWindow::GetBoard()
             board = "CS12720_RK3568_133_156_215_236";
         }
     }
-    if(GetPlat() == "imx8mp")
+    if(cpuplat == "imx8mp")
     {
         QString CS12800_IMX8MP_101 = GetComResult("grep -c imx8mp-eisd-1280800 /proc/device-tree/compatible");
         QString CS10600_IMX8MP_070 = GetComResult("grep -c imx8mp-eisd-1024600 /proc/device-tree/compatible");
@@ -517,7 +532,7 @@ QString MainWindow::GetBoard()
             board = "CS12720_IMX8MP_133_156_215_236";
         }
     }
-    if(GetPlat() == "rk3588")
+    if(cpuplat == "rk3588")
     {
         QString CS10600_RK3588_070 = GetComResult("grep -c CS10600-RK3588-070 /sys/devices/platform/board/info");
         QString CS12800_RK3588_101 = GetComResult("grep -c CS12800-RK3588-101 /sys/devices/platform/board/info");
@@ -529,14 +544,21 @@ QString MainWindow::GetBoard()
         }
     }
 
-    return board;
+    if(cpuplat == "stm32mp25")
+    {
+        QString CS10600_STMP25_070 = GetComResult("grep -c stm32mp25 /proc/device-tree/compatible");
 
+        if(CS10600_STMP25_070.left(1) == "2"){
+            board = "CS10600_STMP25_070";
+        }
+    }
+    return board;
 }
 
 QString MainWindow::GetMachine()
 {
     QString machine;
-    if(GetPlat() == "rk3588") {
+    if(cpuplat == "rk3588") {
         QString PPC_A76_BOX = GetComResult("grep -c PPC-A76-BOX /sys/devices/platform/board/info");
         QString PPC_A76_070 = GetComResult("grep -c PPC-A76-070 /sys/devices/platform/board/info");
         QString PPC_A76_101 = GetComResult("grep -c PPC-A76-101 /sys/devices/platform/board/info");
@@ -566,31 +588,31 @@ QString MainWindow::GetKernelVersion()
 QString MainWindow::GetDebianCodeName()
 {
     QString codename="NULL";
-    if(GetPlat() == "pi"){
+    if(cpuplat == "pi"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
         if(codename.contains("bookworm"))
             codename = "bookworm";
     }
-    if(GetPlat() == "rk3568"){
+    if(cpuplat == "rk3568"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
     }
-    if(GetPlat() == "rk3588"){
+    if(cpuplat == "rk3588"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
         if(codename.contains("focal"))
             codename = "focal";
     }
-    if(GetPlat() == "rk3568"){
+    if(cpuplat == "rk3568"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("focal"))
             codename = "focal";
     }
-    if(GetPlat() == "imx6q"){
+    if(cpuplat == "imx6q"){
         codename = GetComResult("lsb_release -sc");
         if(codename.contains("bionic"))
             codename = "bionic";
@@ -619,7 +641,7 @@ void MainWindow::Delay_MSec_Suspend(int msec)
 
 void MainWindow::BoardSetting()
 {
-    if(GetPlat() == "imx6q"){
+    if(cpuplat == "imx6q"){
         board = "imx6q";
         ledpath = IMX6QLED4PATH;
         ledpath2 = IMX6QLED5PATH;
@@ -639,7 +661,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "imx6dl"){
+    }else if(cpuplat == "imx6dl"){
         board = "imx6d";
         ledpath = IMX6DLED0PATH;
         ledpath2 = IMX6DLED1PATH;
@@ -659,7 +681,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "imx6ul"){
+    }else if(cpuplat == "imx6ul"){
         board = "imx6u";
         ledpath = IMX6ULED0PATH;
         ledpath2 = IMX6ULED1PATH;
@@ -679,7 +701,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "am335x"){
+    }else if(cpuplat == "am335x"){
         board = "AM335XBOARD";
         ledpath = AM335XLED0PATH;
         ledpath2 = AM335XLED1PATH;
@@ -699,9 +721,9 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "bbbexp"){
+    }else if(cpuplat == "bbbexp"){
         board = "bbbexp";
-    }else if(GetPlat() == "pi"){
+    }else if(cpuplat == "pi"){
         //board = GetBoard(); //board will be fill in boardInit() function.
         if (ispifive) {
             ledpath = PILEDACTPATH;
@@ -752,7 +774,7 @@ void MainWindow::BoardSetting()
             gpioInArray[2] = "7";
             gpioInArray[3] = "8";
         }
-    }else if(GetPlat() == "px30"){
+    }else if(cpuplat == "px30"){
         board = GetBoard();
         ledpath = PX30LED0PATH;
         ledpath2 = PX30LED1PATH;
@@ -772,7 +794,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "rk3568"){
+    }else if(cpuplat == "rk3568"){
         board = GetBoard();
         ledpath = RK3568LED0PATH;
         ledpath2 = RK3568LED1PATH;
@@ -792,7 +814,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "rk3399"){
+    }else if(cpuplat == "rk3399"){
         board = GetBoard();
         ledpath = RK3399LED0PATH;
         ledpath2 = RK3399LED1PATH;
@@ -812,7 +834,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
-    }else if(GetPlat() == "imx8mp"){
+    }else if(cpuplat == "imx8mp"){
         board = GetBoard();
         ledpath = IMX8MPLED0PATH;
         ledpath2 = IMX8MPLED1PATH;
@@ -832,7 +854,7 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "gpiochip0 7";
         gpioInArray[2] = "gpiochip0 6";
         gpioInArray[3] = "gpiochip0 5";
-    }else if(GetPlat() == "rk3588"){
+    }else if(cpuplat == "rk3588"){
         board = GetBoard();
         ledpath = RK3588LED0PATH;
         ledpath2 = RK3588LED1PATH;
@@ -852,6 +874,26 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "gpiochip1 9";
         gpioInArray[2] = "gpiochip1 8";
         gpioInArray[3] = "gpiochip1 6";
+    }else if(cpuplat == "stm32mp25"){
+        board = GetBoard();
+        ledpath = STM32MP25LED0PATH;
+        ledpath2 = STM32MP25LED1PATH;
+        audiopath = RK3588AUDIOPATH;
+        cueaudiopath = STM32MP25CUEAUDIOPATH;
+        volumepath = STM32MP25VOLUMEPATH;
+        buzzerpath = "/dev/gpiochip9 10";
+        backlightpath = STM32MP25BACKLIGHTPATH;
+        maxbacklightpath = STM32MP25MAXBACKLIGHTPATH;
+        videopath = STM32MP25VIDEOPATH;
+        ipaddrpath = STM32MP25IPPATH;
+        gpioOutArray[0] = "/dev/gpiochip11 6";
+        gpioOutArray[1] = "/dev/gpiochip11 7";
+        gpioOutArray[2] = "/dev/gpiochip11 8";
+        gpioOutArray[3] = "/dev/gpiochip11 9";
+        gpioInArray[0] = "/dev/gpiochip11 5";
+        gpioInArray[1] = "/dev/gpiochip11 4";
+        gpioInArray[2] = "/dev/gpiochip11 3";
+        gpioInArray[3] = "/dev/gpiochip11 2";
     }
 }
 
@@ -954,7 +996,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30"){
+    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30" || cpuplat == "stm32mp25"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -1207,6 +1249,15 @@ void MainWindow::RecordTest()
         eventloop.exec();
 
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /tmp/output.wav");
+    }else if(cpuplat == "stm32mp25") {
+        system("test -f /tmp/output.wav && rm /tmp/output.wav");
+        QString cmdstr = "arecord -D sysdefault:CARD=ES8388 -f cd -V stereo -d 18 /tmp/output.wav & ";
+        system(cmdstr.toLocal8Bit());
+
+        QEventLoop eventloop;
+        QTimer::singleShot(18000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+        utils.executeCommand("sleep 3 && aplay -D sysdefault:CARD=ES8388 /tmp/output.wav");
     }
 }
 
@@ -1264,7 +1315,7 @@ void MainWindow::ChangeVolume()
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
-    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588") {
+    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" ) {
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
@@ -1274,7 +1325,7 @@ void MainWindow::ChangeVolume()
 
 void MainWindow::EnableBuzzer()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25"){
         buzzer->writeGpioValue(1);
     } else {
         QString cmdstr = "echo 1 >"+buzzerpath+"&";
@@ -1284,7 +1335,7 @@ void MainWindow::EnableBuzzer()
 
 void MainWindow::DisableBuzzer()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588") {
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588"|| cpuplat == "stm32mp25") {
         buzzer->writeGpioValue(0);
     } else {
         QString cmdstr = "echo 0 >"+buzzerpath+"&";
@@ -1355,7 +1406,7 @@ void MainWindow::audioInit()
         ui->label_audio_volume->setVisible(false);
     }
 
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588"||cpuplat == "stm32mp25" ){
         buzzer->initializeGpio(buzzerpath.split(" ").at(0).toUtf8().constData(),buzzerpath.split(" ").at(1).toInt());
         buzzer->setGpioDirection(true);
     }
@@ -1546,7 +1597,7 @@ void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
     // try to use inter LCDTester class to test LCD
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || ispifive){
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || ispifive || cpuplat == "stm32mp25"){//
         lcd = new LCDTester;
         connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
     } else {
@@ -1817,6 +1868,7 @@ void MainWindow::wifiEnable()
     popen("wifienable.sh","r");
     this->ui->textBrowser_network_text->setText("WIFI will be open in background, press \"Network Info\" to check\n\n\n\n*NOTE:\nUsing follow command to config YOURS wifi ssid and password first\n\n#wpa_passphrase \"wifi_ssid\" \"wifi_password\" >> /etc/wpa_supplicant.conf\n\nExample:\nctrl_interface=/var/run/wpa_supplicant\nctrl_interface_group=0\nctrl_interface_group=0\nnetwork={\n        ssid=\"wifi_ssid\"\n        #psk=\"wifi_password\"\n        psk=0fbbe9e700815707d38305d89e3260f3b2334d0a0979c61be8eeea6ca9b0cd64\n}");
     this->ui->pushButton_netInfo->setText("Network Info");
+
     this->ui->pushButton_wifiEnable->setDisabled(true);
     this->ui->pushButton_wifiDisable->setDisabled(false);
     QMessageBox::warning(this,"Tips","Need Time to complete, Press OK to wait.");
@@ -1904,6 +1956,12 @@ void MainWindow::networkInit()
     ui->pushButton_cmst->setVisible(false);
 
     if(cpuplat == "imx8mp" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (board == "imx6q" && debiancodename == "bionic")){
+        ui->pushButton_wifiEnable->setVisible(false);
+        ui->pushButton_wifiDisable->setVisible(false);
+        ui->pushButton_BluetoothTest->setVisible(false);
+    }
+
+    if(cpuplat == "stm32mp25"){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
         ui->pushButton_BluetoothTest->setVisible(false);
@@ -2354,7 +2412,7 @@ void MainWindow::setGPIOModel(QString gpionum, QString model)
 
 void MainWindow::setGPIOInStatu()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" ){
         if(in[0]->readGpioValue() == 1)
             ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
         else
@@ -2427,7 +2485,7 @@ void MainWindow::setGPIOInStatu()
 
 void MainWindow::setGPIOOutStatu()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25"){
         if(ui->radioButton_out_1_high->isChecked())
             out[0]->writeGpioValue(1);
         else
@@ -2643,7 +2701,7 @@ void MainWindow::gpioInit()
         connect(ui->pushButton_gpioRefresh,&QPushButton::clicked,this,&MainWindow::setGPIOInStatu);
     }
 
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588") {
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25") {
         QStringList list;
         for(int i=0; i<4; i++){
             list = gpioOutArray[i].split(" ");
@@ -2694,7 +2752,11 @@ void MainWindow::canStart()
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic")  || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588"){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (ispifive) {
+    } else if (cpuplat == "stm32mp25"){
+        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000  && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    }
+
+    else if (ispifive) {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else {
         cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
@@ -2711,7 +2773,7 @@ void MainWindow::canSend()
     QString canframe;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52")  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52")  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25"){
 	canframe = CANSENDCANFRAMENEW;
     } else {
 	canframe = CANSENDDATA;
@@ -2729,7 +2791,7 @@ void MainWindow::canStop()
     QString cmdstr;
     QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25"){
         cmdstr = "ip link set "+cannum+" down";
     } else {
         cmdstr = "canconfig "+cannum+" stop";
@@ -2789,7 +2851,7 @@ void MainWindow::canInit()
 {
     // UI
     ui->checkBox_2can->setVisible(false);
-    if(board == "imx6q" || board == "imx6d" || board == "imx6u" || board == "CS12800_RK3568_101" || board == "CS10600_RK3568_070"  || cpuplat == "imx8mp" || cpuplat == "rk3588"){
+    if(board == "imx6q" || board == "imx6d" || board == "imx6u" || board == "CS12800_RK3568_101" || board == "CS10600_RK3568_070"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25"){
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
@@ -2863,7 +2925,7 @@ void MainWindow::autoTest()
         OpenLed();
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
        	    OpenLed2();
-	}
+        }
         if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
             RelayNO();
         }
@@ -2875,7 +2937,7 @@ void MainWindow::autoTest()
         CloseLed();
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
             CloseLed2();
-	}
+        }
         if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
             RelayNC();
         }

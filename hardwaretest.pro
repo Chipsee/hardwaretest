@@ -21,28 +21,28 @@ LIBS += -lgpiod
 
 # Get libgpiod version
 LIBGPIOD_VERSION = $$system(pkg-config --modversion libgpiod)
+LIBGPIOD_VERSION_STR = $$first(LIBGPIOD_VERSION)
+message(libgpiod_version = $$LIBGPIOD_VERSION_STR)
 
-message(LIBGPIOD_VERSION = $$LIBGPIOD_VERSION)
-
-equals(find(LIBGPIOD_VERSION, "2."), -1){
-    message("Using libgpiod v1")
-    DEFINES += USE_GPIOD_V1
-} else {
-    message("Using libgpiod v2")
+contains(LIBGPIOD_VERSION_STR, "2.0") {
+    message("Using gpioconroller_v2(libgpiod v2)")
     DEFINES += USE_GPIOD_V2
+} else {
+    message("Using gpioconroller_v1(libgpiod v1)")
+    DEFINES += USE_GPIOD_V1
 }
-
 message(DEFINES = $$DEFINES)
 
 SOURCES += main.cpp\
     epflash.cpp \
     gpiocontroller.cpp \
-        mainwindow.cpp \
+    mainwindow.cpp \
     timedialog.cpp \
     slavethread.cpp \
     device.cpp \
     service.cpp \
     lcdtester.cpp \
+    recorderworker.cpp \
     utils.cpp
 
 HEADERS  += mainwindow.h \
@@ -54,6 +54,7 @@ HEADERS  += mainwindow.h \
     version.h \
     device.h \
     service.h \
+    recorderworker.h \
     lcdtester.h
 
 FORMS    += mainwindow.ui \

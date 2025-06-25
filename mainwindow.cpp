@@ -28,6 +28,8 @@
 #include <QSettings>
 #include <QtGui/QCloseEvent>
 #include <QDir>
+#include "recorderworker.h"
+#include <QThread>
 
 #include <QDebug>
 /*
@@ -423,7 +425,7 @@ QString MainWindow::GetPlat()
         plat = "imx8mp";
     }else if(rk3588.left(1) == "2"){
         plat = "rk3588";
-    }else if(stm32mp25.left(1) == "2"){
+    }else if(stm32mp25.left(1) == "3"){
         plat = "stm32mp25";
     }
 
@@ -546,9 +548,9 @@ QString MainWindow::GetBoard()
 
     if(cpuplat == "stm32mp25")
     {
-        QString CS10600_STMP25_070 = GetComResult("grep -c stm32mp25 /proc/device-tree/compatible");
+        QString CS10600_STMP25_070 = GetComResult("grep -c stm32mp257f-eisd-1024600 /proc/device-tree/compatible");
 
-        if(CS10600_STMP25_070.left(1) == "2"){
+        if(CS10600_STMP25_070.left(1) == "1"){
             board = "CS10600_STMP25_070";
         }
     }
@@ -1250,14 +1252,33 @@ void MainWindow::RecordTest()
 
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /tmp/output.wav");
     }else if(cpuplat == "stm32mp25") {
-        system("test -f /tmp/output.wav && rm /tmp/output.wav");
-        QString cmdstr = "arecord -D sysdefault:CARD=ES8388 -f cd -V stereo -d 18 /tmp/output.wav & ";
-        system(cmdstr.toLocal8Bit());
+        QStringList recordArgs = {
+            "-D", "sysdefault:CARD=ES8388",
+            "-f", "cd",
+            "-d", "18",
+            "/tmp/output.wav"
+        };
 
-        QEventLoop eventloop;
-        QTimer::singleShot(18000, &eventloop,SLOT(quit()));
-        eventloop.exec();
-        utils.executeCommand("sleep 3 && aplay -D sysdefault:CARD=ES8388 /tmp/output.wav");
+        QStringList playArgs = {
+            "-D", "sysdefault:CARD=ES8388",
+            "/tmp/output.wav"
+        };
+
+        QThread *thread = new QThread;
+        RecorderWorker *worker = new RecorderWorker;
+        worker->moveToThread(thread);
+
+        connect(thread, &QThread::started, [=]() {
+            worker->recordAndPlay(recordArgs, playArgs);
+        });
+        connect(worker, &RecorderWorker::status, this, [=](const QString &msg) {
+            qDebug() << msg;
+        });
+        connect(worker, &RecorderWorker::finished, thread, &QThread::quit);
+        connect(worker, &RecorderWorker::finished, worker, &RecorderWorker::deleteLater);
+        connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+        thread->start();
     }
 }
 

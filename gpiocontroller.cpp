@@ -83,6 +83,8 @@ void GpioController::initializeGpio(const char *chipname, unsigned int offset)
 #endif
 }
 
+#ifdef USE_GPIOD_V1
+#else
 struct gpiod_line_request* GpioController::requestInputLine()
 {
     if (!chip || !settings || !line_config || !req_config) {
@@ -123,6 +125,7 @@ struct gpiod_line_request* GpioController::requestOutputLine(enum gpiod_line_val
 
     return new_request;
 }
+#endif
 
 void GpioController::setGpioDirection(bool isOutput)
 {

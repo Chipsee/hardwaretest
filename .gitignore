@@ -14,4 +14,6 @@ moc_*
 qrc_*
 ui_*
 .qtc_clangd/
-hardwaretest
+/hardwaretest
+!/hardwaretest/
+

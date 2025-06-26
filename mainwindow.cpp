@@ -934,6 +934,10 @@ void MainWindow::boardInit()
             relaypath = "/sys/class/gpio/gpio17/value";
         }
 
+        if(board == "CS12800RA5101A") {
+            relaypath = "/dev/relay";
+	}
+
         // use new backlight path
         backlightpath = "/sys/class/backlight/pwm-backlight/brightness";
         maxbacklightpath = "/sys/class/backlight/pwm-backlight/max_brightness";
@@ -1394,13 +1398,9 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(127);
     }else if (board == "bbbexp"){
     }else if (cpuplat == "pi"){
-        //if(ispifive){
-        //    ui->horizontalSlider_audio_volume->setVisible(false);
-        //    ui->label_audio_volume->setVisible(false);
-        //}
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
-        if(debiancodename == "bullseye"){
+        if(debiancodename == "bullseye" || debiancodename == "bookworm"){
             //cmdstr = "amixer cset "+volumepath+" 50%";
             ui->horizontalSlider_audio_volume->setVisible(false);
             ui->label_audio_volume->setVisible(false);
@@ -2654,7 +2654,7 @@ void MainWindow::gpioInit()
         ui->label_out_4->setVisible(false);
     }
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -2876,7 +2876,7 @@ void MainWindow::canInit()
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else if(board == "AM335XBOARD"){
@@ -2902,6 +2902,14 @@ void MainWindow::canInit()
                 ui->comboBox_canNum->addItem("can0","can0");
                 ui->comboBox_canNum->addItem("Custum");
         }
+    }else if(board == "CS12800RA5101A") {
+        if(GetComResult("ifconfig -a").contains("can0")) {
+                ui->comboBox_canNum->addItem("can0","can0");
+                ui->comboBox_canNum->addItem("Custum");
+        } else {
+                ui->comboBox_canNum->setDisabled(true);
+                ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
+        }
     }else{
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("Custum");
@@ -2914,8 +2922,15 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
         ui->pushButton_canStart->setDisabled(true);
+    }
+    if(board == "CS12800RA5101A") {
+        if(GetComResult("ifconfig -a").contains("can0")) {
+            ui->pushButton_canStart->setDisabled(false);
+        } else {
+            ui->pushButton_canStart->setDisabled(true);
+        }
     }
     connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);
     connect(ui->pushButton_canSend,&QPushButton::clicked,this,&MainWindow::canSend);
@@ -3074,7 +3089,7 @@ void MainWindow::autoTest()
     }
 
     if(cpuplat == "pi"){
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800RA4101AV4"){
             QString audiostr("@@AUDIO\n");
             if(port[0]->isOpen())
                 port[0]->close();

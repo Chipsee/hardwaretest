@@ -1414,7 +1414,7 @@ void MainWindow::audioInit()
             ui->pushButton_record->setVisible(false);
         }
 
-    }else if ( cpuplat == "imx8mp" || cpuplat == "px30" || cpuplat == "rk3568" || cpuplat == "rk3588" || (board == "imx6q" && debiancodename == "bionic")){
+    }else if ( cpuplat == "imx8mp" || cpuplat == "px30" || cpuplat == "rk3568" || cpuplat == "rk3588" || (board == "imx6q" && debiancodename == "bionic") || cpuplat == "stm32mp25"){
         ui->horizontalSlider_audio_volume->setRange(0,100);
         ui->horizontalSlider_audio_volume->setValue(100);
     }else if (cpuplat == "rk3399"){

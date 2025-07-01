@@ -167,7 +167,7 @@ private:
     bool vautoflag;
     int lcdwidth;
     int lcdheight;
-    bool ispifive;
+    bool ispifive = false;
     bool fgisquetel;
     bool fgissimcom;
     QString exeName;

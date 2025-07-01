@@ -1340,8 +1340,10 @@ void MainWindow::ChangeVolume()
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
-    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" ) {
+    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588") {
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
+    }else if(cpuplat == "stm32mp25") {
+        cmdstr = "su -l weston -c 'pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &'";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }

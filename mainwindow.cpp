@@ -280,6 +280,9 @@ MainWindow::~MainWindow()
         QString cmdstr = "cp /usr/bin/vlc.bak /usr/bin/vlc && sync";
         system(cmdstr.toLocal8Bit());
     }
+    if(cpuplat == "stm32mp25"){
+        utils.checkAndFixOwnershipAsync("/run/user/1000/pulse", "weston", "weston");
+    }
     delete ui;
     qDebug() << "I had gone";
 }
@@ -1340,10 +1343,8 @@ void MainWindow::ChangeVolume()
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
     }else if(cpuplat == "rk3568") {
         cmdstr = "amixer cset "+volumepath+" "+value+"% "+value+"% &";
-    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588") {
+    }else if((board == "imx6q" && debiancodename == "bionic") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25") {
         cmdstr = "pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &";
-    }else if(cpuplat == "stm32mp25") {
-        cmdstr = "su -l weston -c 'pactl set-sink-volume @DEFAULT_SINK@ "+value+"% &'";
     }else{
         cmdstr = "amixer cset "+volumepath+" "+value+"&";
     }

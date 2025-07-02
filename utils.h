@@ -13,6 +13,11 @@
 #include <QMessageBox>
 #include <QDebug>
 
+#include <QFileInfo>
+#include <QStringList>
+#include <QLoggingCategory>
+#include <QFile>
+
 class Utils : public QObject
 {
     Q_OBJECT
@@ -20,6 +25,9 @@ public:
     explicit Utils(QObject *parent = nullptr);
     void executeCommand(const QString &command);
     void showCustomMessage(const QString &msgtype, const QString &title,const QString &message, int width, int height);
+    void checkAndFixOwnershipAsync(const QString &path,
+                                          const QString &targetUser,
+                                          const QString &targetGroup);
     int lcdWidth;
     int lcdHeight;
 

@@ -90,3 +90,43 @@ void Utils::showCustomMessage(const QString &msgtype, const QString &title,const
     QSize size = msgBox.size();
     qDebug() << "MessageBox final size:" << size;
 }
+
+void Utils::checkAndFixOwnershipAsync(const QString &path,
+                                      const QString &targetUser,
+                                      const QString &targetGroup)
+{
+        QFileInfo fileInfo(path);
+
+        if (!fileInfo.exists()) {
+            qCritical() << "File does not exist:" << path;
+            return;
+        }
+
+        // Retrieve current user and group via `stat`
+        QProcess idProcess;
+        idProcess.start("stat", QStringList() << "-c" << "%U %G" << path);
+        idProcess.waitForFinished();
+        QStringList output = QString(idProcess.readAllStandardOutput()).trimmed().split(" ");
+
+        if (output.size() != 2) {
+            qCritical() << "Failed to retrieve user/group info for" << path;
+            return;
+        }
+
+        QString currentUser = output[0];
+        QString currentGroup = output[1];
+
+        if (currentUser != targetUser || currentGroup != targetGroup) {
+            QString chownCommand = targetUser + ":" + targetGroup;
+            QProcess chownProcess;
+            chownProcess.start("chown", QStringList() << chownCommand << path);
+            chownProcess.waitForFinished();
+
+            if (chownProcess.exitStatus() != QProcess::NormalExit || chownProcess.exitCode() != 0) {
+                qCritical() << "Failed to change owner/group of" << path << ":" << chownProcess.readAllStandardError();
+                return;
+            }
+
+            qInfo() << "Changed owner/group of" << path << "to" << targetUser << ":" << targetGroup;
+        }
+}

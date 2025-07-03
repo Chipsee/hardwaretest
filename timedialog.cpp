@@ -1,6 +1,5 @@
 #include "timedialog.h"
 #include "ui_timedialog.h"
-#include <QProcess>
 
 timedialog::timedialog(QWidget *parent) :
     QDialog(parent),

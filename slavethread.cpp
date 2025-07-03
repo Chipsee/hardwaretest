@@ -249,6 +249,16 @@ void SlaveThread::run()
         }
     }
 
+    if(*board == "STMP25"){
+        port[4] = port[3];
+        port[3] = port[1];
+        port[1] = port[5];
+        qDebug() << *board + " New Serial Port list(thread): ";
+        for(i=0; i<6; i++)
+        {
+            qDebug() << port[i]->portName();
+        }
+    }
     if(*board != "CS10600RA070" && *board != "CS12800RA4101" && *board != "LRRA4-101" && *board != "CS12800RA4101A" && *board != "CS12800RA4101AV4" && *board != "CS12800RA5101A"){
         //CAN INIT
         if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
@@ -260,6 +270,11 @@ void SlaveThread::run()
             system("echo >/tmp/can0.txt");
             system("ip link set can0 down");
             system("ip link set can0 type can bitrate 10000");
+            system("ip link set can0 up");
+        }else if(*board == "STMP25"){
+            system("echo >/tmp/can0.txt");
+            system("ip link set can0 down");
+            system("ip link set can0 type can bitrate 100000");
             system("ip link set can0 up");
         }else{
             system("echo >/tmp/can0.txt");
@@ -278,6 +293,11 @@ void SlaveThread::run()
                 system("echo >/tmp/can1.txt");
                 system("ip link set can1 down");
                 system("ip link set can1 type can bitrate 100000 triple-sampling on loopback off ");
+                system("ip link set can1 up");
+            }else if(*board == "STMP25"){
+                system("echo >/tmp/can1.txt");
+                system("ip link set can1 down");
+                system("ip link set can1 type can bitrate 100000");
                 system("ip link set can1 up");
             }else{
                 system("echo >/tmp/can1.txt");
@@ -359,14 +379,14 @@ void SlaveThread::run()
                 QTextStream in(&file);
                 QString line=in.readLine(); // The First Line
                 //qDebug() << "1" + line;
-                if(*board !="CS12800R101P" && *board != "RK3568" && *board !="RK3588" && *board != "IMX8MP" && *board != "CS10600RA5070P")
+                if(*board !="CS12800R101P" && *board != "RK3568" && *board !="RK3588" && *board != "IMX8MP" && *board != "CS10600RA5070P" && *board != "STMP25")
                     line = in.readLine();   // The Second Line
                 emit this->canrequest("can0\n"+line);
                 //qDebug() << "2" + line;
                 if(line.contains("11 22 33 44 55 66 77 88"))
                 {
                     //qDebug() << "have 11223344";
-                    if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP" || *board == "CS10600RA5070P"){
+                    if(*board == "CS12800R101P" || *board == "RK3568" || *board == "RK3588" || *board == "IMX8MP" || *board == "CS10600RA5070P" || *board == "STMP25"){
                         system("cansend can0 5A1#1122334455667788");
                         //qDebug() << "Cansend can0";
                     }else{
@@ -383,14 +403,14 @@ void SlaveThread::run()
                     QTextStream in(&file1);
                     QString line=in.readLine(); // The First Line
                     //qDebug() << "1" + line;
-                    if(*board != "RK3568" && *board != "RK3588" && *board != "IMX8MP")
+                    if(*board != "RK3568" && *board != "RK3588" && *board != "IMX8MP" && *board != "STMP25")
                     	line = in.readLine();   // The Second Line
                     emit this->canrequest("can1\n"+line);
                     //qDebug() << "2" + line;
                     if(line.contains("11 22 33 44 55 66 77 88"))
                     {
                         //qDebug() << "have 11223344";
-                        if(*board == "RK3568" || *board == "RK3588" || *board == "IMX8MP"){
+                        if(*board == "RK3568" || *board == "RK3588" || *board == "IMX8MP" || *board == "STMP25"){
                             system("cansend can1 5A1#1122334455667788");
                             //qDebug() << "Cansend can1";
                         }else{

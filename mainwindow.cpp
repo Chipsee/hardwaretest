@@ -1644,7 +1644,7 @@ void MainWindow::displayInit()
     }
     connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
 
-    if(machine == "PPC-A76-BOX" || ispifive) {
+    if(machine == "PPC-A76-BOX" || ispifive || cpuplat == "stm32mp25") {
     	ui->horizontalSlider_backlight->setVisible(false);
 	ui->label_backlight->setVisible(false);
     }
@@ -2985,11 +2985,12 @@ void MainWindow::autoTest()
         eventloop.exec();
     }
 
+
     if(cpuplat != "pi" && cpuplat != "imx8mp"){
         usbInit();
     }
 
-    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P"  && cpuplat != "imx8mp") {
+    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P"  && cpuplat != "imx8mp" && cpuplat !="stm32mp25") {
         networkautotest();
     }
 
@@ -3077,6 +3078,13 @@ void MainWindow::autoTest()
         port[3] = port[1];
         port[1] = port[5];
         board = "IMX8MP";
+    }
+
+    if(cpuplat == "stm32mp25"){
+        port[4] = port[3];
+        port[3] = port[1];
+        port[1] = port[5];
+        board = "STMP25";
     }
 
     QString str("#################\n");

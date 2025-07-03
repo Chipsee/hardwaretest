@@ -1,6 +1,7 @@
 #include "timedialog.h"
 #include "ui_timedialog.h"
 
+
 timedialog::timedialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::timedialog)

@@ -504,7 +504,7 @@ QString MainWindow::GetBoard()
         QString CS10600_RK3568_070 = GetComResult("grep -c rk3568-eisd-1024600 /proc/device-tree/compatible");
         QString CS12720_RK3568_050 = GetComResult("grep -c rk3568-eisd-1280720 /proc/device-tree/compatible");
         QString CS12800_RK3568_120_150 = GetComResult("grep -c rk3568-eisd-1024768 /proc/device-tree/compatible");
-        QString CS12800_RK3568_133_156_215_236 = GetComResult("grep -c rk3568-eisd-19201080 /proc/device-tree/compatible");
+        QString CS12800_RK3568_133_156_185_215_236 = GetComResult("grep -c rk3568-eisd-19201080 /proc/device-tree/compatible");
 
         if(CS12800_RK3568_101.left(1) == "1"){
             board = "CS12800_RK3568_101";
@@ -514,8 +514,8 @@ QString MainWindow::GetBoard()
             board = "CS12720_RK3568_050";
         } else if(CS12800_RK3568_120_150.left(1) == "1"){
             board = "CS12720_RK3568_120_150";
-        } else if(CS12800_RK3568_133_156_215_236.left(1) == "1"){
-            board = "CS12720_RK3568_133_156_215_236";
+        } else if(CS12800_RK3568_133_156_185_215_236.left(1) == "1"){
+            board = "CS12720_RK3568_133_156_185_215_236";
         }
     }
     if(cpuplat == "imx8mp")
@@ -523,18 +523,18 @@ QString MainWindow::GetBoard()
         QString CS12800_IMX8MP_101 = GetComResult("grep -c imx8mp-eisd-1280800 /proc/device-tree/compatible");
         QString CS10600_IMX8MP_070 = GetComResult("grep -c imx8mp-eisd-1024600 /proc/device-tree/compatible");
         QString CS12720_IMX8MP_050 = GetComResult("grep -c imx8mp-eisd-1280720 /proc/device-tree/compatible");
-        QString CS12800_IMX8MP_120_150 = GetComResult("grep -c imx8mp-eisd-1024768 /proc/device-tree/compatible");
-        QString CS12800_IMX8MP_133_156_215_236 = GetComResult("grep -c imx8mp-eisd-19201080 /proc/device-tree/compatible");
+        QString CS10768_IMX8MP_120_150 = GetComResult("grep -c imx8mp-eisd-1024768 /proc/device-tree/compatible");
+        QString CS19108_IMX8MP_133_156_185_215_236 = GetComResult("grep -c imx8mp-eisd-19201080 /proc/device-tree/compatible");
         if(CS12800_IMX8MP_101.left(1) == "1"){
             board = "CS12800_IMX8MP_101";
         } else if(CS10600_IMX8MP_070.left(1) == "1"){
             board = "CS10600_IMX8MP_070";
         } else if(CS12720_IMX8MP_050.left(1) == "1"){
             board = "CS12720_IMX8MP_050";
-        } else if(CS12800_IMX8MP_120_150.left(1) == "1"){
-            board = "CS12720_IMX8MP_120_150";
-        } else if(CS12800_IMX8MP_133_156_215_236.left(1) == "1"){
-            board = "CS12720_IMX8MP_133_156_215_236";
+        } else if(CS10768_IMX8MP_120_150.left(1) == "1"){
+            board = "CS10768_IMX8MP_120_150";
+        } else if(CS19108_IMX8MP_133_156_185_215_236.left(1) == "1"){
+            board = "CS19108_IMX8MP_133_156_185_215_236";
         }
     }
     if(cpuplat == "rk3588")
@@ -551,10 +551,22 @@ QString MainWindow::GetBoard()
 
     if(cpuplat == "stm32mp25")
     {
+        QString CS12720_STMP25_050 = GetComResult("grep -c stm32mp257f-eisd-1280720 /proc/device-tree/compatible");
         QString CS10600_STMP25_070 = GetComResult("grep -c stm32mp257f-eisd-1024600 /proc/device-tree/compatible");
+        QString CS12800_STMP25_101 = GetComResult("grep -c stm32mp257f-eisd-1280800 /proc/device-tree/compatible");
+        QString CS10768_STMP25_120_150 = GetComResult("grep -c stm32mp257f-eisd-1024768 /proc/device-tree/compatible");
+        QString CS19108_STMP25_133_156_185_215_236 = GetComResult("grep -c stm32mp257f-eisd-19201080 /proc/device-tree/compatible");
 
-        if(CS10600_STMP25_070.left(1) == "1"){
+        if(CS12720_STMP25_050.left(1) == "1"){
+            board = "CS12720_STMP25_050";
+        } else if(CS10600_STMP25_070.left(1) == "1"){
             board = "CS10600_STMP25_070";
+        } else if(CS12800_STMP25_101.left(1) == "1"){
+            board = "CS12800_STMP25_101";
+        } else if(CS10768_STMP25_120_150.left(1) == "1"){
+            board = "CS10768_STMP25_120_150";
+        } else if(CS19108_STMP25_133_156_185_215_236.left(1) == "1"){
+            board = "CS19108_STMP25_133_156_185_215_236";
         }
     }
     return board;

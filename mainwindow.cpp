@@ -1260,7 +1260,7 @@ void MainWindow::RecordTest()
         eventloop.exec();
         //utils.executeCommand("aplay -Dhw:1,0 /tmp/output.wav");
         utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /tmp/output.wav");
-    }else if(cpuplat == "rk3588") {
+    }else if(cpuplat == "rk3588-false-for-backup") {
         system("test -f /tmp/output.wav && rm /tmp/output.wav");
         QString cmdstr = "arecord -D sysdefault:CARD=rockchipes8388 -f cd -V stereo -d 18 /tmp/output.wav & ";
         system(cmdstr.toLocal8Bit());
@@ -1270,7 +1270,8 @@ void MainWindow::RecordTest()
         eventloop.exec();
 
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /tmp/output.wav");
-    }else if(cpuplat == "stm32mp25") {
+    }else if(cpuplat == "stm32mp25" || cpuplat == "rk3588") {
+        int index = 0;
         QStringList recordArgs = {
             "-D", "sysdefault:CARD=ES8388",
             "-f", "cd",
@@ -1282,6 +1283,18 @@ void MainWindow::RecordTest()
             "-D", "sysdefault:CARD=ES8388",
             "/tmp/output.wav"
         };
+
+	if (cpuplat == "rk3588") {
+                index = recordArgs.indexOf("sysdefault:CARD=ES8388");
+                if (index != -1) {
+                        recordArgs[index] = "sysdefault:CARD=rockchipes8388";
+                }
+
+                index = playArgs.indexOf("sysdefault:CARD=ES8388");
+                if (index != -1) {
+                        playArgs[index] = "sysdefault:CARD=rockchipes8388";
+                }
+	}
 
         QThread *thread = new QThread;
         RecorderWorker *worker = new RecorderWorker;

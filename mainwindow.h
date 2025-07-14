@@ -168,8 +168,8 @@ private:
     int lcdwidth;
     int lcdheight;
     bool ispifive = false;
-    bool fgisquetel;
-    bool fgissimcom;
+    bool fgisquetel = false;
+    bool fgissimcom = false;
     QString exeName;
     epflash *epflashdialog;
 

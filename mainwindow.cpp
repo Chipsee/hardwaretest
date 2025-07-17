@@ -962,32 +962,7 @@ void MainWindow::boardInit()
 
     ui->labelVersion->setText(VERSION);
 
-    if(ispifive && has4GModule()) {
-        if (QFile::exists("/dev/ttyUSB6"))
-            fgisquetel = true;
-        else if (QFile::exists("/dev/ttyUSB2"))
-            fgisquetel = true;
-        else
-            fgisquetel = false;
-
-        if (QFile::exists("/dev/ttyACM0"))
-            fgissimcom = true;
-        else
-            fgissimcom = false;
-    }else if(cpuplat == "imx8mp" && has4GModule()) {
-        if (QFile::exists("/dev/ttyUSB6"))
-            fgisquetel = true;
-        else if (QFile::exists("/dev/ttyUSB2"))
-            fgisquetel = true;
-        else
-            fgisquetel = false;
-
-        if (QFile::exists("/dev/ttyACM0"))
-            fgissimcom = true;
-        else
-            fgissimcom = false;
-    }
-
+    check4GModule();
     BoardSetting();
     connect(ui->pushButton_exit,&QPushButton::clicked,this,&MainWindow::close);
 }
@@ -2032,18 +2007,62 @@ void MainWindow::networkautotest()
  * has4GModule() mobile4gEnable() mobile4gDisable() checkCustom4gNumPolicy(int idx) mobile4gInit()
  *
  */
-    bool MainWindow::has4GModule()
-    {
-        QDir netDir("/sys/class/net/");
-        QStringList interfaces = netDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+bool MainWindow::has4GModule()
+{
+    QDir netDir("/sys/class/net/");
+    QStringList interfaces = netDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
-        foreach (const QString &interface, interfaces) {
-            if (interface.startsWith("wwan") || interface.startsWith("usb")) {
-                qDebug() << "4G module detected:" << interface;
-                return true;
-            }
+    foreach (const QString &interface, interfaces) {
+        if (interface.startsWith("wwan") || interface.startsWith("usb")) {
+            qDebug() << "4G module detected:" << interface;
+            return true;
         }
+    }
 
+    QProcess process;
+    process.start("nmcli", {"-t", "-f", "DEVICE,TYPE", "dev"});
+    process.waitForFinished();
+
+    if (process.exitCode() == 0) {
+        QString output = process.readAllStandardOutput();
+        if (output.contains("gsm") || output.contains("cdma")) {
+            qDebug() << "4G module detected.";
+            return true;
+        }
+    } else {
+        qDebug() << "Failed to check for 4G module:" << process.readAllStandardError();
+    }
+
+    return false;
+}
+
+void MainWindow::check4GModule()
+{
+    fgissimcom = false;
+    fgisquetel = false;
+    bool has4G = false;
+    QDir netDir("/sys/class/net/");
+    QStringList interfaces = netDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+//    qDebug() << "4GCHECK(function) - SIMCOM:" << fgissimcom << "Quectel:" << fgisquetel;
+    foreach (const QString &interface, interfaces){
+        if (interface.startsWith("wwan")) {
+            qDebug() << "Quectel module :" << interface;
+            has4G = true;
+            if ((cpuplat == "imx8mp" && QFile::exists("/dev/ttyUSB6"))||QFile::exists("/dev/ttyUSB2")) {
+                fgisquetel = true;
+            }
+            break;
+        } else if (interface.startsWith("usb")) {
+            qDebug() << "SIMCOM module :" << interface;
+            has4G = true;
+            if (QFile::exists("/dev/ttyACM0")) {
+                fgissimcom = true;
+            }
+            break;
+        }
+    }
+//    qDebug() << "4GCHECK(function) - SIMCOM:" << fgissimcom << "Quectel:" << fgisquetel;
+    if (!has4G) {
         QProcess process;
         process.start("nmcli", {"-t", "-f", "DEVICE,TYPE", "dev"});
         process.waitForFinished();
@@ -2051,15 +2070,21 @@ void MainWindow::networkautotest()
         if (process.exitCode() == 0) {
             QString output = process.readAllStandardOutput();
             if (output.contains("gsm") || output.contains("cdma")) {
-                qDebug() << "4G module detected.";
-                return true;
+                    qDebug() << "4G module detected NMCLI";
+                    has4G = true;
             }
         } else {
-            qDebug() << "Failed to check for 4G module:" << process.readAllStandardError();
+            qDebug() << "NMCLI error:" << process.readAllStandardError();
         }
-
-        return false;
+        process.close();
     }
+
+    if(!has4G){
+        qDebug() << "No 4G module detected";
+        return;
+    }
+//    qDebug() << "Module status - SIMCOM:" << fgissimcom << "Quectel:" << fgisquetel;
+}
 
 void MainWindow::mobile4gEnable()
 {
@@ -2073,7 +2098,7 @@ void MainWindow::mobile4gEnable()
     else
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
 
-    if(ispifive && fgissimcom) {
+    if(fgissimcom) {
         QString cfg1cmd("AT+DIALMODE=0\r\n");
         QString cfg2cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
 
@@ -2095,12 +2120,11 @@ void MainWindow::mobile4gEnable()
             while(fgport->waitForReadyRead(100));
             fgport->close();
             qDebug() << "SIMCOM 4G Enabled";
-        }else
-        {
+        }else{
             QMessageBox::critical(this, tr("Error"), "SIMCOM 4G Open fail");
             return;
         }
-    } else {
+    }else {
         system(cmdstr.toLocal8Bit());
     }
 
@@ -2131,27 +2155,16 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
 
 void MainWindow::mobile4gInit()
 {
-    if(ispifive && !has4GModule()) {
-        ui->comboBox_4g->setVisible(false);
-        ui->pushButton_4gDisable->setVisible(false);
-        ui->pushButton_4gEnable->setVisible(false);
-        return;
-    }
-    if(cpuplat == "imx8mp" && !has4GModule()) {   //pp-w
+    if(!(fgissimcom||fgisquetel)){
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
         return;
     }
 
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||
-	   board == "CS19108RA4133PR2P" ||
-           board == "CS19108RA4156PR2P" ||
-           board == "CS12800RA4101PR2P" ||
-           board == "CS12800RA4101PR2PBOX" ||
-           board == "CS10768RA4121PR2P" ||
-           board == "CS10768RA4150PR2P"
-    ){
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||board == "CS19108RA4133PR2P" ||
+       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P")
+    {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
@@ -2165,12 +2178,7 @@ void MainWindow::mobile4gInit()
     ui->pushButton_4gEnable->setDisabled(false);
     ui->pushButton_4gDisable->setDisabled(true);
 
-    if(ispifive && fgissimcom) {
-        ui->comboBox_4g->setVisible(false);
-        ui->pushButton_4gDisable->setVisible(false);
-    }
-
-    if(cpuplat == "imx8mp" && fgissimcom) {  //pp-w
+    if(fgissimcom) {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
     }
@@ -2255,39 +2263,24 @@ void MainWindow::gpsInit()
     QString atportname="/dev/ttyUSB2";
     QString gpsportname="/dev/ttyUSB1";
 
-    if(ispifive && !has4GModule()) {
-        ui->pushButton_GPSEnable->setVisible(false);
-        ui->pushButton_GPSDisable->setVisible(false);
-        return;
-    } else if (ispifive && fgissimcom){
-        ui->pushButton_GPSEnable->setVisible(false);
-        ui->pushButton_GPSDisable->setVisible(false);
-        return;
-    }
-
-    if(cpuplat == "imx8mp" && !has4GModule()) { //pp-w
-        ui->pushButton_GPSEnable->setVisible(false);
-        ui->pushButton_GPSDisable->setVisible(false);
-        return;
-    }
-
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" ||
-           board == "CS19108RA4133PR2P" ||
-           board == "CS19108RA4156PR2P" ||
-           board == "CS12800RA4101PR2P" ||
-           board == "CS12800RA4101PR2PBOX" ||
-           board == "CS10768RA4121PR2P" ||
-           board == "CS10768RA4150PR2P"
-    ){
-        ui->pushButton_GPSEnable->setVisible(false);
-        ui->pushButton_GPSDisable->setVisible(false);
-        return;
-    }
-
     if(cpuplat == "imx8mp")
     {
         atportname = "/dev/ttyUSB6";
         gpsportname = "/dev/ttyUSB5";
+    }
+
+    if((!fgisquetel)) {
+        ui->pushButton_GPSEnable->setVisible(false);
+        ui->pushButton_GPSDisable->setVisible(false);
+        return;
+      }
+
+    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || board == "CS19108RA4133PR2P" ||
+       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" ||board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P")
+    {
+        ui->pushButton_GPSEnable->setVisible(false);
+        ui->pushButton_GPSDisable->setVisible(false);
+        return;
     }
 
     atport = new QSerialPort(this);

@@ -106,6 +106,7 @@ private slots:
     void alltestInit();
     void displayInfo();
     bool has4GModule();
+    void check4GModule();
 
 private:
     Ui::MainWindow *ui;

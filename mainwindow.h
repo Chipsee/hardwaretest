@@ -106,6 +106,7 @@ private slots:
     void alltestInit();
     void displayInfo();
     bool has4GModule();
+    void check4GModule();
 
 private:
     Ui::MainWindow *ui;
@@ -168,8 +169,8 @@ private:
     int lcdwidth;
     int lcdheight;
     bool ispifive = false;
-    bool fgisquetel;
-    bool fgissimcom;
+    bool fgisquetel = false;
+    bool fgissimcom = false;
     QString exeName;
     epflash *epflashdialog;
 

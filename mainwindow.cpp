@@ -2111,6 +2111,41 @@ void MainWindow::check4GModule()
 //    qDebug() << "Module status - SIMCOM:" << fgissimcom << "Quectel:" << fgisquetel;
 }
 
+bool MainWindow::checkRK3588CPU(QWidget *parent = nullptr)
+{
+    QString npuCmd = "i2cdetect -y 2 0x42 0x42 | egrep \"(42|UU)\" | awk '{print $2}'";
+    QString cpuBig0Cmd = "i2cdetect -y 3 0x42 0x42 | egrep \"(42|UU)\" | awk '{print $2}'";
+    QString cpuBig1Cmd = "i2cdetect -y 6 0x43 0x43 | egrep \"(43|UU)\" | awk '{print $2}'";
+
+    QProcess process;
+
+    process.start("bash", QStringList() << "-c" << npuCmd);
+    process.waitForFinished();
+    QString npuOutput = process.readAllStandardOutput().trimmed();
+
+    process.start("bash", QStringList() << "-c" << cpuBig0Cmd);
+    process.waitForFinished();
+    QString cpuBig0Output = process.readAllStandardOutput().trimmed();
+
+    process.start("bash", QStringList() << "-c" << cpuBig1Cmd);
+    process.waitForFinished();
+    QString cpuBig1Output = process.readAllStandardOutput().trimmed();
+
+    qDebug() << "NPU:" << npuOutput << "CPUBIG0:" << cpuBig0Output << "CPUBIG1:" << cpuBig1Output;
+
+    if (npuOutput == "UU" && cpuBig0Output == "UU" && cpuBig1Output == "UU") {
+        qDebug() << "RK3588 CPU Check: OK";
+        return true;
+    } else {
+        QString errorMsg = QString("RK3588 CPU Check fail£º\n")
+                         + "NPU: " + npuOutput + "\n"
+                         + "CPUBIG0: " + cpuBig0Output + "\n"
+                         + "CPUBIG1: " + cpuBig1Output;
+        QMessageBox::warning(parent, "RK3588 CPU Check fail", errorMsg);
+        return false;
+    }
+}
+
 void MainWindow::mobile4gEnable()
 {
     ui->pushButton_4gEnable->setDisabled(true);
@@ -3015,6 +3050,12 @@ void MainWindow::autoTest()
 {   
     autoflag = true;
     autoTesttimer->stop();
+
+    if(cpuplat == "rk3588"){
+        if(!checkRK3588CPU(this))
+           return;
+    }
+
     // Test Beeper And Led
     QEventLoop eventloop;
     for(int i=0; i<2; i++)

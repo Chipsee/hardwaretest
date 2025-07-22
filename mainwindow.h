@@ -107,6 +107,7 @@ private slots:
     void displayInfo();
     bool has4GModule();
     void check4GModule();
+    bool checkRK3588CPU(QWidget *);
 
 private:
     Ui::MainWindow *ui;

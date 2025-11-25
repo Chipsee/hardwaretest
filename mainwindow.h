@@ -108,6 +108,7 @@ private slots:
     bool has4GModule();
     void check4GModule();
     bool checkRK3588CPU(QWidget *);
+    bool hasBl();
 
 private:
     Ui::MainWindow *ui;
@@ -172,6 +173,7 @@ private:
     bool ispifive = false;
     bool fgisquetel = false;
     bool fgissimcom = false;
+    bool hasbl = true;
     QString exeName;
     epflash *epflashdialog;
 

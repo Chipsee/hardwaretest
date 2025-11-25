@@ -30,6 +30,7 @@
 #include <QDir>
 #include "recorderworker.h"
 #include <QThread>
+#include <QFileInfo>
 
 #include <QDebug>
 /*
@@ -302,6 +303,25 @@ void MainWindow::screenInit()
     //qDebug() << "Screen is:" + QString::number(lcdwidth) + "x" +QString::number(lcdheight);
 }
 
+bool MainWindow::hasBl()
+{
+    QDir dir("/sys/class/backlight");
+    if (!dir.exists()) {
+        return false;
+    }
+
+    QStringList entries = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &entry : entries) {
+        QString brightnessPath = dir.absoluteFilePath(entry + "/brightness");
+        QFileInfo fi(brightnessPath);
+        if (fi.exists() && fi.isReadable()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QString MainWindow::GetTempFileValue()
 {
     QString tmpath = TEMPFILEPATH;
@@ -385,6 +405,9 @@ QString MainWindow::GetComResult(QString cmd)
 QString MainWindow::GetPlat()
 {
     if (system ("raspi-config nonint is_pifive") == 0) {
+        return "pi";
+    }
+    if (system ("raspi-config nonint is_pifour") == 0) {
         return "pi";
     }
     QString plat;
@@ -759,6 +782,9 @@ void MainWindow::BoardSetting()
             } else {
                 volumepath = PIVOLUMEPATH;
             }
+	} else if (debiancodename == "bookworm") {
+            ledpath = PILEDACTPATH;
+            volumepath = PIVOLUMEPATH;
         } else {
             ledpath = PILED0PATH;
             volumepath = PIVOLUMEPATH;
@@ -927,6 +953,7 @@ void MainWindow::boardInit()
     kernelversion = GetKernelVersion();
     machine = GetMachine();
     board = GetBoard();
+    hasbl = hasBl();
 
     //qDebug() << cpuplat;
     //qDebug() << "BOARD is " + board;
@@ -1573,10 +1600,6 @@ void MainWindow::ChangeBacklight()
 
 int MainWindow::MaxBacklighValue()
 {
-#if 1
-    if(ispifive)
-        return 1;
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     if( GetFileValue(maxbacklightpath) == QString() && machine != "PPC-A76-BOX") {
 #else
@@ -1600,10 +1623,6 @@ int MainWindow::MaxBacklighValue()
 
 int MainWindow::GetBacklightValue()
 {
-#if 1
-    if(ispifive)
-        return 1;
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     if(GetFileValue(backlightpath)==QString() && machine != "PPC-A76-BOX"){
 #else
@@ -1639,32 +1658,27 @@ void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
     // try to use inter LCDTester class to test LCD
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || ispifive || cpuplat == "stm32mp25"){//
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "pi" || cpuplat == "stm32mp25"){//
         lcd = new LCDTester;
         connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
     } else {
         connect(ui->pushButton_lcdtest,&QPushButton::clicked,this,&MainWindow::LCDTest);
     }
-    //connect(ui->pushButton_touchtest,&QPushButton::clicked,this,&MainWindow::TouchTest);
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
 
-    ui->horizontalSlider_backlight->setRange(1,MaxBacklighValue());
-    ui->horizontalSlider_backlight->setValue(GetBacklightValue());
-#if 0
-    if(cpuplat == "pi"){
-        ui->horizontalSlider_backlight->setRange(0,1);
-        ui->horizontalSlider_backlight->setValue(1);
+    if (hasbl) {
+        ui->horizontalSlider_backlight->setRange(1,MaxBacklighValue());
+        ui->horizontalSlider_backlight->setValue(GetBacklightValue());
+        connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
     }
-#endif
+
+    if(!hasbl || machine == "PPC-A76-BOX" || cpuplat == "stm32mp25") {
+    	ui->horizontalSlider_backlight->setVisible(false);
+	ui->label_backlight->setVisible(false);
+    }
 
     if(cpuplat == "am335x"){
         ui->pushButton_video->setVisible(false);
-    }
-    connect(ui->horizontalSlider_backlight,&QSlider::valueChanged,this,&MainWindow::ChangeBacklight);
-
-    if(machine == "PPC-A76-BOX" || ispifive || cpuplat == "stm32mp25") {
-    	ui->horizontalSlider_backlight->setVisible(false);
-	ui->label_backlight->setVisible(false);
     }
 
     videoloopTimer = new QTimer(this);

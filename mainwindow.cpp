@@ -2765,7 +2765,7 @@ void MainWindow::gpioInit()
         ui->label_out_4->setVisible(false);
     }
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "CS12720RA5050P") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -2808,7 +2808,7 @@ void MainWindow::gpioInit()
         ui->pushButton_setAllHigh->setVisible(false);
         ui->pushButton_setAllLow->setVisible(false);
         ui->checkBox_Relay->setVisible(false);
-        if(board != "CS12720RA4050" && board != "CS12720_RK3568_050" && cpuplat != "imx8mp") {
+        if(board != "CS12720RA4050" && board != "CS12720_RK3568_050" && cpuplat != "imx8mp" && board != "CS12720RA5050P") {
             ui->checkBox_Relay->setVisible(true);
             relayflag=true;
             ui->checkBox_Relay->setChecked(false);

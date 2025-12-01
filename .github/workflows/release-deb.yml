@@ -1,0 +1,60 @@
+name: Build and Release Debian Package (multi-arch with changelog)
+
+on:
+  push:
+    tags:
+      - 'v*'   # Trigger when pushing tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64, armhf]   # Build for both ARM64 and ARMHF
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential devscripts debhelper \
+          qtbase5-dev qt5-qmake git libqt5serialport5-dev qtdeclarative5-dev \
+          qml-module-qtquick2 qml-module-qtquick-controls qml-module-qtquick-controls2 \
+          qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev
+
+    - name: Update debian/changelog version from tag with commit logs
+      run: |
+        TAG=${GITHUB_REF##*/}
+        VERSION=${TAG#v}
+
+        # Find previous tag (if any)
+        PREV_TAG=$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "")
+
+        # Collect commit logs with author names
+        if [ -n "$PREV_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"  * %s (by %an)" $PREV_TAG..$TAG)
+        else
+          COMMITS=$(git log --pretty=format:"  * %s (by %an)")
+        fi
+
+        # Create changelog entry with commit logs
+        dch --create -v "${VERSION}-1" --package hardwaretest ""
+        echo "$COMMITS" >> debian/changelog
+
+        # Mark changelog as released
+        dch --release ""
+
+    - name: Build .deb package for ${{ matrix.arch }}
+      run: |
+        sudo dpkg --add-architecture ${{ matrix.arch }}
+        sudo apt-get update
+        dpkg-buildpackage -us -uc -a${{ matrix.arch }}
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ../*.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

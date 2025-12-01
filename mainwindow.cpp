@@ -2160,6 +2160,33 @@ bool MainWindow::checkRK3588CPU(QWidget *parent = nullptr)
     }
 }
 
+void MainWindow::simcom4gEnable()
+{
+    QString cfg1cmd("AT+DIALMODE=0\r\n");
+    QString cfg2cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
+    
+    fgport = new QSerialPort(this);
+    fgport->setPortName("/dev/ttyACM0");
+    fgport->setBaudRate(QSerialPort::Baud9600);
+    fgport->setDataBits(QSerialPort::Data8);
+    fgport->setParity(QSerialPort::NoParity);
+    fgport->setStopBits(QSerialPort::OneStop);
+    fgport->setFlowControl(QSerialPort::NoFlowControl);
+    
+    if(fgport->isOpen())
+        fgport->close();
+    if(fgport->open(QIODevice::ReadWrite)){
+        fgport->write(cfg1cmd.toLatin1());
+        while(fgport->waitForReadyRead(100));
+        fgport->write(cfg2cmd.toLatin1());
+        while(fgport->waitForReadyRead(100));
+        fgport->close();
+        qDebug() << "SIMCOM 4G Enabled";
+    }else{
+        QMessageBox::critical(this, tr("Error"), "SIMCOM 4G Open fail");
+    }
+}
+
 void MainWindow::mobile4gEnable()
 {
     ui->pushButton_4gEnable->setDisabled(true);
@@ -2173,31 +2200,8 @@ void MainWindow::mobile4gEnable()
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
 
     if(fgissimcom) {
-        QString cfg1cmd("AT+DIALMODE=0\r\n");
-        QString cfg2cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
-
-        fgport = new QSerialPort(this);
-        fgport->setPortName("/dev/ttyACM0");
-        fgport->setBaudRate(QSerialPort::Baud9600);
-        fgport->setDataBits(QSerialPort::Data8);
-        fgport->setParity(QSerialPort::NoParity);
-        fgport->setStopBits(QSerialPort::OneStop);
-        fgport->setFlowControl(QSerialPort::NoFlowControl);
-
-        if(fgport->isOpen())
-            fgport->close();
-        if(fgport->open(QIODevice::ReadWrite)){
-            ui->pushButton_4gEnable->setDisabled(true);
-            fgport->write(cfg1cmd.toLatin1());
-            while(fgport->waitForReadyRead(100));
-            fgport->write(cfg2cmd.toLatin1());
-            while(fgport->waitForReadyRead(100));
-            fgport->close();
-            qDebug() << "SIMCOM 4G Enabled";
-        }else{
-            QMessageBox::critical(this, tr("Error"), "SIMCOM 4G Open fail");
-            return;
-        }
+        simcom4gEnable();
+        ui->pushButton_4gEnable->setDisabled(true);
     }else {
         system(cmdstr.toLocal8Bit());
     }
@@ -2255,6 +2259,7 @@ void MainWindow::mobile4gInit()
     if(fgissimcom) {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
+        simcom4gEnable();
     }
 
     connect(ui->comboBox_4g, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),this,&MainWindow::checkCustom4gNumPolicy);
@@ -2273,6 +2278,10 @@ void MainWindow::mobile4gInit()
 void MainWindow::readGPSData()
 {
     QByteArray gpsdata;
+    if(fgissimcom) {
+        QString startcmd("AT+CGNSSINFO\r\n");
+        gpsport->write(startcmd.toLatin1());
+    }
     if(gpsport->waitForReadyRead(1000)){
         gpsdata= gpsport->readAll();
         while (gpsport->waitForReadyRead(10)) {
@@ -2285,9 +2294,12 @@ void MainWindow::readGPSData()
 
 void MainWindow::gpsEnable()
 {
-    //QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",2\r\n");
     QString cfgcmd("AT+QGPSCFG=\"gpsnmeatype\",31\r\n");
     QString startcmd("AT+QGPS=1\r\n");
+    if(fgissimcom) {
+        cfgcmd = "AT+CGNSSPWR=1\r\n";
+        startcmd = "AT+CGNSSINFO\r\n";
+    }
     if(atport->isOpen())
         atport->close();
     if(atport->open(QIODevice::ReadWrite)){
@@ -2308,9 +2320,16 @@ void MainWindow::gpsEnable()
 
     if(gpsport->isOpen())
         gpsport->close();
-    if(!gpsport->open(QIODevice::ReadOnly)){
-        QMessageBox::critical(this, tr("Error"), "No GPS");
-        return;
+    if(fgissimcom) {
+        if(!gpsport->open(QIODevice::ReadWrite)){
+            QMessageBox::critical(this, tr("Error"), "No GPS");
+            return;
+        }
+    } else {
+        if(!gpsport->open(QIODevice::ReadOnly)){
+            QMessageBox::critical(this, tr("Error"), "No GPS");
+            return;
+        }
     }
 
     gpsreadTimer->start(2000);
@@ -2319,6 +2338,9 @@ void MainWindow::gpsEnable()
 void MainWindow::gpsDisable()
 {
     QString stopcmd("AT+QGPSEND\r");
+    if(fgissimcom) {
+        stopcmd = "AT+CGNSSPWR=0\r";
+    };
     if(atport->isOpen())
         atport->close();
     if(atport->open(QIODevice::ReadWrite)){
@@ -2330,6 +2352,9 @@ void MainWindow::gpsDisable()
     }
 
     gpsreadTimer->stop();
+
+    ui->pushButton_GPSEnable->setDisabled(false);
+    ui->pushButton_GPSDisable->setDisabled(true);
 }
 
 void MainWindow::gpsInit()
@@ -2343,11 +2368,16 @@ void MainWindow::gpsInit()
         gpsportname = "/dev/ttyUSB5";
     }
 
-    if((!fgisquetel)) {
+    if(fgissimcom) {
+        atportname = "/dev/ttyACM0";
+        gpsportname = "/dev/ttyACM0";
+    }
+
+    if((!fgisquetel) && (!fgissimcom)) {
         ui->pushButton_GPSEnable->setVisible(false);
         ui->pushButton_GPSDisable->setVisible(false);
         return;
-      }
+    }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || board == "CS19108RA4133PR2P" ||
        board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" ||board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P")

@@ -90,6 +90,7 @@ private slots:
     void canStop();
     void canReceive();
     void checkCustom4gNumPolicy(int idx);
+    void simcom4gEnable();
     void mobile4gEnable();
     void mobile4gDisable();
     void readGPSData();

@@ -27,10 +27,39 @@ This program only support the following Chipsee products now:
  - [RK3588](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=rockchip-rk3588&query_type_cpu=or)
 
 # Release notes
+**V5.10:**
+
+- Add function to check RK3588 CPU
+- Add hasbl function to control the backlight feature
+- Disable GPIO on CS12720RA5050P
+- Add 4G CAT1 GPS support.
+- Enable 4G CAT1 dialog automaticly when detected it.
+- Added Deb build script
+
+**V5.9:**
+
+- Fix gpiod detect function
+- Use thread to record and play audio on STMP25 board
+- Added recorderworker class.
+- fix gpiocontroller compatible issue
+- Added CS12800RA5101A product support
+- Use weston user to run pipewire command on stmp25 platform yocto system
+- Added Autotest support for STM32MP25 platform product.
+- Change RK3588 to use thread record and play audio
+
 **V5.8:**
 
 - Add CS10600RA5070P support
 - Add CS12800RA5101P support
+- Support to test CM5 products
+- Program can enter to manufecture autotest mode by rename program name to hardwaretest_auto 
+- Add flash device size for CM5 products features.
+- Fix save/restore ui geometry bugs.
+- Add RK3588 Ubuntu20.04 support
+- add cm5 133h 150h 156h products ep support
+- fix 133h 150h 156h button group
+- Added STMP25 product support
+
 
 **V5.7:**
 

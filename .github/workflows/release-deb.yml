@@ -40,7 +40,7 @@ jobs:
         fi
 
         # Create changelog entry with commit logs
-        dch --create -v "${VERSION}-1" --package hardwaretest ""
+        dch --newversion -v "${VERSION}-1" --package hardwaretest ""
         echo "$COMMITS" >> debian/changelog
 
         # Mark changelog as released

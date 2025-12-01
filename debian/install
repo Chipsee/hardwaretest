@@ -1,0 +1,12 @@
+# Copy resource files
+resourcefiles/hardwaretest usr/
+
+# Install hardwaretest binaries
+hardwaretest usr/hardwaretest/
+
+# Desktop entry and icon
+resourcefiles/hardwaretest/hardwaretest.desktop usr/share/applications/
+resourcefiles/hardwaretest/hardwaretest.png usr/share/pixmaps/
+
+# Install LCDTester binary
+LCDTester/LCDTester usr/hardwaretest/

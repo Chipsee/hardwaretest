@@ -1,0 +1,5 @@
+hardwaretest (1.0-1) unstable; urgency=low
+
+  * Initial release with hardwaretest and LCDTester.
+
+ -- Xiaoqiang Liu <lxq@chipsee.com>  Mon, 01 Dec 2025 15:55:00 +0800

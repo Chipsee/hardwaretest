@@ -1,0 +1,5 @@
+# Create symlink for LCDTester in /usr/bin
+usr/hardwaretest/hardwaretest usr/bin/hardwaretest
+
+# Create symlink for LCDTester in /usr/bin
+usr/hardwaretest/LCDTester usr/bin/LCDTester

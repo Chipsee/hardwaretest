@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+# Configure step: prepare version.h and run qmake
+override_dh_auto_configure:
+	# Get git commit hash and replace placeholder in version.h
+	head=`git rev-parse --verify --short HEAD 2>/dev/null`; \
+	LAST_GIT_VERSION="+git$$head"; \
+	git checkout version.h; \
+	sed -i "s/LAST_GIT_HASH/$$LAST_GIT_VERSION/g" version.h; \
+	sleep 1
+	
+	# Generate Makefile for hardwaretest using qmake
+	qmake -o Makefile hardwaretest.pro
+
+# Build step: compile hardwaretest
+override_dh_auto_build:
+	$(MAKE) -j4
+
+# Install step: compile LCDTester, actual file placement handled by debian/install
+override_dh_auto_install:
+	cd LCDTester && qmake -o Makefile LCDTester.pro && $(MAKE) -j4
+	dh_install
+	cp debian/hardwaretest/usr/hardwaretest/hardwaretest \
+		debian/hardwaretest/usr/hardwaretest/hardwaretest_auto

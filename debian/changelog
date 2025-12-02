@@ -1,3 +1,11 @@
+hardwaretest (5.10.5) unstable; urgency=medium
+
+  * Change changelog file
+  * fix workflows bugs
+  * Added deb build guide in README
+
+ -- Xiaoqiang Liu <lxq@chipsee.com>  Tue, 02 Dec 2025 08:26:44 +0000
+
 hardwaretest (5.10.4) unstable; urgency=medium
 
   * fix workflows bugs

@@ -1,4 +1,4 @@
-hardwaretest (refs/heads/master) unstable; urgency=medium
+hardwaretest (5.10.4) unstable; urgency=medium
 
   * fix workflows bugs
   * Added deb build guide in README

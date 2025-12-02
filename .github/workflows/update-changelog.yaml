@@ -1,0 +1,66 @@
+name: Update Debian Changelog
+
+on:
+  push:
+    tags:
+      - '*'   # Trigger workflow on any tag push
+  workflow_dispatch:  # Manual trigger: run workflow from GitHub Actions page
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0   # Fetch full history including tags
+
+      - name: Set Git user
+        run: |
+          # Configure Git user information for changelog entries
+          git config --global user.name "Xiaoqiang Liu"
+          git config --global user.email "lxq@chipsee.com"
+
+      - name: Generate commit messages between tags
+        run: |
+          # Get the current tag that triggered this workflow
+          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+
+          # Find the previous tag (skip the latest one, take the next most recent)
+          PREV_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+
+          # Collect commit messages between previous and current tag
+          # Exclude commits that mention debian/changelog
+          COMMIT_MSG=$(git log ${PREV_TAG}..${CURRENT_TAG} --pretty=format:"%s" --grep="debian/changelog" --invert-grep)
+
+          # Save commit messages to a temporary file for later use
+          echo "${COMMIT_MSG}" > commit_messages.txt
+
+      - name: Update debian/changelog
+        run: |
+          # Read commit messages from file
+          COMMIT_MSG=$(cat commit_messages.txt)
+          DATE=$(date -R)
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+
+          # Create a new changelog entry using the tag name as version
+          cat <<EOF > debian/changelog.new
+          hardwaretest (${VERSION}) unstable; urgency=medium
+
+          $(echo "${COMMIT_MSG}" | sed 's/^/  * /')
+
+           -- Xiaoqiang Liu <lxq@chipsee.com>  ${DATE}
+
+          EOF
+
+          # Prepend the new entry to the existing changelog
+          cat debian/changelog >> debian/changelog.new
+          mv debian/changelog.new debian/changelog
+
+      - name: Commit and push changelog
+        run: |
+          git add debian/changelog
+          git commit -m "Update debian/changelog for tag ${GITHUB_REF#refs/tags/}"
+          git push origin HEAD:main

@@ -26,6 +26,16 @@ This program only support the following Chipsee products now:
  - [RK3568](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=arm-rockchip-rk3568&query_type_cpu=or)
  - [RK3588](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=rockchip-rk3588&query_type_cpu=or)
 
+# Build deb packages
+```
+mkdir hardwaretest-packages
+cd hardwaretest-packages
+git clone https://github.com/Chipsee/hardwaretest.git
+cd hardwaretest
+dpkg-buildpackage -us -uc
+```
+Then, you can get hardwaretest_\<VERSION\>-1_arm64.deb in the hardwaretest-packages directory
+
 # Release notes
 **V5.10:**
 

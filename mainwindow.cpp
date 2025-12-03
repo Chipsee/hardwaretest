@@ -1001,6 +1001,7 @@ void MainWindow::boardInit()
 
     ui->labelVersion->setText(VERSION);
 
+    checkRelay();
     check4GModule();
     BoardSetting();
     connect(ui->pushButton_exit,&QPushButton::clicked,this,&MainWindow::close);
@@ -2073,6 +2074,19 @@ bool MainWindow::has4GModule()
     }
 
     return false;
+}
+
+bool MainWindow::checkRelay()
+{
+    QString path = "/dev/relay";
+    QFile file(path);
+
+    if (file.exists()) {
+        relaypath = path;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void MainWindow::check4GModule()

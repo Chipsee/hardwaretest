@@ -110,6 +110,7 @@ private slots:
     void check4GModule();
     bool checkRK3588CPU(QWidget *);
     bool hasBl();
+    bool checkRelay();
 
 private:
     Ui::MainWindow *ui;

@@ -28,6 +28,8 @@ This program only support the following Chipsee products now:
 
 # Build deb packages
 ```
+sudo apt-get update
+sudo apt install debhelper
 mkdir hardwaretest-packages
 cd hardwaretest-packages
 git clone https://github.com/Chipsee/hardwaretest.git
@@ -44,7 +46,8 @@ Then, you can get hardwaretest_\<VERSION\>-1_arm64.deb in the hardwaretest-packa
 - Disable GPIO on CS12720RA5050P
 - Add 4G CAT1 GPS support.
 - Enable 4G CAT1 dialog automaticly when detected it.
-- Added Deb build script
+- Added Deb build script.
+- Added checkRelay function.
 
 **V5.9:**
 

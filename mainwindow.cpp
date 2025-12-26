@@ -592,11 +592,15 @@ QString MainWindow::GetBoard()
     {
         QString CS10600_RK3576_070 = GetComResult("grep -c CS10600-RK3576-070 /sys/devices/platform/board/info");
         QString CS12800_RK3576_101 = GetComResult("grep -c CS12800-RK3576-101 /sys/devices/platform/board/info");
+        QString AIO_RK3576_101 = GetComResult("grep -c AIO-RK3576-101 /sys/devices/platform/board/info");
         if(CS10600_RK3576_070.left(1) == "1") {
             board = "CS10600_RK3576_070";
         }
         if(CS12800_RK3576_101.left(1) == "1") {
             board = "CS12800_RK3576_101";
+        }
+        if(AIO_RK3576_101.left(1) == "2") {
+            board = "AIO_RK3576_101";
         }
     }
 
@@ -1093,7 +1097,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30" || cpuplat == "stm32mp25" || cpuplat == "imx8mp" ){
+    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30" || cpuplat == "stm32mp25" || cpuplat == "imx8mp"  || cpuplat == "rk3576"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -1208,7 +1212,7 @@ void MainWindow::AudioTest()
         utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /usr/hardwaretest/AudioTest.wav");
     }else if(cpuplat == "rk3588"){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
-    }else if(cpuplat == "rk3576"){
+    }else if(cpuplat == "rk3576" && debiancodename == "bookworm"){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
     }else{
         system("killall gst-play-1.0");
@@ -2312,7 +2316,7 @@ void MainWindow::mobile4gInit()
     }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||board == "CS19108RA4133PR2P" ||
-       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || cpuplat == "rk3576")
+       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || (cpuplat == "rk3576" && debiancodename == "bookworm"))
     {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
@@ -2866,7 +2870,7 @@ void MainWindow::gpioInit()
         ui->label_out_4->setVisible(false);
     }
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "CS12720RA5050P") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "CS12720RA5050P" || board == "AIO_RK3576_101") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -3084,11 +3088,11 @@ void MainWindow::canInit()
 {
     // UI
     ui->checkBox_2can->setVisible(false);
-    if(board == "imx6q" || board == "imx6d" || board == "imx6u" || board == "CS12800_RK3568_101" || board == "CS10600_RK3568_070"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576"){
+    if(board == "imx6q" || board == "imx6d" || board == "imx6u" || board == "CS12800_RK3568_101" || board == "CS10600_RK3568_070"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || (cpuplat == "rk3576" && board != "AIO_RK3576_101")){
         ui->comboBox_canNum->addItem("can0","can0");
         ui->comboBox_canNum->addItem("can1","can1");
         ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
+    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "AIO_RK3576_101"){
         ui->comboBox_canNum->setDisabled(true);
         ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
     }else if(board == "AM335XBOARD"){
@@ -3134,7 +3138,7 @@ void MainWindow::canInit()
     // Button
     ui->pushButton_canSend->setDisabled(true);
     ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4"){
+    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "AIO_RK3576_101"){
         ui->pushButton_canStart->setDisabled(true);
     }
     if(board == "CS12800RA5101A") {
@@ -3180,7 +3184,7 @@ void MainWindow::autoTest()
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
        	    OpenLed2();
         }
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "AIO_RK3576_101"){
             RelayNO();
         }
 
@@ -3192,7 +3196,7 @@ void MainWindow::autoTest()
         if(board == "imx6q" || board == "imx6d" || board =="imx6u"){
             CloseLed2();
         }
-        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A"){
+        if(board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "AIO_RK3576_101"){
             RelayNC();
         }
 
@@ -3209,7 +3213,7 @@ void MainWindow::autoTest()
         networkautotest();
     }
 
-    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4" && board != "CS12800RA5101A" && board != "CS19108RA4133PISO") {
+    if(board != "CS12800RA4101" && board != "LRRA4-101" && board != "CS12800RA4101A" && board !="CS10600RA070" && board != "CS12800RA4101AV4" && board != "CS12800RA5101A" && board != "CS19108RA4133PISO" && board != "AIO_RK3576_101") {
         // Test Serial and CAN
         connect(&thread, &SlaveThread::canrequest, this,&MainWindow::showcanRequest);
     }

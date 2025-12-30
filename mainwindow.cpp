@@ -982,6 +982,16 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "gpiochip4 5";
         gpioInArray[2] = "gpiochip4 3";
         gpioInArray[3] = "gpiochip4 2";
+		if (board == "CS10600_RK3576_070") {
+            gpioOutArray[0] = "gpiochip2 7";
+            gpioOutArray[1] = "gpiochip2 6";
+            gpioOutArray[2] = "gpiochip3 28";
+            gpioOutArray[3] = "gpiochip0 2";
+            gpioInArray[0] = "gpiochip3 22";
+            gpioInArray[1] = "gpiochip3 21";
+            gpioInArray[2] = "gpiochip3 16";
+            gpioInArray[3] = "gpiochip3 15";
+		}
     }else if(cpuplat == "stm32mp25"){
         board = GetBoard();
         ledpath = STM32MP25LED0PATH;

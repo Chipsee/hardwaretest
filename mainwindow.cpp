@@ -590,9 +590,13 @@ QString MainWindow::GetBoard()
 
     if(cpuplat == "rk3576")
     {
+        QString CS12720_RK3576_050 = GetComResult("grep -c CS12720-RK3576-050 /sys/devices/platform/board/info");
         QString CS10600_RK3576_070 = GetComResult("grep -c CS10600-RK3576-070 /sys/devices/platform/board/info");
         QString CS12800_RK3576_101 = GetComResult("grep -c CS12800-RK3576-101 /sys/devices/platform/board/info");
         QString AIO_RK3576_101 = GetComResult("grep -c AIO-RK3576-101 /sys/devices/platform/board/info");
+        if(CS12720_RK3576_050.left(1) == "1") {
+            board = "CS12720_RK3576_050";
+        }
         if(CS10600_RK3576_070.left(1) == "1") {
             board = "CS10600_RK3576_070";
         }
@@ -2326,7 +2330,7 @@ void MainWindow::mobile4gInit()
     }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||board == "CS19108RA4133PR2P" ||
-       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || (cpuplat == "rk3576" && debiancodename == "bookworm"))
+       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || (cpuplat == "rk3576" && debiancodename == "bookworm") || board == "CS12720_RK3576_050")
     {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
@@ -2465,7 +2469,7 @@ void MainWindow::gpsInit()
     }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || board == "CS19108RA4133PR2P" ||
-       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" ||board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P")
+       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" ||board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || board == "CS12720_RK3576_050")
     {
         ui->pushButton_GPSEnable->setVisible(false);
         ui->pushButton_GPSDisable->setVisible(false);
@@ -2880,7 +2884,7 @@ void MainWindow::gpioInit()
         ui->label_out_4->setVisible(false);
     }
 
-    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "CS12720RA5050P" || board == "AIO_RK3576_101") {
+    if(board == "LRRA4-101" || board == "CS12800RA4101" || board == "CS12800RA4101A" || board == "CS12800PX101" || board == "CS12720RA4050" || board == "CS12720_RK3568_050" || board == "CS12800RA4101AV4" || board == "CS12800RA5101A" || board == "CS12720RA5050P" || board == "AIO_RK3576_101" || board == "CS12720_RK3576_050") {
         ui->radioButton_out_1_high->setCheckable(false);
         ui->radioButton_out_2_high->setCheckable(false);
         ui->radioButton_out_3_high->setCheckable(false);
@@ -2923,7 +2927,7 @@ void MainWindow::gpioInit()
         ui->pushButton_setAllHigh->setVisible(false);
         ui->pushButton_setAllLow->setVisible(false);
         ui->checkBox_Relay->setVisible(false);
-        if(board != "CS12720RA4050" && board != "CS12720_RK3568_050" && cpuplat != "imx8mp" && board != "CS12720RA5050P") {
+        if(board != "CS12720RA4050" && board != "CS12720_RK3568_050" && cpuplat != "imx8mp" && board != "CS12720RA5050P" && board != "CS12720_RK3576_050") {
             ui->checkBox_Relay->setVisible(true);
             relayflag=true;
             ui->checkBox_Relay->setChecked(false);

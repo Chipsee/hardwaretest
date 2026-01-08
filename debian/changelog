@@ -1,3 +1,15 @@
+hardwaretest (5.10.8) unstable; urgency=medium
+
+  * 1. Added PPC-RK3576-050 support. 2. Update version to 5.10.8.
+  * Added PPC-RK3576-070 support
+  * 1. Added AIO-RK3576-101 support. 2. Update version to 5.10.7.
+  * update icon
+  * Added RK3576 Bookworm support
+  * Update README.md
+  * added checkRelay function
+
+ -- Xiaoqiang Liu <lxq@chipsee.com>  Thu, 08 Jan 2026 05:58:17 +0000
+
 hardwaretest (5.10.5) unstable; urgency=medium
 
   * Change changelog file

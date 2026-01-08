@@ -1205,7 +1205,7 @@ void MainWindow::AudioTest()
         QMessageBox::information(this,"Tips","Press OK to Play Audio!");
     }
 
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588") {
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || (cpuplat == "rk3588" && debiancodename != "bookworm")) {
         QSoundEffect *effect = new QSoundEffect(this);
         effect->setSource(QUrl("qrc:/medias/AudioTest.wav"));
         effect->setVolume(1.0);   //0.0 ~ 1.0 0% ~ 100%
@@ -1224,7 +1224,7 @@ void MainWindow::AudioTest()
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
     }else if(cpuplat == "imx8mp"){
         utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /usr/hardwaretest/AudioTest.wav");
-    }else if(cpuplat == "rk3588"){
+    }else if(cpuplat == "rk3588" && debiancodename == "bookworm"){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
     }else if(cpuplat == "rk3576" && debiancodename == "bookworm"){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
@@ -1546,7 +1546,7 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(70);
     }
 
-    if((cpuplat == "rk3568" && debiancodename != "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm")){
+    if((cpuplat == "rk3568" && debiancodename != "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "bookworm")){
         ui->horizontalSlider_audio_volume->setVisible(false);
         ui->label_audio_volume->setVisible(false);
     }

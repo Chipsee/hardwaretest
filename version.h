@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define MAIN_VERSION "Ver 5.10.8"
+#define MAIN_VERSION "Ver 5.10.9"
 #define GIT_VERSION "LAST_GIT_HASH"
 #define VERSION (MAIN_VERSION GIT_VERSION)
 

@@ -1,3 +1,9 @@
+hardwaretest (5.10.10) unstable; urgency=medium
+
+  * Added RK3568B2 101 Product support Update version to 5.10.10
+
+ -- Xiaoqiang Liu <lxq@chipsee.com>  Wed, 28 Jan 2026 03:31:22 +0000
+
 hardwaretest (5.10.9) unstable; urgency=medium
 
   * Added RK3588 Bookworm support

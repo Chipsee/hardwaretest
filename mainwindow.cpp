@@ -459,7 +459,7 @@ QString MainWindow::GetPlat()
         plat = "px30";
     } else if(rk3399.left(1) == "2") {
         plat = "rk3399";
-    } else if(rk3568.left(1) == "2"){
+    } else if(rk3568.left(1).toInt() >= 1){
         plat = "rk3568";
     } else if(imx8mp.left(1) == "2"){
         plat = "imx8mp";
@@ -544,6 +544,7 @@ QString MainWindow::GetBoard()
         QString CS12720_RK3568_050 = GetComResult("grep -c rk3568-eisd-1280720 /proc/device-tree/compatible");
         QString CS12800_RK3568_120_150 = GetComResult("grep -c rk3568-eisd-1024768 /proc/device-tree/compatible");
         QString CS12800_RK3568_133_156_185_215_236 = GetComResult("grep -c rk3568-eisd-19201080 /proc/device-tree/compatible");
+        QString CS12800_RK3568B2_101 = GetComResult("grep -c rk3568-eisd-csbc-1280800-mipi /proc/device-tree/compatible");
 
         if(CS12800_RK3568_101.left(1) == "1"){
             board = "CS12800_RK3568_101";
@@ -555,7 +556,9 @@ QString MainWindow::GetBoard()
             board = "CS12720_RK3568_120_150";
         } else if(CS12800_RK3568_133_156_185_215_236.left(1) == "1"){
             board = "CS12720_RK3568_133_156_185_215_236";
-        }
+        } else if(CS12800_RK3568B2_101.left(1) == "1") {
+            board = "CS12800_RK3568B2_101";
+	}
     }
     if(cpuplat == "imx8mp")
     {
@@ -675,6 +678,8 @@ QString MainWindow::GetDebianCodeName()
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye"))
             codename = "bullseye";
+        if(codename.contains("focal"))
+            codename = "focal";
     }
     if(cpuplat == "rk3588"){
         codename = GetComResult("lsb_release -c");
@@ -689,11 +694,6 @@ QString MainWindow::GetDebianCodeName()
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bookworm"))
             codename = "bookworm";
-    }
-    if(cpuplat == "rk3568"){
-        codename = GetComResult("lsb_release -c");
-        if(codename.contains("focal"))
-            codename = "focal";
     }
     if(cpuplat == "imx6q"){
         codename = GetComResult("lsb_release -sc");
@@ -906,6 +906,16 @@ void MainWindow::BoardSetting()
         gpioInArray[1] = "6";
         gpioInArray[2] = "7";
         gpioInArray[3] = "8";
+	if (board == "CS12800_RK3568B2_101") {
+		gpioOutArray[0] = "gpiochip2 28";
+		gpioOutArray[1] = "gpiochip2 30";
+		gpioOutArray[2] = "gpiochip1 10";
+		gpioOutArray[3] = "gpiochip1 10"; //don't display
+		gpioInArray[0] = "gpiochip1 8";
+		gpioInArray[1] = "gpiochip2 26";
+		gpioInArray[2] = "gpiochip3 1";
+		gpioInArray[3] = "gpiochip3 1"; //don't display
+	}
     }else if(cpuplat == "rk3399"){
         board = GetBoard();
         ledpath = RK3399LED0PATH;
@@ -1028,8 +1038,8 @@ void MainWindow::boardInit()
     board = GetBoard();
     hasbl = hasBl();
 
-    //qDebug() << cpuplat;
-    //qDebug() << "BOARD is " + board;
+    qDebug() << cpuplat;
+    qDebug() << "BOARD is " + board;
 
     if (cpuplat == "imx6q" || cpuplat =="imx6dl" || cpuplat == "imx6ul") {
         ui->labelBoard->setText("IMX6QDLUL");
@@ -1564,6 +1574,11 @@ void MainWindow::audioInit()
     ui->checkBox_audioloop->setChecked(false);
     connect(audioloopTimer,SIGNAL(timeout()),SLOT(AudioTest()));
     connect(ui->checkBox_audioloop,SIGNAL(toggled(bool)),this,SLOT(AudioLoop()));
+	
+	if(board == "CS12800_RK3568B2_101"){
+		ui->checkBox_buzzer->setVisible(false);
+                ui->label_buzzer->setVisible(false);
+	}
 }
 
 /*
@@ -1734,7 +1749,7 @@ void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
     // try to use inter LCDTester class to test LCD
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "pi" || cpuplat == "stm32mp25" || cpuplat  == "rk3576"){//
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "pi" || cpuplat == "stm32mp25" || cpuplat  == "rk3576" || cpuplat == "rk3568"){//
         lcd = new LCDTester;
         connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
     } else {
@@ -2663,7 +2678,7 @@ void MainWindow::setGPIOModel(QString gpionum, QString model)
 
 void MainWindow::setGPIOInStatu()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101"){
         if(in[0]->readGpioValue() == 1)
             ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
         else
@@ -2736,7 +2751,7 @@ void MainWindow::setGPIOInStatu()
 
 void MainWindow::setGPIOOutStatu()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576"){
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101"){
         if(ui->radioButton_out_1_high->isChecked())
             out[0]->writeGpioValue(1);
         else
@@ -2951,8 +2966,16 @@ void MainWindow::gpioInit()
         gpioInStatuTimer->start(50);
         connect(ui->pushButton_gpioRefresh,&QPushButton::clicked,this,&MainWindow::setGPIOInStatu);
     }
+	
+	if(board == "CS12800_RK3568B2_101") {
+		ui->label_out_4->setVisible(false);
+		ui->radioButton_out_4_high->setVisible(false);
+		ui->radioButton_out_4_low->setVisible(false);
+		ui->label_in_4->setVisible(false);
+		ui->label_in_4_in->setVisible(false);
+	}
 
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576") {
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101") {
         QStringList list;
         for(int i=0; i<4; i++){
             list = gpioOutArray[i].split(" ");

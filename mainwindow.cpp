@@ -689,6 +689,8 @@ QString MainWindow::GetDebianCodeName()
             codename = "focal";
         if(codename.contains("bookworm"))
             codename = "bookworm";
+        if(codename.contains("jammy"))
+            codename = "jammy";
     }
     if(cpuplat == "rk3576"){
         codename = GetComResult("lsb_release -c");
@@ -1215,7 +1217,7 @@ void MainWindow::AudioTest()
         QMessageBox::information(this,"Tips","Press OK to Play Audio!");
     }
 
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || (cpuplat == "rk3588" && debiancodename != "bookworm")) {
+    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || (cpuplat == "rk3588" && debiancodename != "bookworm" && debiancodename != "jammy")) {
         QSoundEffect *effect = new QSoundEffect(this);
         effect->setSource(QUrl("qrc:/medias/AudioTest.wav"));
         effect->setVolume(1.0);   //0.0 ~ 1.0 0% ~ 100%
@@ -1234,7 +1236,7 @@ void MainWindow::AudioTest()
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
     }else if(cpuplat == "imx8mp"){
         utils.executeCommand("aplay -D sysdefault:CARD=imx8mpnau8822 /usr/hardwaretest/AudioTest.wav");
-    }else if(cpuplat == "rk3588" && debiancodename == "bookworm"){
+    }else if((cpuplat == "rk3588" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "jammy")){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
     }else if(cpuplat == "rk3576" && debiancodename == "bookworm"){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
@@ -1556,7 +1558,7 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(70);
     }
 
-    if((cpuplat == "rk3568" && debiancodename != "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "bookworm")){
+    if((cpuplat == "rk3568" && debiancodename != "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "jammy")){
         ui->horizontalSlider_audio_volume->setVisible(false);
         ui->label_audio_volume->setVisible(false);
     }
@@ -2104,7 +2106,7 @@ void MainWindow::networkInit()
 
     bool isJammy = (debiancodename == "jammy");
 
-    if(cpuplat == "stm32mp25" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (board == "imx6q" && debiancodename == "bionic") || (cpuplat == "rk3576" && debiancodename == "bookworm")){
+    if(cpuplat == "stm32mp25" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (cpuplat == "rk3588" && debiancodename == "jammy") || (board == "imx6q" && debiancodename == "bionic") || (cpuplat == "rk3576" && debiancodename == "bookworm")){
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);
         ui->pushButton_BluetoothTest->setVisible(false);

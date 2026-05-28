@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1107</width>
-    <height>666</height>
+    <height>697</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -657,6 +657,37 @@
             </widget>
            </item>
            <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_SIM">
+             <item>
+              <widget class="QLabel" name="label_sim">
+               <property name="text">
+                <string>Activated SIM Card Slot: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radioButton_sim1">
+               <property name="text">
+                <string>SIM1</string>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">buttonGroup_sim</string>
+               </attribute>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radioButton_sim2">
+               <property name="text">
+                <string>SIM2</string>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">buttonGroup_sim</string>
+               </attribute>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_4G">
              <item>
               <widget class="QComboBox" name="comboBox_4g">
@@ -951,7 +982,7 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_in_">
+            <widget class="QLabel" name="label_in_2">
              <property name="text">
               <string>IN_2</string>
              </property>
@@ -1275,11 +1306,12 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_sim"/>
   <buttongroup name="buttonGroup_out_4"/>
-  <buttongroup name="buttonGroup_led2"/>
-  <buttongroup name="buttonGroup_out_3"/>
-  <buttongroup name="buttonGroup_out_1"/>
   <buttongroup name="buttonGroup_led1"/>
+  <buttongroup name="buttonGroup_out_3"/>
+  <buttongroup name="buttonGroup_led2"/>
+  <buttongroup name="buttonGroup_out_2"/>
+  <buttongroup name="buttonGroup_out_1"/>
  </buttongroups>
 </ui>

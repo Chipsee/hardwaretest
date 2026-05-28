@@ -37,6 +37,7 @@ SOURCES += main.cpp\
     epflash.cpp \
     gpiocontroller.cpp \
     mainwindow.cpp \
+    shellworker.cpp \
     timedialog.cpp \
     slavethread.cpp \
     device.cpp \
@@ -48,6 +49,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     epflash.h \
     gpiocontroller.h \
+    shellworker.h \
     timedialog.h \
     slavethread.h \
     utils.h \

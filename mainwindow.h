@@ -111,6 +111,8 @@ private slots:
     bool checkRK3588CPU(QWidget *);
     bool hasBl();
     bool checkRelay();
+    void switchSIM1();
+    void switchSIM2();
 
 private:
     Ui::MainWindow *ui;
@@ -203,6 +205,8 @@ private:
     QString GetComResult(QString);
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
     QString executeShellCommand(const QString &command, const QStringList &arguments);
+    void executeShellScriptInThread(const QString &script);
+    void switchSIMInThread(const QString &script);
 #endif
     QString GetPlat();
     QString GetResolution();

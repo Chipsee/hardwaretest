@@ -31,6 +31,7 @@
 #include "recorderworker.h"
 #include <QThread>
 #include <QFileInfo>
+#include "shellworker.h"
 
 #include <QDebug>
 /*
@@ -382,6 +383,37 @@ QString MainWindow::executeShellCommand(const QString &command, const QStringLis
 
     QString output = process.readAllStandardOutput();
     return output.trimmed();
+}
+
+void MainWindow::executeShellScriptInThread(const QString &script)
+{
+    QThread *workThread = new QThread;
+    ShellWorker *shellWorker = new ShellWorker;
+    shellWorker->moveToThread(workThread);
+
+    ui->textBrowser_network_text->clear();
+
+    connect(shellWorker, &ShellWorker::status, this, [this](const QString &msg) {
+        qDebug() << "[Info]: " + msg;
+    });
+
+    connect(shellWorker, &ShellWorker::error, this, [this](const QString &err) {
+        qDebug() << "[ERROR] " + err;
+    });
+
+    // Auto clean up thread & worker
+    connect(shellWorker, &ShellWorker::finished, workThread, &QThread::quit);
+    connect(shellWorker, &ShellWorker::finished, shellWorker, &ShellWorker::deleteLater);
+    connect(workThread, &QThread::finished, workThread, &QThread::deleteLater);
+
+    // Run script when thread starts
+    connect(workThread, &QThread::started, shellWorker, [=]() {
+        QStringList args;
+        args << "-c" << script;
+        shellWorker->execshell(args);
+    });
+
+    workThread->start();
 }
 #endif
 
@@ -2337,6 +2369,79 @@ void MainWindow::checkCustom4gNumPolicy(int idx)
         ui->comboBox_4g->clearEditText();
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
+void MainWindow::switchSIMInThread(const QString &script)
+{
+    QThread *workThread = new QThread;
+    ShellWorker *shellWorker = new ShellWorker;
+    shellWorker->moveToThread(workThread);
+
+    ui->textBrowser_network_text->clear();
+
+    connect(workThread, &QThread::started, this, [this, script]() {
+        if(script.contains("sim1.sh")) {
+            ui->radioButton_sim2->setEnabled(false);
+        } else {
+            ui->radioButton_sim1->setEnabled(false);
+        }
+    });
+
+    // Output shell message to UI
+    connect(shellWorker, &ShellWorker::status, this, [this](const QString &msg) {
+        // ignore the unusable message
+        if(msg.contains(".") || msg.contains("error")) {
+            ui->textBrowser_network_text->insertPlainText(".");
+        } else {
+            ui->textBrowser_network_text->append(msg);
+        }
+        ui->textBrowser_network_text->moveCursor(QTextCursor::End);
+    });
+
+    // Output error message to UI
+    connect(shellWorker, &ShellWorker::error, this, [this](const QString &err) {
+        ui->textBrowser_network_text->append("[ERROR] " + err);
+        ui->textBrowser_network_text->moveCursor(QTextCursor::End);
+    });
+
+    // Do work after thread finnished
+    connect(shellWorker, &ShellWorker::finished, this, [this, script]() {
+        if(script.contains("sim1.sh")) {
+            ui->radioButton_sim2->setEnabled(true);
+        } else {
+            ui->radioButton_sim1->setEnabled(true);
+        }
+    });
+
+    // Auto clean up thread & worker
+    connect(shellWorker, &ShellWorker::finished, workThread, &QThread::quit);
+    connect(shellWorker, &ShellWorker::finished, shellWorker, &ShellWorker::deleteLater);
+    connect(workThread, &QThread::finished, workThread, &QThread::deleteLater);
+
+    // Run script when thread starts
+    connect(workThread, &QThread::started, shellWorker, [=]() {
+        QStringList args;
+        args << "-c" << script;
+        shellWorker->execshell(args);
+    });
+
+    workThread->start();
+}
+#endif
+
+void MainWindow::switchSIM1()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
+    switchSIMInThread("/opt/hardware/test/gsm/sim1.sh");
+#endif
+}
+
+void MainWindow::switchSIM2()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,8)
+    switchSIMInThread("/opt/hardware/test/gsm/sim2.sh");
+#endif
+}
+
 void MainWindow::mobile4gInit()
 {
     if(!(fgissimcom||fgisquetel)){
@@ -2344,6 +2449,31 @@ void MainWindow::mobile4gInit()
         ui->pushButton_4gDisable->setVisible(false);
         ui->pushButton_4gEnable->setVisible(false);
         return;
+    }
+
+    /* CS_RK3576_BOX has double SIM card slots, show the switch radiobutton */
+    if(board == "CS_RK3576_BOX") {
+        ui->radioButton_sim1->setVisible(true);
+        ui->radioButton_sim2->setVisible(true);
+        ui->label_sim->setVisible(true);
+
+        /* we will use the value of /dev/simsw to confirm the current sim status */
+        /* Value: 1=>sim1 0=>sim2 */
+        if(GetFileValue("/dev/simsw") == "1\n") {
+            qDebug() << "CS_RK3576_BOX: SIM1 is enabled";
+            ui->radioButton_sim1->setChecked(true);
+        } else {
+            qDebug() << "CS_RK3576_BOX: SIM2 is enabled";
+            ui->radioButton_sim2->setChecked(true);
+        }
+
+        connect(ui->radioButton_sim1,&QRadioButton::clicked,this,&MainWindow::switchSIM1);
+        connect(ui->radioButton_sim2,&QRadioButton::clicked,this,&MainWindow::switchSIM2);
+
+    } else {
+        ui->radioButton_sim1->setVisible(false);
+        ui->radioButton_sim2->setVisible(false);
+        ui->label_sim->setVisible(false);
     }
 
     if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||board == "CS19108RA4133PR2P" ||
@@ -2932,7 +3062,7 @@ void MainWindow::gpioInit()
         ui->radioButton_out_2_low->setVisible(false);
         ui->radioButton_out_3_low->setVisible(false);
         ui->radioButton_out_4_low->setVisible(false);
-        ui->label_in_->setVisible(false);
+        ui->label_in_2->setVisible(false);
         ui->label_in_1->setVisible(false);
         ui->label_in_3->setVisible(false);
         ui->label_in_4->setVisible(false);

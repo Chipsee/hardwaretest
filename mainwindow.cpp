@@ -681,37 +681,37 @@ QString MainWindow::GetDebianCodeName()
     if(cpuplat == "rk3568"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "bullseye";
         }
         if(codename.contains("focal")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "focal";
         }
     }
     if(cpuplat == "rk3588"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bullseye")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "bullseye";
         }
         if(codename.contains("focal")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "focal";
         }
         if(codename.contains("bookworm")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "bookworm";
         }
         if(codename.contains("jammy")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "jammy";
         }
     }
     if(cpuplat == "rk3576"){
         codename = GetComResult("lsb_release -c");
         if(codename.contains("bookworm")){
-            fg_4g_ui = false;
+            fgui = false;
             codename = "bookworm";
         }
     }
@@ -997,7 +997,7 @@ void MainWindow::BoardSetting()
         gpioInArray[2] = "gpiochip1 8";
         gpioInArray[3] = "gpiochip1 6";
     }else if(cpuplat == "rk3576"){
-        board = GetBoard();   //
+        board = GetBoard();
         ledpath = RK3576LED0PATH;
         ledpath2 = RK3576LED1PATH;
         audiopath = RK3576AUDIOPATH;
@@ -1086,7 +1086,7 @@ void MainWindow::boardInit()
     if (cpuplat == "imx6q" || cpuplat =="imx6dl" || cpuplat == "imx6ul") {
         ui->labelBoard->setText("IMX6QDLUL");
     } else if (cpuplat == "pi"){
-        if (system (" nonint is_pifive") == 0)
+        if (system ("raspi-config nonint is_pifive") == 0)
             ispifive = true;
         else
             ispifive = false;
@@ -2354,20 +2354,9 @@ void MainWindow::mobile4gEnable()
     else
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
 
-    // 4G：如果是RK3576-BOX，就先切换sim2.sh，再切换sim1.sh
-    if (board == "CS_RK3576_BOX") {
-        //QMessageBox::information(this, tr("Info"),
-        ui->textBrowser_network_text->setText(
-            "即将切换SIM卡，这个过程可能需要1-3分钟，\n"
-            "期间界面可能会暂时无响应，请耐心等待。");
-//        system("/opt/hardware/test/gsm/sim2.sh");
-//        system("/opt/hardware/test/gsm/sim1.sh");
-    }
-
     if(fgissimcom) {
         simcom4gEnable(); //config rndis
         ui->pushButton_4gEnable->setDisabled(true);
-        //QMessageBox::information(this, tr("Success"),
         ui->textBrowser_network_text->setText(
                                  "SIM7670G RNDIS mode configuration sent successfully.\n\n"
                                  "*** Please reboot the system for the changes to take effect. ***\n"
@@ -2411,12 +2400,14 @@ void MainWindow::mobile4gInit()
         return;
     }
 
-    if(fg_4g_ui == false)
+    if(fgui == false)
     {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
-        ui->pushButton_4gEnable->setVisible(false);
-        return;
+	if(!fgissimcom) {
+            ui->pushButton_4gEnable->setVisible(false);
+            return;
+	}
     }
 
     ui->comboBox_4g->addItem("3gnet","3gnet");
@@ -2773,35 +2764,6 @@ void MainWindow::setGPIOInStatu()
                 ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_low.png"));
         }
 
-#if 0
-        if(board == "CS_RK3576_BOX")
-        {
-            if(in[0]->readGpioValue() == 1)
-                ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
-            else
-                ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_low.png"));
-
-            if(in[1]->readGpioValue() == 1)
-                ui->label_in_2_in->setPixmap(QPixmap(":/images/IO_high.png"));
-            else
-                ui->label_in_2_in->setPixmap(QPixmap(":/images/IO_low.png"));
-
-            if(ui->radioButton_out_3_high->isChecked())
-            {
-                ui->label_in_3_in->setPixmap(QPixmap(":/images/IO_high.png"));
-                ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_high.png"));
-                ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
-            }
-            else
-            {
-                ui->label_in_3_in->setPixmap(QPixmap(":/images/IO_low.png"));
-                ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
-                ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_low.png"));
-            }
-            return;
-        }
-#endif
-
         return;
     }
 
@@ -2928,7 +2890,7 @@ void MainWindow::setGPIOOutAllHigh()
     ui->radioButton_out_2_high->setChecked(true);
     ui->radioButton_out_3_high->setChecked(true);
     if(board != "CS_RK3576_BOX")
-    ui->radioButton_out_4_high->setChecked(true);
+       ui->radioButton_out_4_high->setChecked(true);
 }
 
 void MainWindow::setGPIOOutAllLow()
@@ -2937,7 +2899,7 @@ void MainWindow::setGPIOOutAllLow()
     ui->radioButton_out_2_low->setChecked(true);
     ui->radioButton_out_3_low->setChecked(true);
     if(board != "CS_RK3576_BOX")
-    ui->radioButton_out_4_low->setChecked(true);
+        ui->radioButton_out_4_low->setChecked(true);
 }
 
 void MainWindow::gpioExport(QString gpionum)

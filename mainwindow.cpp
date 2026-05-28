@@ -597,6 +597,7 @@ QString MainWindow::GetBoard()
         QString CS10600_RK3576_070 = GetComResult("grep -c CS10600-RK3576-070 /sys/devices/platform/board/info");
         QString CS12800_RK3576_101 = GetComResult("grep -c CS12800-RK3576-101 /sys/devices/platform/board/info");
         QString AIO_RK3576_101 = GetComResult("grep -c AIO-RK3576-101 /sys/devices/platform/board/info");
+        QString CS_RK3576_BOX = GetComResult("grep -c CS-RK3576-BOX /sys/devices/platform/board/info");
         if(CS12720_RK3576_050.left(1) == "1") {
             board = "CS12720_RK3576_050";
         }
@@ -608,6 +609,9 @@ QString MainWindow::GetBoard()
         }
         if(AIO_RK3576_101.left(1) == "2") {
             board = "AIO_RK3576_101";
+        }
+        if(CS_RK3576_BOX.left(1) == "1") {
+            board = "CS_RK3576_BOX";
         }
     }
 
@@ -676,26 +680,40 @@ QString MainWindow::GetDebianCodeName()
     }
     if(cpuplat == "rk3568"){
         codename = GetComResult("lsb_release -c");
-        if(codename.contains("bullseye"))
+        if(codename.contains("bullseye")){
+            fgui = false;
             codename = "bullseye";
-        if(codename.contains("focal"))
+        }
+        if(codename.contains("focal")){
+            fgui = false;
             codename = "focal";
+        }
     }
     if(cpuplat == "rk3588"){
         codename = GetComResult("lsb_release -c");
-        if(codename.contains("bullseye"))
+        if(codename.contains("bullseye")){
+            fgui = false;
             codename = "bullseye";
-        if(codename.contains("focal"))
+        }
+        if(codename.contains("focal")){
+            fgui = false;
             codename = "focal";
-        if(codename.contains("bookworm"))
+        }
+        if(codename.contains("bookworm")){
+            fgui = false;
             codename = "bookworm";
-        if(codename.contains("jammy"))
+        }
+        if(codename.contains("jammy")){
+            fgui = false;
             codename = "jammy";
+        }
     }
     if(cpuplat == "rk3576"){
         codename = GetComResult("lsb_release -c");
-        if(codename.contains("bookworm"))
+        if(codename.contains("bookworm")){
+            fgui = false;
             codename = "bookworm";
+        }
     }
     if(cpuplat == "imx6q"){
         codename = GetComResult("lsb_release -sc");
@@ -1007,7 +1025,29 @@ void MainWindow::BoardSetting()
             gpioInArray[1] = "gpiochip3 21";
             gpioInArray[2] = "gpiochip3 16";
             gpioInArray[3] = "gpiochip3 15";
-		}
+        }
+        if (board == "CS_RK3576_BOX") {
+            in.push_back(new GpioController(this)); //bug
+            // OUT-GPIO: gpioset 6 0=0, gpioset 6 1=0, gpioset 6 2=0
+            gpioOutArray[0] = "gpiochip6 0";  // out1
+            gpioOutArray[1] = "gpiochip6 1";  // out2
+            gpioOutArray[2] = "gpiochip6 2";  // out3
+
+            for (int i = 3; i < 4; i++) {
+                gpioOutArray[i] = "";
+            }
+
+            // IN-GPIO: gpioget 6 3,4,5,6,7
+            gpioInArray[0] = "gpiochip6 3";  // in1
+            gpioInArray[1] = "gpiochip6 4";  // in2
+            gpioInArray[2] = "gpiochip6 5";  // in3
+            gpioInArray[3] = "gpiochip6 6";  // in4
+            gpioInArray[4] = "gpiochip6 7";  // in5
+
+            for (int i = 5; i < 8; i++) {
+                gpioInArray[i] = "";
+            }
+        }
     }else if(cpuplat == "stm32mp25"){
         board = GetBoard();
         ledpath = STM32MP25LED0PATH;
@@ -2269,7 +2309,8 @@ bool MainWindow::checkRK3588CPU(QWidget *parent = nullptr)
 void MainWindow::simcom4gEnable()
 {
     QString cfg1cmd("AT+DIALMODE=0\r\n");
-    QString cfg2cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
+    QString cfg2cmd("AT+USBNETIP=1\r\n");
+    QString cfg3cmd("AT$MYCONFIG=\"usbnetmode\",0\r\n");
     
     fgport = new QSerialPort(this);
     fgport->setPortName("/dev/ttyACM0");
@@ -2286,8 +2327,16 @@ void MainWindow::simcom4gEnable()
         while(fgport->waitForReadyRead(100));
         fgport->write(cfg2cmd.toLatin1());
         while(fgport->waitForReadyRead(100));
+        fgport->write(cfg3cmd.toLatin1());
+        while(fgport->waitForReadyRead(100));
         fgport->close();
-        qDebug() << "SIMCOM 4G Enabled";
+        qDebug() << "SIMCOM 4G (RNDIS mode)configured.";
+
+//        QMessageBox::information(this, tr("Success"),
+//                                 "SIMCOM RNDIS mode configuration sent successfully.\n\n"
+//                                 "*** Please reboot the system for the changes to take effect. ***\n"
+//                                 "You can run 'sudo reboot' in a terminal or restart via the system interface."
+//                                 );
     }else{
         QMessageBox::critical(this, tr("Error"), "SIMCOM 4G Open fail");
     }
@@ -2306,11 +2355,16 @@ void MainWindow::mobile4gEnable()
         cmdstr = "ifconfig wwan0 down && quectel-CM -s " + nettype + "&";
 
     if(fgissimcom) {
-        simcom4gEnable();
+        simcom4gEnable(); //config rndis
         ui->pushButton_4gEnable->setDisabled(true);
+        ui->textBrowser_network_text->setText(
+                                 "SIM7670G RNDIS mode configuration sent successfully.\n\n"
+                                 "*** Please reboot the system for the changes to take effect. ***\n"
+                                 "You can run 'sudo reboot' in a terminal or restart via the system interface."
+                                 );
     }else {
         system(cmdstr.toLocal8Bit());
-    }
+    }   
 
     ui->textBrowser_network_text->setText("4G Enabling, press 'Netinfo' to know status.");
 }
@@ -2346,13 +2400,14 @@ void MainWindow::mobile4gInit()
         return;
     }
 
-    if(board == "AM335XBOARD" || cpuplat == "rk3399" || board == "CS12720_RK3568_050" || board == "CS19108RA4133PISO" || cpuplat == "rk3588" ||board == "CS19108RA4133PR2P" ||
-       board == "CS19108RA4156PR2P" || board == "CS12800RA4101PR2P" || board == "CS12800RA4101PR2PBOX" || board == "CS10768RA4121PR2P" || board == "CS10768RA4150PR2P" || (cpuplat == "rk3576" && debiancodename == "bookworm") || board == "CS12720_RK3576_050")
+    if(fgui == false)
     {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
-        ui->pushButton_4gEnable->setVisible(false);
-        return;
+	if(!fgissimcom) {
+            ui->pushButton_4gEnable->setVisible(false);
+            return;
+	}
     }
 
     ui->comboBox_4g->addItem("3gnet","3gnet");
@@ -2365,6 +2420,7 @@ void MainWindow::mobile4gInit()
     if(fgissimcom) {
         ui->comboBox_4g->setVisible(false);
         ui->pushButton_4gDisable->setVisible(false);
+        ui->pushButton_4gEnable->setText("4G Config");
         simcom4gEnable();
     }
 
@@ -2680,7 +2736,7 @@ void MainWindow::setGPIOModel(QString gpionum, QString model)
 
 void MainWindow::setGPIOInStatu()
 {
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101"){
+     if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101"){
         if(in[0]->readGpioValue() == 1)
             ui->label_in_1_in->setPixmap(QPixmap(":/images/IO_high.png"));
         else
@@ -2699,6 +2755,15 @@ void MainWindow::setGPIOInStatu()
             ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_high.png"));
         else
             ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
+
+        if(board == "CS_RK3576_BOX")
+        {
+            if(in[4]->readGpioValue() == 1)
+                ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
+            else
+                ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_low.png"));
+        }
+
         return;
     }
 
@@ -2769,10 +2834,13 @@ void MainWindow::setGPIOOutStatu()
         else
             out[2]->writeGpioValue(0);
 
-        if(ui->radioButton_out_4_high->isChecked())
-            out[3]->writeGpioValue(1);
-        else
-            out[3]->writeGpioValue(0);
+        if(board != "CS_RK3576_BOX" && out[3])
+        {
+            if(ui->radioButton_out_4_high->isChecked())
+                out[3]->writeGpioValue(1);
+            else
+                out[3]->writeGpioValue(0);
+        }
         return;
     }
 
@@ -2792,7 +2860,8 @@ void MainWindow::setGPIOOutStatu()
            board != "CS12800RA4101PR2P" &&
            board != "CS12800RA4101PR2PBOX" &&
            board != "CS10768RA4121PR2P" &&
-           board != "CS10768RA4150PR2P"
+           board != "CS10768RA4150PR2P"&&
+           board != "CS_RK3576_BOX"
     ) {
         if(ui->radioButton_out_3_high->isChecked())
             setGPIOValue(gpioOutArray[2],"1");
@@ -2804,6 +2873,15 @@ void MainWindow::setGPIOOutStatu()
         else
             setGPIOValue(gpioOutArray[3],"0");
     }
+    else if(board == "CS_RK3576_BOX")
+    {
+        // CS_RK3576_BOX:OUT3，dont have OUT4
+        if(ui->radioButton_out_3_high->isChecked())
+            setGPIOValue(gpioOutArray[2],"1");
+        else
+            setGPIOValue(gpioOutArray[2],"0");
+    }
+
 }
 
 void MainWindow::setGPIOOutAllHigh()
@@ -2811,7 +2889,8 @@ void MainWindow::setGPIOOutAllHigh()
     ui->radioButton_out_1_high->setChecked(true);
     ui->radioButton_out_2_high->setChecked(true);
     ui->radioButton_out_3_high->setChecked(true);
-    ui->radioButton_out_4_high->setChecked(true);
+    if(board != "CS_RK3576_BOX")
+       ui->radioButton_out_4_high->setChecked(true);
 }
 
 void MainWindow::setGPIOOutAllLow()
@@ -2819,7 +2898,8 @@ void MainWindow::setGPIOOutAllLow()
     ui->radioButton_out_1_low->setChecked(true);
     ui->radioButton_out_2_low->setChecked(true);
     ui->radioButton_out_3_low->setChecked(true);
-    ui->radioButton_out_4_low->setChecked(true);
+    if(board != "CS_RK3576_BOX")
+        ui->radioButton_out_4_low->setChecked(true);
 }
 
 void MainWindow::gpioExport(QString gpionum)
@@ -2858,13 +2938,6 @@ void MainWindow::ChangeRelayState()
 
 void MainWindow::gpioInit()
 {
-//    for(int i=0; i<4; i++){
-//        gpioExport(gpioOutArray[i]);
-//        gpioExport(gpioInArray[i]);
-//        setGPIOModel(gpioOutArray[i],"out");
-//        setGPIOModel(gpioInArray[i],"in");
-//    }
-
     // GPIO_OUT
     ui->radioButton_out_1_low->setChecked(true);
     ui->radioButton_out_2_low->setChecked(true);
@@ -2888,7 +2961,7 @@ void MainWindow::gpioInit()
         ui->label_in_6_in->setVisible(false);
         ui->label_in_7_in->setVisible(false);
         ui->label_in_8_in->setVisible(false);
-    } else {
+    }else {
         ui->radioButton_out_3_high->setCheckable(false);
         ui->radioButton_out_4_high->setCheckable(false);
         ui->radioButton_out_3_low->setCheckable(false);
@@ -2977,15 +3050,73 @@ void MainWindow::gpioInit()
 		ui->label_in_4_in->setVisible(false);
 	}
 
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101") {
+    if(board == "CS_RK3576_BOX") {
+        ui->checkBox_Relay->setVisible(false);
+
+        ui->label_out_1->setVisible(true);
+        ui->label_out_2->setVisible(true);
+        ui->label_out_3->setVisible(true);
+
+        ui->radioButton_out_1_high->setVisible(true);
+        ui->radioButton_out_1_low->setVisible(true);
+        ui->radioButton_out_2_high->setVisible(true);
+        ui->radioButton_out_2_low->setVisible(true);
+        ui->radioButton_out_3_high->setVisible(true);
+        ui->radioButton_out_3_low->setVisible(true);
+
+        // hide out4
+        ui->label_out_4->setVisible(false);
+        ui->radioButton_out_4_high->setVisible(false);
+        ui->radioButton_out_4_low->setVisible(false);
+
+        // display in1-in5（in5 is add）
+        ui->label_in_1->setVisible(true);
+        ui->label_in_->setVisible(true);
+        ui->label_in_3->setVisible(true);
+        ui->label_in_4->setVisible(true);
+        ui->label_in_5->setVisible(true);  // display in5
+
+        ui->label_in_1_in->setVisible(true);
+        ui->label_in_2_in->setVisible(true);
+        ui->label_in_3_in->setVisible(true);
+        ui->label_in_4_in->setVisible(true);
+        ui->label_in_5_in->setVisible(true);
+
+        // hide in6-in8
+        ui->label_in_6->setVisible(false);
+        ui->label_in_7->setVisible(false);
+        ui->label_in_8->setVisible(false);
+        ui->label_in_6_in->setVisible(false);
+        ui->label_in_7_in->setVisible(false);
+        ui->label_in_8_in->setVisible(false);
+    }
+
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101" || board == "CS_RK3576_BOX") {
         QStringList list;
-        for(int i=0; i<4; i++){
+        int outCount = 4;
+        if(board == "CS_RK3576_BOX") {
+            outCount = 3;  // out1, out2, out3
+        }
+
+        for(int i = 0; i < outCount; i++) {
             list = gpioOutArray[i].split(" ");
-            out[i]->initializeGpio(list.at(0).toUtf8().constData(),list.at(1).toInt());
-            out[i]->setGpioDirection(true);
+            if(out[i]) {
+                    out[i]->initializeGpio(list.at(0).toUtf8().constData(), list.at(1).toInt());
+                    out[i]->setGpioDirection(true);
+            }
+        }
+
+        int inCount = 4;
+        if(board == "CS_RK3576_BOX") {
+            inCount = 5;  // in1, in2, in3, in4, in5
+        }
+
+        for(int i = 0; i < inCount; i++) {
             list = gpioInArray[i].split(" ");
-            in[i] ->initializeGpio(list.at(0).toUtf8().constData(),list.at(1).toInt());
-            in[i]->setGpioDirection(false);
+            if(in[i]) {
+                    in[i]->initializeGpio(list.at(0).toUtf8().constData(), list.at(1).toInt());
+                    in[i]->setGpioDirection(false);
+            }
         }
     }
 }

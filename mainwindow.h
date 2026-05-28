@@ -175,6 +175,7 @@ private:
     bool ispifive = false;
     bool fgisquetel = false;
     bool fgissimcom = false;
+    bool fgui = true;
     bool hasbl = true;
     QString exeName;
     epflash *epflashdialog;

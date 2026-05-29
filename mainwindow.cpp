@@ -629,7 +629,7 @@ QString MainWindow::GetBoard()
         QString CS10600_RK3576_070 = GetComResult("grep -c CS10600-RK3576-070 /sys/devices/platform/board/info");
         QString CS12800_RK3576_101 = GetComResult("grep -c CS12800-RK3576-101 /sys/devices/platform/board/info");
         QString AIO_RK3576_101 = GetComResult("grep -c AIO-RK3576-101 /sys/devices/platform/board/info");
-        QString CS_RK3576_BOX = GetComResult("grep -c CS-RK3576-BOX /sys/devices/platform/board/info");
+        QString CS_RK3576_BOX_SK = GetComResult("grep -c CS-RK3576-BOX-SK /sys/devices/platform/board/info");
         if(CS12720_RK3576_050.left(1) == "1") {
             board = "CS12720_RK3576_050";
         }
@@ -642,8 +642,8 @@ QString MainWindow::GetBoard()
         if(AIO_RK3576_101.left(1) == "2") {
             board = "AIO_RK3576_101";
         }
-        if(CS_RK3576_BOX.left(1) == "1") {
-            board = "CS_RK3576_BOX";
+        if(CS_RK3576_BOX_SK.left(1) == "1") {
+            board = "CS_RK3576_BOX_SK";
         }
     }
 
@@ -1058,7 +1058,7 @@ void MainWindow::BoardSetting()
             gpioInArray[2] = "gpiochip3 16";
             gpioInArray[3] = "gpiochip3 15";
         }
-        if (board == "CS_RK3576_BOX") {
+        if (board == "CS_RK3576_BOX_SK") {
             in.push_back(new GpioController(this)); //bug
             // OUT-GPIO: gpioset 6 0=0, gpioset 6 1=0, gpioset 6 2=0
             gpioOutArray[0] = "gpiochip6 0";  // out1
@@ -2505,8 +2505,8 @@ void MainWindow::mobile4gInit()
         return;
     }
 
-    /* CS_RK3576_BOX has double SIM card slots, show the switch radiobutton */
-    if(board == "CS_RK3576_BOX") {
+    /* CS_RK3576_BOX_SK has double SIM card slots, show the switch radiobutton */
+    if(board == "CS_RK3576_BOX_SK") {
         ui->radioButton_sim1->setVisible(true);
         ui->radioButton_sim2->setVisible(true);
         ui->label_sim->setVisible(true);
@@ -2514,10 +2514,10 @@ void MainWindow::mobile4gInit()
         /* we will use the value of /dev/simsw to confirm the current sim status */
         /* Value: 1=>sim1 0=>sim2 */
         if(GetFileValue("/dev/simsw") == "1\n") {
-            qDebug() << "CS_RK3576_BOX: SIM1 is enabled";
+            qDebug() << "CS_RK3576_BOX_SK: SIM1 is enabled";
             ui->radioButton_sim1->setChecked(true);
         } else {
-            qDebug() << "CS_RK3576_BOX: SIM2 is enabled";
+            qDebug() << "CS_RK3576_BOX_SK: SIM2 is enabled";
             ui->radioButton_sim2->setChecked(true);
         }
 
@@ -2886,7 +2886,7 @@ void MainWindow::setGPIOInStatu()
         else
             ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
-        if(board == "CS_RK3576_BOX")
+        if(board == "CS_RK3576_BOX_SK")
         {
             if(in[4]->readGpioValue() == 1)
                 ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
@@ -2964,7 +2964,7 @@ void MainWindow::setGPIOOutStatu()
         else
             out[2]->writeGpioValue(0);
 
-        if(board != "CS_RK3576_BOX" && out[3])
+        if(board != "CS_RK3576_BOX_SK" && out[3])
         {
             if(ui->radioButton_out_4_high->isChecked())
                 out[3]->writeGpioValue(1);
@@ -2991,7 +2991,7 @@ void MainWindow::setGPIOOutStatu()
            board != "CS12800RA4101PR2PBOX" &&
            board != "CS10768RA4121PR2P" &&
            board != "CS10768RA4150PR2P"&&
-           board != "CS_RK3576_BOX"
+           board != "CS_RK3576_BOX_SK"
     ) {
         if(ui->radioButton_out_3_high->isChecked())
             setGPIOValue(gpioOutArray[2],"1");
@@ -3003,9 +3003,9 @@ void MainWindow::setGPIOOutStatu()
         else
             setGPIOValue(gpioOutArray[3],"0");
     }
-    else if(board == "CS_RK3576_BOX")
+    else if(board == "CS_RK3576_BOX_SK")
     {
-        // CS_RK3576_BOX:OUT3，dont have OUT4
+        // CS_RK3576_BOX_SK:OUT3，dont have OUT4
         if(ui->radioButton_out_3_high->isChecked())
             setGPIOValue(gpioOutArray[2],"1");
         else
@@ -3019,7 +3019,7 @@ void MainWindow::setGPIOOutAllHigh()
     ui->radioButton_out_1_high->setChecked(true);
     ui->radioButton_out_2_high->setChecked(true);
     ui->radioButton_out_3_high->setChecked(true);
-    if(board != "CS_RK3576_BOX")
+    if(board != "CS_RK3576_BOX_SK")
        ui->radioButton_out_4_high->setChecked(true);
 }
 
@@ -3028,7 +3028,7 @@ void MainWindow::setGPIOOutAllLow()
     ui->radioButton_out_1_low->setChecked(true);
     ui->radioButton_out_2_low->setChecked(true);
     ui->radioButton_out_3_low->setChecked(true);
-    if(board != "CS_RK3576_BOX")
+    if(board != "CS_RK3576_BOX_SK")
         ui->radioButton_out_4_low->setChecked(true);
 }
 
@@ -3180,7 +3180,7 @@ void MainWindow::gpioInit()
 		ui->label_in_4_in->setVisible(false);
 	}
 
-    if(board == "CS_RK3576_BOX") {
+    if(board == "CS_RK3576_BOX_SK") {
         ui->checkBox_Relay->setVisible(false);
 
         ui->label_out_1->setVisible(true);
@@ -3201,7 +3201,7 @@ void MainWindow::gpioInit()
 
         // display in1-in5（in5 is add）
         ui->label_in_1->setVisible(true);
-        ui->label_in_->setVisible(true);
+        ui->label_in_2->setVisible(true);
         ui->label_in_3->setVisible(true);
         ui->label_in_4->setVisible(true);
         ui->label_in_5->setVisible(true);  // display in5
@@ -3221,10 +3221,10 @@ void MainWindow::gpioInit()
         ui->label_in_8_in->setVisible(false);
     }
 
-    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101" || board == "CS_RK3576_BOX") {
+    if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576" || board == "CS12800_RK3568B2_101" || board == "CS_RK3576_BOX_SK") {
         QStringList list;
         int outCount = 4;
-        if(board == "CS_RK3576_BOX") {
+        if(board == "CS_RK3576_BOX_SK") {
             outCount = 3;  // out1, out2, out3
         }
 
@@ -3237,7 +3237,7 @@ void MainWindow::gpioInit()
         }
 
         int inCount = 4;
-        if(board == "CS_RK3576_BOX") {
+        if(board == "CS_RK3576_BOX_SK") {
             inCount = 5;  // in1, in2, in3, in4, in5
         }
 
@@ -3288,7 +3288,10 @@ void MainWindow::canStart()
     } else if (cpuplat == "pi" && debiancodename =="bullseye") {
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic")  || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "rk3576"){
-        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+        if(board == "CS_RK3576_BOX_SK")
+           cmdstr = "sudo ip link set "+cannum+" down && sudo ip link set "+cannum+" type can bitrate 10000 dbitrate 50000 fd on && sudo ip link set "+cannum+" up && sudo candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+        else
+            cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     } else if (cpuplat == "stm32mp25"){
         cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000  && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
     }

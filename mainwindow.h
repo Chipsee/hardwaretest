@@ -113,6 +113,8 @@ private slots:
     bool checkRelay();
     void switchSIM1();
     void switchSIM2();
+    void switchHP();
+    void switchSPK();
 
 private:
     Ui::MainWindow *ui;

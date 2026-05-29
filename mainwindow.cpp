@@ -1590,6 +1590,18 @@ void MainWindow::ChangeBuzzerState()
     }
 }
 
+void MainWindow::switchHP()
+{
+    QString cmdstr = "amixer -c 0 cset name='Speaker Switch' off > /dev/null && amixer -c 0 cset name='Headphone Switch' on > /dev/null";
+    system(cmdstr.toLocal8Bit());
+}
+
+void MainWindow::switchSPK()
+{
+    QString cmdstr = "amixer -c 0 cset name='Speaker Switch' on > /dev/null && amixer -c 0 cset name='Headphone Switch' off > /dev/null";
+    system(cmdstr.toLocal8Bit());
+}
+
 void MainWindow::audioInit()
 {
     QString cmdstr;
@@ -1653,6 +1665,19 @@ void MainWindow::audioInit()
 		ui->checkBox_buzzer->setVisible(false);
                 ui->label_buzzer->setVisible(false);
 	}
+
+    if(board =="CS_RK3576_BOX_SK"){
+        ui->radioButton_HP->setVisible(true);
+        ui->radioButton_SPK->setVisible(true);
+        connect(ui->radioButton_HP,&QRadioButton::clicked,this,&MainWindow::switchHP);
+        connect(ui->radioButton_SPK,&QRadioButton::clicked,this,&MainWindow::switchSPK);
+        /* Set SPK default */
+        switchSPK();
+        ui->radioButton_SPK->setChecked(true);
+    } else {
+        ui->radioButton_HP->setVisible(false);
+        ui->radioButton_SPK->setVisible(false);
+    }
 }
 
 /*

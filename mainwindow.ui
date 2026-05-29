@@ -191,6 +191,26 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_HP">
+             <property name="text">
+              <string>HP</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_audio</string>
+             </attribute>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_SPK">
+             <property name="text">
+              <string>SPK</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_audio</string>
+             </attribute>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -1306,12 +1326,13 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_sim"/>
+  <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_4"/>
   <buttongroup name="buttonGroup_led1"/>
   <buttongroup name="buttonGroup_out_3"/>
-  <buttongroup name="buttonGroup_led2"/>
   <buttongroup name="buttonGroup_out_2"/>
-  <buttongroup name="buttonGroup_out_1"/>
+  <buttongroup name="buttonGroup_sim"/>
+  <buttongroup name="buttonGroup_audio"/>
  </buttongroups>
 </ui>

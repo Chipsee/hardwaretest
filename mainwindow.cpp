@@ -2443,8 +2443,8 @@ void MainWindow::switchSIMInThread(const QString &script)
     // Output shell message to UI
     connect(shellWorker, &ShellWorker::status, this, [this](const QString &msg) {
         // ignore the unusable message
-        if(msg.contains(".") || msg.contains("error")) {
-            ui->textBrowser_network_text->insertPlainText(".");
+        if(msg.contains("*") || msg.contains("error")) {
+            ui->textBrowser_network_text->insertPlainText("*");
         } else {
             ui->textBrowser_network_text->append(msg);
         }

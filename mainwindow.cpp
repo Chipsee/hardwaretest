@@ -2922,7 +2922,7 @@ void MainWindow::setGPIOInStatu()
         else
             ui->label_in_4_in->setPixmap(QPixmap(":/images/IO_low.png"));
 
-        if(board == "CS_RK3576_BOX_SK")
+        if( (cpuplat == "rk3576") && (in.size() > 4) )
         {
             if(in[4]->readGpioValue() == 1)
                 ui->label_in_5_in->setPixmap(QPixmap(":/images/IO_high.png"));
@@ -3544,11 +3544,11 @@ void MainWindow::autoTest()
     }
 
 
-    if(cpuplat != "pi" && cpuplat != "imx8mp"){
+    if(cpuplat != "pi" && cpuplat != "imx8mp" && cpuplat != "rk3576"){
         usbInit();
     }
 
-    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P"  && cpuplat != "imx8mp" && cpuplat !="stm32mp25") {
+    if(cpuplat != "pi" && board !="CS12800PX101" && board != "CS12800R101P"  && cpuplat != "imx8mp" && cpuplat !="stm32mp25" && cpuplat != "rk3576") {
         networkautotest();
     }
 
@@ -3645,6 +3645,20 @@ void MainWindow::autoTest()
         board = "STMP25";
     }
 
+    if(cpuplat == "rk3576"){
+        QSerialPort *newPorts[6];
+        newPorts[0] = port[0];
+        newPorts[1] = port[5];
+        newPorts[2] = port[1];
+        newPorts[3] = port[2];
+        newPorts[4] = port[4];
+        newPorts[5] = port[3];//dummy
+        for (i=0; i < 6; i++)
+        {
+            port[i] = newPorts[i];
+        }
+    }
+
     QString str("#################\n");
     if(port[0]->isOpen())
         port[0]->close();
@@ -3677,6 +3691,12 @@ void MainWindow::autoTest()
         }
     } else if(board == "AM335XBOARD"){
 
+    } else if(board == "CS_RK3576_BOX_SK") {
+        switchHP();
+        AudioTest();
+        QTimer::singleShot(9000, &eventloop,SLOT(quit()));
+        eventloop.exec();
+        switchSPK();
     }else{
         QString audiostr("@@AUDIO\n");
         if(port[0]->isOpen())
@@ -3693,6 +3713,42 @@ void MainWindow::autoTest()
         RecordTest();
     }
 
+    // TPM
+    if(board == "CS_RK3576_BOX_SK"){
+        qDebug()<< GetComResult("find /dev/tpm0");
+        if(GetComResult("find /dev/tpm0").remove(QChar('\n'),Qt::CaseInsensitive) == "/dev/tpm0") {
+           QString tpmstr("TPMISOK\n");
+           if(port[0]->isOpen())
+               port[0]->close();
+           if(port[0]->open(QIODevice::ReadWrite)) {
+               port[0]->write(tpmstr.toLatin1());
+               qDebug() << "send TPMISOK";
+               QTimer::singleShot(500, &eventloop,SLOT(quit()));
+               eventloop.exec();
+               qDebug() << "eventloop 500";
+               port[0]->close();
+               qDebug() << "TPM close port";
+           }
+        }else{
+            QString tpmstr("TPMISNOTOK\n");
+            if(port[0]->isOpen())
+               port[0]->close();
+            if(port[0]->open(QIODevice::ReadWrite)) {
+               port[0]->write(tpmstr.toLatin1());
+
+               QTimer::singleShot(100, &eventloop,SLOT(quit()));
+               eventloop.exec();
+
+               port[0]->close();
+            }
+        }
+    }
+
+    // Rename rk3576 platform board name to RK3576.
+    if(cpuplat == "rk3576") {
+        board = "RK3576";
+    }
+
     // send board information to master
     // format:
     // @@[Board Version]
@@ -3703,7 +3759,7 @@ void MainWindow::autoTest()
         port[0]->close();
     if(port[0]->open(QIODevice::ReadWrite)) {
         port[0]->write(boardstr.toLatin1());
-        qDebug() << "send RTCISOK";
+        qDebug() << "send boardname";
         QTimer::singleShot(100, &eventloop,SLOT(quit()));
         eventloop.exec();
         qDebug() << "eventloop 100";
@@ -3790,6 +3846,17 @@ void MainWindow::autoTest()
             qDebug() << "eventloop 500";
             port[0]->close();
             qDebug() << "rtc close port";
+        }
+    } else {
+        QString rtcstr("RTCISNOTOK\n");
+        if(port[0]->isOpen())
+           port[0]->close();
+        if(port[0]->open(QIODevice::ReadWrite)) {
+           port[0]->write(rtcstr.toLatin1());
+
+           QTimer::singleShot(100, &eventloop,SLOT(quit()));
+           eventloop.exec();
+           port[0]->close();
         }
     }
 

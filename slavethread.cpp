@@ -250,12 +250,20 @@ void SlaveThread::run()
     }
 
     if(*board == "STMP25"){
-        port[4] = port[3];
-        port[3] = port[1];
-        port[1] = port[5];
+//        port[4] = port[3];
+//        port[3] = port[1];
+//        port[1] = port[5];
+        QSerialPort *newPorts[6];
+        newPorts[0] = port[0];  // ttySTM0
+        newPorts[1] = port[5];
+        newPorts[2] = port[2];
+        newPorts[3] = port[1];
+        newPorts[4] = port[3];
+        newPorts[5] = port[4];
         qDebug() << *board + " New Serial Port list(thread): ";
         for(i=0; i<6; i++)
         {
+            port[i] = newPorts[i];
             qDebug() << port[i]->portName();
         }
     }
@@ -360,9 +368,11 @@ void SlaveThread::run()
 
             if(i==0 && *board != "CS12800PX101"){
                 timeout = 20000;
-            } else if (i == 1 && *board == "RK3576") {
+            } else if (i == 1 && (*board == "RK3576" )){
                 timeout = 500;
-            } else{
+            }else if (i == 1 && (*board == "STMP25")){
+                timeout = 50; //100 //OK
+            }else{
                 timeout = 1000;
             }
             requestData = "";

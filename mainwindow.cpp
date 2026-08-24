@@ -720,6 +720,14 @@ QString MainWindow::GetDebianCodeName()
             fgui = false;
             codename = "focal";
         }
+        if(codename.contains("bookworm")){
+            fgui = false;
+            codename = "bookworm";
+        }
+        if(codename.contains("jammy")){
+            fgui = false;
+            codename = "jammy";
+        }
     }
     if(cpuplat == "rk3588"){
         codename = GetComResult("lsb_release -c");
@@ -1188,6 +1196,8 @@ void MainWindow::syncTime()
     cmdstr = "ntpdate-debian";
     system(cmdstr.toLocal8Bit());
     QMessageBox::warning(this,"Tips","If the time not update, don't worry, press ok to Wait Complete.");
+    cmdstr = "hwclock -w";
+    system(cmdstr.toLocal8Bit());
 }
 
 void MainWindow::dateTimeInit()
@@ -1316,6 +1326,8 @@ void MainWindow::AudioTest()
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
     }else if((cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3576" && debiancodename == "jammy") ){
         utils.executeCommand("aplay -D sysdefault:CARD=rockchipes8388 /usr/hardwaretest/AudioTest.wav");
+    }else if((cpuplat == "rk3568" && debiancodename == "bookworm") || (cpuplat == "rk3568" && debiancodename == "jammy") ){
+        utils.executeCommand("aplay -D sysdefault:CARD=rockchiprk809 /usr/hardwaretest/AudioTest.wav");
     }else{
         system("killall gst-play-1.0");
         cmdstr = "gst-play-1.0 "+audiopath+" >/dev/null &";
@@ -1395,7 +1407,14 @@ void MainWindow::RecordTest()
     }else if(cpuplat == "rk3568"){   //need check again
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.wav");
-        QString cmdstr = "arecord -f cd -c 1 -d 18 /usr/hardwaretest/output.wav & ";
+        QString cmdstr = "";
+        if(debiancodename == "bookworm"
+                || debiancodename == "jammy"
+                ){
+            cmdstr = "arecord -D sysdefault:CARD=rockchiprk809 -f cd -V stereo -c 1 -d 18 /usr/hardwaretest/output.wav & ";
+        } else {
+            cmdstr = "arecord -f cd -c 1 -d 18 /usr/hardwaretest/output.wav & ";
+        }
 
         system(cmdstr.toLocal8Bit());
 
@@ -1403,8 +1422,14 @@ void MainWindow::RecordTest()
         QTimer::singleShot(18000, &eventloop,SLOT(quit()));
         eventloop.exec();
 
-        system("killall gst-play-1.0");
-        system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
+        if(debiancodename == "bookworm"
+                || debiancodename == "jammy"
+                ){
+            system("aplay -D sysdefault:CARD=rockchiprk809 /usr/hardwaretest/output.wav >/dev/null &");
+        } else {
+            system("killall gst-play-1.0");
+            system("gst-play-1.0 /usr/hardwaretest/output.wav >/dev/null &");
+        }
     }else if(cpuplat == "rk3399"){
         system("killall gst-play-1.0");
         system("rm /usr/hardwaretest/output.wav");
@@ -1646,8 +1671,10 @@ void MainWindow::audioInit()
         ui->horizontalSlider_audio_volume->setValue(70);
     }
 
-    if((cpuplat == "rk3568" && debiancodename != "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "jammy")
+    if((cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3576" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "bookworm") || (cpuplat == "rk3588" && debiancodename == "jammy")
             || (cpuplat == "rk3576" && debiancodename == "jammy")
+            || (cpuplat == "rk3568" && debiancodename == "bookworm")
+            || (cpuplat == "rk3568" && debiancodename == "jammy")
       ){
         ui->horizontalSlider_audio_volume->setVisible(false);
         ui->label_audio_volume->setVisible(false);
@@ -2211,6 +2238,8 @@ void MainWindow::networkInit()
 
     if(cpuplat == "stm32mp25" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (cpuplat == "rk3588" && debiancodename == "jammy") || (board == "imx6q" && debiancodename == "bionic") || (cpuplat == "rk3576" && debiancodename == "bookworm")
             || (cpuplat == "rk3576" && debiancodename == "jammy")
+            || (cpuplat == "rk3568" && debiancodename == "bookworm")
+            || (cpuplat == "rk3568" && debiancodename == "jammy")
       ) {
         ui->pushButton_wifiEnable->setVisible(false);
         ui->pushButton_wifiDisable->setVisible(false);

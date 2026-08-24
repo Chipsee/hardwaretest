@@ -1,3 +1,9 @@
+hardwaretest (5.10.14) unstable; urgency=medium
+
+  * 1. Add bookworm/jammy system support for RK3568 platform. 2. Write date to RTC when update time online. Update version to 5.10.14
+
+ -- Xiaoqiang Liu <lxq@chipsee.com>  Mon, 24 Aug 2026 05:38:15 +0000
+
 hardwaretest (5.10.13) unstable; urgency=medium
 
   * Added Autotest support for RK3576 platform Update version to 5.10.13

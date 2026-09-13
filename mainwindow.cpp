@@ -3573,7 +3573,7 @@ void MainWindow::autoTest()
     }
 
 
-    if(cpuplat != "pi" && cpuplat != "imx8mp" && cpuplat != "rk3576"){
+    if(cpuplat != "pi" && cpuplat != "imx8mp" && cpuplat != "rk3576" && cpuplat != "stm32mp25"){
         usbInit();
     }
 

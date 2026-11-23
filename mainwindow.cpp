@@ -3678,7 +3678,8 @@ bool MainWindow::setCanLink(const QStringList &arguments)
     QString error = QString::fromLocal8Bit(process.readAllStandardError()).trimmed();
     if (error.isEmpty())
         error = process.errorString();
-    ui->textBrowser_can_text->append(tr("CAN configuration failed: %1").arg(error.toHtmlEscaped()));
+    ui->textBrowser_can_text->append(tr("CAN configuration failed (%1): %2")
+        .arg(arguments.join(' ').toHtmlEscaped(), error.toHtmlEscaped()));
     return false;
 }
 
@@ -3708,8 +3709,12 @@ void MainWindow::canStart()
     QStringList config{name, "type", "can", "bitrate", ui->comboBox_canBitRate->currentText()};
     if (fd)
         config << "dbitrate" << ui->comboBox_canDataBitRate->currentText() << "fd" << "on";
-    else if (GetFileValue(path + "/mtu").trimmed().toInt() == 72)
-        config << "fd" << "off";
+    else {
+        const QString driver = QFileInfo(path + "/device/driver").canonicalFilePath();
+        // RK3576 can report a classic MTU while its default FD flag is still set.
+        if (driver.endsWith("/rk3576_canfd") || GetFileValue(path + "/mtu").trimmed().toInt() == 72)
+            config << "fd" << "off";
+    }
 
     if (!setCanLink(config) || !setCanLink({name, "up"})) {
         delete device;

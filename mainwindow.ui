@@ -1351,7 +1351,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_i2cInfo">
            <property name="text">
-            <string>I²C Interfaces</string>
+            <string>I²C Devices</string>
            </property>
           </widget>
          </item>

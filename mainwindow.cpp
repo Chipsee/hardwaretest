@@ -10,8 +10,6 @@
 #include <unistd.h>
 #include <net/if.h>
 #include <net/if_arp.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
 #include <QMessageBox>
 #include <QProcess>
 #include <QStringList>
@@ -1217,7 +1215,7 @@ void MainWindow::boardInit()
     ui->labelVersion->setText(VERSION);
     showCapacity();
     ui->pushButton_i2cInfo->setVisible(cpuplat == "nvidia");
-    connect(ui->pushButton_i2cInfo, &QPushButton::clicked, this, &MainWindow::showI2cInterfaces);
+    connect(ui->pushButton_i2cInfo, &QPushButton::clicked, this, &MainWindow::showI2cDevices);
 
     checkRelay();
     check4GModule();
@@ -1269,28 +1267,26 @@ void MainWindow::showCapacity()
     ui->labelSsd->setVisible(!ssdCapacities.isEmpty());
 }
 
-void MainWindow::showI2cInterfaces()
+void MainWindow::showI2cDevices()
 {
-    QStringList adapters;
-    const QDir buses("/sys/class/i2c-dev");
-    for (const QString &name : buses.entryList({"i2c-*"}, QDir::Dirs)) {
-        QFile device("/dev/" + name);
-        if (!device.exists())
-            continue;
-
-        unsigned long functions = 0;
-        QString status;
-        if (!device.open(QIODevice::ReadOnly)) {
-            status = device.errorString();
-        } else if (ioctl(device.handle(), I2C_FUNCS, &functions) < 0) {
-            status = tr("Cannot query adapter capabilities");
-        } else {
-            status = tr("Available");
+    const QDir devices("/sys/bus/i2c/devices");
+    QStringList buses;
+    for (const int bus : {7, 1}) {
+        const QString heading = QStringLiteral("i2c-%1").arg(bus);
+        const QString filter = QStringLiteral("%1-????").arg(bus);
+        QStringList entries;
+        for (const QString &device : devices.entryList({filter}, QDir::Dirs)) {
+            bool ok = false;
+            const uint address = device.section('-', 1).toUInt(&ok, 16);
+            const QString name = GetFileValue(devices.filePath(device + "/name")).trimmed();
+            if (ok && !name.isEmpty())
+                entries << QStringLiteral("0x%1  %2").arg(address, 2, 16, QChar('0')).arg(name);
         }
-        adapters << tr("%1  %2  (%3)").arg(name, GetFileValue(buses.filePath(name + "/name")).trimmed(), status);
+        if (entries.isEmpty())
+            entries << (devices.exists(heading) ? tr("No devices registered") : tr("Bus not detected"));
+        buses << heading + '\n' + entries.join('\n');
     }
-    QMessageBox::information(this, tr("I²C Interfaces"),
-        adapters.isEmpty() ? tr("No I²C adapters detected.") : adapters.join('\n'));
+    QMessageBox::information(this, tr("I²C Devices"), buses.join("\n\n"));
 }
 
 /*

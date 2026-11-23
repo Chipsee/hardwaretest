@@ -211,7 +211,7 @@ private:
 
     void BoardSetting();
     void showCapacity();
-    void showI2cInterfaces();
+    void showI2cDevices();
     void setNvidiaLed(bool enabled);
     void startNvidiaSessionCommand(QProcess &process, const QString &program, const QStringList &arguments);
     void playNvidiaAudio(const QString &path);

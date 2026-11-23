@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include "slavethread.h"
 #include "device.h"
+#include "lcdtester.h"
 #include "utils.h"
 #include "gpiocontroller.h"
 #include <QSettings>
@@ -57,6 +58,7 @@ private slots:
     void ChangeRelayState();
     void VideoTest();
     void LCDTest();
+    void showNvidiaLcdTest();
     void TouchTest();
     void ChangeBacklight();
     int MaxBacklighValue();
@@ -140,6 +142,7 @@ private:
     QIntValidator *intValidator;
     timedialog *timeset;
     DeviceDiscoveryDialog *bluetoothdialog;
+    LCDTester *lcd = nullptr;
     QQuickView *lcdTestView = nullptr;
     Utils utils;
     QTimer *setTimeTimer;

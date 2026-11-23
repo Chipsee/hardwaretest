@@ -42,6 +42,7 @@ SOURCES += main.cpp\
     slavethread.cpp \
     device.cpp \
     service.cpp \
+    lcdtester.cpp \
     recorderworker.cpp \
     utils.cpp
 
@@ -55,13 +56,15 @@ HEADERS  += mainwindow.h \
     version.h \
     device.h \
     service.h \
-    recorderworker.h
+    recorderworker.h \
+    lcdtester.h
 
 FORMS    += mainwindow.ui \
     epflash.ui \
     timedialog.ui \
     device.ui \
-    service.ui
+    service.ui \
+    lcdtester.ui
 
 RESOURCES += \
     hardwaretext_resource.qrc

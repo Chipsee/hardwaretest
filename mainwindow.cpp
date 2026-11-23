@@ -2068,6 +2068,13 @@ int MainWindow::GetBacklightValue()
 
 void MainWindow::LCDTest()
 {
+    system("/usr/bin/LCDTester");
+
+    //qDebug() << "here";
+}
+
+void MainWindow::showNvidiaLcdTest()
+{
     if (!lcdTestView) {
         auto *view = new QQuickView;
         view->QObject::setParent(this);
@@ -2099,7 +2106,14 @@ void MainWindow::TouchTest()
 void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
-    connect(ui->pushButton_lcdtest, &QPushButton::clicked, this, &MainWindow::LCDTest);
+    if (cpuplat == "nvidia") {
+        connect(ui->pushButton_lcdtest, &QPushButton::clicked, this, &MainWindow::showNvidiaLcdTest);
+    } else if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "pi" || cpuplat == "stm32mp25" || cpuplat  == "rk3576" || cpuplat == "rk3568"){//
+        lcd = new LCDTester;
+        connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
+    } else {
+        connect(ui->pushButton_lcdtest,&QPushButton::clicked,this,&MainWindow::LCDTest);
+    }
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
 
     if (hasbl) {

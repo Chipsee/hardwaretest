@@ -1234,24 +1234,39 @@ void MainWindow::showCapacity()
         ? tr("RAM: %1 GiB").arg(memoryBytes / 1073741824.0, 0, 'f', 2)
         : tr("RAM: Unknown"));
 
-    QStringList capacities;
+    QStringList emmcCapacities;
+    QStringList ssdCapacities;
     const QDir block("/sys/block");
     static const QRegularExpression mmcName("^mmcblk[0-9]+$");
-    for (const QString &disk : block.entryList({"mmcblk*"}, QDir::Dirs)) {
+    static const QRegularExpression nvmeName("^nvme[0-9]+n[0-9]+$");
+    static const QRegularExpression scsiDiskName("^sd[a-z]+$");
+    for (const QString &disk : block.entryList({"mmcblk*", "nvme*", "sd*"}, QDir::Dirs)) {
         const QString path = block.filePath(disk);
-        if (!mmcName.match(disk).hasMatch() || GetFileValue(path + "/device/type").trimmed() != "MMC"
-            || GetFileValue(path + "/removable").trimmed() != "0") {
+        if (GetFileValue(path + "/removable").trimmed() != "0")
             continue;
-        }
 
-        // The kernel reports block capacity in 512-byte sectors.
+        QStringList *capacities = nullptr;
+        if (mmcName.match(disk).hasMatch() && GetFileValue(path + "/device/type").trimmed() == "MMC") {
+            capacities = &emmcCapacities;
+        } else if (nvmeName.match(disk).hasMatch()
+                   || (scsiDiskName.match(disk).hasMatch()
+                       && GetFileValue(path + "/device/vendor").trimmed() == "ATA"
+                       && GetFileValue(path + "/queue/rotational").trimmed() == "0")) {
+            capacities = &ssdCapacities;
+        }
+        if (!capacities)
+            continue;
+
+        // Block capacity is reported in 512-byte sectors.
         bool ok = false;
         const qint64 sectors = GetFileValue(path + "/size").trimmed().toLongLong(&ok);
-        capacities << (ok && sectors > 0
+        *capacities << (ok && sectors > 0
             ? tr("%1 GiB").arg(sectors / 2097152.0, 0, 'f', 2) : tr("Unknown"));
     }
-    ui->labelEmmc->setText(tr("eMMC: %1").arg(capacities.isEmpty()
-        ? tr("Not detected") : capacities.join(", ")));
+    ui->labelEmmc->setText(tr("eMMC: %1").arg(emmcCapacities.join(", ")));
+    ui->labelEmmc->setVisible(!emmcCapacities.isEmpty());
+    ui->labelSsd->setText(tr("SSD: %1").arg(ssdCapacities.join(", ")));
+    ui->labelSsd->setVisible(!ssdCapacities.isEmpty());
 }
 
 void MainWindow::showI2cInterfaces()

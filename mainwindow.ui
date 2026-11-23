@@ -1346,6 +1346,9 @@
           <widget class="QLabel" name="labelEmmc"/>
          </item>
          <item>
+          <widget class="QLabel" name="labelSsd"/>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButton_i2cInfo">
            <property name="text">
             <string>I²C Interfaces</string>

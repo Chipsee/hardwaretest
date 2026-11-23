@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>lcdtest.qml</file>
         <file>images/chipsee.png</file>
         <file>images/IO_high.png</file>
         <file>images/IO_low.png</file>

@@ -8,7 +8,6 @@
 #include <QDateTime>
 #include "slavethread.h"
 #include "device.h"
-#include "lcdtester.h"
 #include "utils.h"
 #include "gpiocontroller.h"
 #include <QSettings>
@@ -23,7 +22,7 @@ class MainWindow;
 class timedialog;
 class QIntValidator;
 class DeviceDiscoveryDialog;
-class LCDTester;
+class QQuickView;
 class GpioController;
 class epflash;
 
@@ -141,7 +140,7 @@ private:
     QIntValidator *intValidator;
     timedialog *timeset;
     DeviceDiscoveryDialog *bluetoothdialog;
-    LCDTester *lcd;
+    QQuickView *lcdTestView = nullptr;
     Utils utils;
     QTimer *setTimeTimer;
     QTimer *gpioInStatuTimer;

@@ -37,6 +37,8 @@
 #include <QSettings>
 #include <QtGui/QCloseEvent>
 #include <QDir>
+#include <QQuickItem>
+#include <QQuickView>
 #include "recorderworker.h"
 #include <QThread>
 #include <QFileInfo>
@@ -2066,9 +2068,27 @@ int MainWindow::GetBacklightValue()
 
 void MainWindow::LCDTest()
 {
-    system("/usr/bin/LCDTester");
+    if (!lcdTestView) {
+        auto *view = new QQuickView;
+        view->QObject::setParent(this);
+        view->setResizeMode(QQuickView::SizeRootObjectToView);
+        view->setModality(Qt::ApplicationModal);
+        view->setSource(QUrl(QStringLiteral("qrc:/lcdtest.qml")));
+        if (view->status() != QQuickView::Ready) {
+            delete view;
+            QMessageBox::warning(this, tr("LCD Test"), tr("Could not load the LCD test view."));
+            return;
+        }
+        lcdTestView = view;
+    }
 
-    //qDebug() << "here";
+    if (QWindow *parentWindow = windowHandle()) {
+        lcdTestView->setTransientParent(parentWindow);
+        lcdTestView->setScreen(parentWindow->screen());
+    }
+    lcdTestView->rootObject()->setProperty("colorIndex", 0);
+    lcdTestView->showFullScreen();
+    lcdTestView->rootObject()->forceActiveFocus();
 }
 
 void MainWindow::TouchTest()
@@ -2079,13 +2099,7 @@ void MainWindow::TouchTest()
 void MainWindow::displayInit()
 {
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
-    // try to use inter LCDTester class to test LCD
-    if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "pi" || cpuplat == "stm32mp25" || cpuplat  == "rk3576" || cpuplat == "rk3568"){//
-        lcd = new LCDTester;
-        connect(ui->pushButton_lcdtest,&QPushButton::clicked,lcd,&LCDTester::LCDTesterShow);
-    } else {
-        connect(ui->pushButton_lcdtest,&QPushButton::clicked,this,&MainWindow::LCDTest);
-    }
+    connect(ui->pushButton_lcdtest, &QPushButton::clicked, this, &MainWindow::LCDTest);
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
 
     if (hasbl) {

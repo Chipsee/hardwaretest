@@ -3,6 +3,15 @@
 #include "timedialog.h"
 #include "epflash.h"
 #include <QDateTime>
+#include <QCanBus>
+#include <QCanBusDevice>
+#include <QRegularExpression>
+#include <QTextDocument>
+#include <unistd.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 #include <QMessageBox>
 #include <QProcess>
 #include <QStringList>
@@ -44,9 +53,6 @@
 /* Common Define */
 #define GPIOBASEPATH "/dev/chipsee-gpio"
 #define GPIOEXPORTPATH "/sys/class/gpio/export"
-#define CANSENDDATA "0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88"
-#define CANSENDCANFRAMENEW "5A1#1122334455667788"
-#define CANTEMPFILEPATH "/tmp/cantmp.txt"
 #define SERIALTEMPFILEPATH "/tmp/serialtmp.txt"
 #define TEMPFILEPATH "/tmp/tmp.txt"
 #define TIMEOUT 2000
@@ -298,6 +304,17 @@ MainWindow::~MainWindow()
     if(cpuplat == "stm32mp25"){
         utils.checkAndFixOwnershipAsync("/run/user/1000/pulse", "weston", "weston");
     }
+    if (canDevice)
+        canStop();
+    if (nvidiaAudio) {
+        nvidiaAudio->kill();
+        nvidiaAudio->waitForFinished(1000);
+    }
+    if (!nvidiaLedTrigger.isEmpty()) {
+        QFile trigger("/sys/class/leds/status/trigger");
+        if (trigger.open(QIODevice::WriteOnly))
+            trigger.write(nvidiaLedTrigger.toLatin1());
+    }
     delete ui;
     qDebug() << "I had gone";
 }
@@ -449,6 +466,12 @@ QString MainWindow::GetComResult(QString cmd)
 
 QString MainWindow::GetPlat()
 {
+    const auto compatibles = GetFileValue("/proc/device-tree/compatible").split(QChar(0));
+    for (const QString &compatible : compatibles) {
+        if (compatible.startsWith("nvidia,tegra"))
+            return "nvidia";
+    }
+
     if (system ("raspi-config nonint is_pifive") == 0) {
         return "pi";
     }
@@ -523,6 +546,10 @@ QString MainWindow::GetResolution()
 
 QString MainWindow::GetBoard()
 {
+    if (cpuplat == "nvidia") {
+        const QString model = GetFileValue("/proc/device-tree/model").section(QChar(0), 0, 0).trimmed();
+        return model.isEmpty() ? QStringLiteral("NVIDIA Tegra") : model;
+    }
     QString board;
 
     if (system ("raspi-config nonint is_pifive") == 0) {
@@ -794,6 +821,18 @@ void MainWindow::Delay_MSec_Suspend(int msec)
 
 void MainWindow::BoardSetting()
 {
+    if (cpuplat == "nvidia") {
+        ledpath = "/sys/class/leds/status/brightness";
+        backlightpath = BACKLIGHTPATH;
+        maxbacklightpath = MAXBACKLIGHTPATH;
+        audiopath = "/usr/hardwaretest/AudioTest.wav";
+        cueaudiopath = CUEAUDIOPATH;
+        videopath = VIDEOPATH;
+        if (QFile::exists(BUZZERPATH))
+            buzzerpath = BUZZERPATH;
+        return;
+    }
+
     if(cpuplat == "imx6q"){
         board = "imx6q";
         ledpath = IMX6QLED4PATH;
@@ -1165,15 +1204,71 @@ void MainWindow::boardInit()
         ui->labelBoard->setText(board);
         relaypath = "/dev/relay";
     } else {
-        ui->labelBoard->setText(GetBoard());
+        ui->labelBoard->setText(board);
     }
 
     ui->labelVersion->setText(VERSION);
+    showCapacity();
+    ui->pushButton_i2cInfo->setVisible(cpuplat == "nvidia");
+    connect(ui->pushButton_i2cInfo, &QPushButton::clicked, this, &MainWindow::showI2cInterfaces);
 
     checkRelay();
     check4GModule();
     BoardSetting();
     connect(ui->pushButton_exit,&QPushButton::clicked,this,&MainWindow::close);
+}
+
+void MainWindow::showCapacity()
+{
+    const QString meminfo = GetFileValue("/proc/meminfo");
+    const auto memory = QRegularExpression("(?m)^MemTotal:[ \\t]+([0-9]+) kB").match(meminfo);
+    const qint64 memoryBytes = memory.captured(1).toLongLong() * 1024;
+    ui->labelMemory->setText(memoryBytes > 0
+        ? tr("RAM: %1 GiB").arg(memoryBytes / 1073741824.0, 0, 'f', 2)
+        : tr("RAM: Unknown"));
+
+    QStringList capacities;
+    const QDir block("/sys/block");
+    static const QRegularExpression mmcName("^mmcblk[0-9]+$");
+    for (const QString &disk : block.entryList({"mmcblk*"}, QDir::Dirs)) {
+        const QString path = block.filePath(disk);
+        if (!mmcName.match(disk).hasMatch() || GetFileValue(path + "/device/type").trimmed() != "MMC"
+            || GetFileValue(path + "/removable").trimmed() != "0") {
+            continue;
+        }
+
+        // The kernel reports block capacity in 512-byte sectors.
+        bool ok = false;
+        const qint64 sectors = GetFileValue(path + "/size").trimmed().toLongLong(&ok);
+        capacities << (ok && sectors > 0
+            ? tr("%1 GiB").arg(sectors / 2097152.0, 0, 'f', 2) : tr("Unknown"));
+    }
+    ui->labelEmmc->setText(tr("eMMC: %1").arg(capacities.isEmpty()
+        ? tr("Not detected") : capacities.join(", ")));
+}
+
+void MainWindow::showI2cInterfaces()
+{
+    QStringList adapters;
+    const QDir buses("/sys/class/i2c-dev");
+    for (const QString &name : buses.entryList({"i2c-*"}, QDir::Dirs)) {
+        QFile device("/dev/" + name);
+        if (!device.exists())
+            continue;
+
+        unsigned long functions = 0;
+        QString status;
+        if (!device.open(QIODevice::ReadOnly)) {
+            status = device.errorString();
+        } else if (ioctl(device.handle(), I2C_FUNCS, &functions) < 0) {
+            status = tr("Cannot query adapter capabilities");
+        } else {
+            status = tr("Available");
+        }
+        adapters << tr("%1  %2  (%3)").arg(name, GetFileValue(buses.filePath(name + "/name")).trimmed(), status);
+    }
+    QMessageBox::information(this, tr("I²C Interfaces"),
+        adapters.isEmpty() ? tr("No I²C adapters detected.") : adapters.join('\n'));
 }
 
 /*
@@ -1209,7 +1304,7 @@ void MainWindow::dateTimeInit()
     setTimeTimer->start(1000);
     connect(ui->pushButton_timeSet,&QPushButton::clicked,timeset,&timedialog::ShowCurrentTime);
     connect(ui->pushButton_timeSync,&QPushButton::clicked,this,&MainWindow::syncTime);
-    if(cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30" || cpuplat == "stm32mp25" || cpuplat == "imx8mp"  || cpuplat == "rk3576"){
+    if(cpuplat == "nvidia" || cpuplat == "pi" || cpuplat == "am335x" || cpuplat == "px30" || cpuplat == "stm32mp25" || cpuplat == "imx8mp"  || cpuplat == "rk3576"){
         ui->pushButton_timeSync->setVisible(false);
     }
 }
@@ -1220,8 +1315,30 @@ void MainWindow::dateTimeInit()
  *  OpenLed() OpenLed2() CloseLed() CloseLed2() ledInit()
  *
  */
+void MainWindow::setNvidiaLed(bool enabled)
+{
+    QFile trigger("/sys/class/leds/status/trigger");
+    if (nvidiaLedTrigger.isEmpty() && trigger.open(QIODevice::ReadOnly)) {
+        const QString triggers = QString::fromLatin1(trigger.readAll());
+        nvidiaLedTrigger = triggers.section('[', 1).section(']', 0, 0);
+        trigger.close();
+        if (trigger.open(QIODevice::WriteOnly)) {
+            trigger.write("none");
+            trigger.close();
+        }
+    }
+    QFile brightness(ledpath);
+    if (!brightness.open(QIODevice::WriteOnly) || brightness.write(enabled ? "1" : "0") != 1)
+        QMessageBox::warning(this, tr("LED"), tr("Cannot write %1: %2").arg(ledpath, brightness.errorString()));
+}
+
 void MainWindow::OpenLed()
 {
+    if (cpuplat == "nvidia") {
+        setNvidiaLed(true);
+        return;
+    }
+
     QString cmdstr;
     if(cpuplat == "pi"){
         cmdstr = "echo 0 >"+ledpath+"&";
@@ -1233,6 +1350,11 @@ void MainWindow::OpenLed()
 
 void MainWindow::CloseLed()
 {
+    if (cpuplat == "nvidia") {
+        setNvidiaLed(false);
+        return;
+    }
+
     QString cmdstr;
     if(cpuplat == "pi"){
         cmdstr = "echo 1 >"+ledpath+"&";
@@ -1256,8 +1378,10 @@ void MainWindow::CloseLed2()
 
 void MainWindow::ledInit()
 {
-    QString cmdstr = "chmod 777 " + ledpath+"&";
-    system(cmdstr.toLocal8Bit());
+    if (cpuplat != "nvidia") {
+        const QString cmdstr = "chmod 777 " + ledpath + "&";
+        system(cmdstr.toLocal8Bit());
+    }
     ui->radioButton_led1_off->setChecked(true);
     ui->radioButton_led2_on->setVisible(false);
     ui->radioButton_led2_off->setVisible(false);
@@ -1293,14 +1417,43 @@ void MainWindow::AudioLoop()
     else {
 	autoflag=false;
         audioloopTimer->stop();
-        system("killall gst-play-1.0");
+        if (cpuplat == "nvidia")
+            nvidiaAudio->terminate();
+        else
+            system("killall gst-play-1.0");
     }
+}
+
+void MainWindow::startNvidiaAudioCommand(QProcess &process, const QString &program,
+                                         const QStringList &arguments)
+{
+    const QString user = qEnvironmentVariable("SUDO_USER");
+    const QString uid = qEnvironmentVariable("SUDO_UID");
+    if (geteuid() == 0 && !user.isEmpty() && !uid.isEmpty()) {
+        // PipeWire belongs to the desktop session, even when hardware tests run as root.
+        process.start("runuser", QStringList{"-u", user, "--", "env",
+                       "XDG_RUNTIME_DIR=/run/user/" + uid, program} + arguments);
+    } else {
+        process.start(program, arguments);
+    }
+}
+
+void MainWindow::playNvidiaAudio(const QString &path)
+{
+    if (nvidiaAudio->state() != QProcess::NotRunning)
+        return;
+    startNvidiaAudioCommand(*nvidiaAudio, "gst-play-1.0", {"--audiosink=pipewiresink", path});
 }
 
 void MainWindow::AudioTest()
 {
     if(!autoflag){
         QMessageBox::information(this,"Tips","Press OK to Play Audio!");
+    }
+
+    if (cpuplat == "nvidia") {
+        playNvidiaAudio(audiopath);
+        return;
     }
 
     if((board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || (cpuplat == "rk3588" && debiancodename != "bookworm" && debiancodename != "jammy")) {
@@ -1528,6 +1681,11 @@ void MainWindow::CueAudio()
     if(audioflag) {
         audioflag = false;
         QString cmdstr = "";
+        if (cpuplat == "nvidia") {
+            playNvidiaAudio(cueaudiopath);
+            audioflag = true;
+            return;
+        }
         if(cpuplat == "pi") {
             cmdstr = "cvlc "+ cueaudiopath + " vlc://quit" + " &";
             //cmdstr = "aplay " + cueaudiopath + " >/dev/null &";
@@ -1559,6 +1717,14 @@ void MainWindow::ChangeVolume()
     QString value = QString::number(volumevalue,10); // int to string
     QString cmdstr = "";
 
+    if (cpuplat == "nvidia") {
+        QProcess volume;
+        startNvidiaAudioCommand(volume, "wpctl", {"set-volume", "@DEFAULT_AUDIO_SINK@", value + "%"});
+        if (!volume.waitForFinished(1000) || volume.exitCode() != 0)
+            qWarning() << "Cannot set PipeWire volume:" << volume.readAllStandardError();
+        return;
+    }
+
     if(board == "imx6q" && kernelversion == "5.10.52") {
         cmdstr = "amixer cset name='Headphone Playback Volume' "+value+"% &";
         popen(cmdstr.toLocal8Bit(),"r");
@@ -1587,6 +1753,9 @@ void MainWindow::ChangeVolume()
 
 void MainWindow::EnableBuzzer()
 {
+    if (cpuplat == "nvidia" && buzzerpath.isEmpty())
+        return;
+
     if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat  == "rk3576"){
         buzzer->writeGpioValue(1);
     } else {
@@ -1597,6 +1766,9 @@ void MainWindow::EnableBuzzer()
 
 void MainWindow::DisableBuzzer()
 {
+    if (cpuplat == "nvidia" && buzzerpath.isEmpty())
+        return;
+
     if(cpuplat == "imx8mp" || cpuplat == "rk3588"|| cpuplat == "stm32mp25" || cpuplat  == "rk3576") {
         buzzer->writeGpioValue(0);
     } else {
@@ -1635,6 +1807,29 @@ void MainWindow::audioInit()
 {
     QString cmdstr;
     buzzerflag = true;
+    if (cpuplat == "nvidia") {
+        nvidiaAudio = new QProcess(this);
+        connect(nvidiaAudio, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart)
+                QMessageBox::warning(this, tr("Audio"), nvidiaAudio->errorString());
+        });
+        connect(nvidiaAudio, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, [this](int code, QProcess::ExitStatus status) {
+            if (status == QProcess::NormalExit && code != 0) {
+                const auto error = QString::fromLocal8Bit(nvidiaAudio->readAllStandardError()).trimmed();
+                if (!error.isEmpty())
+                    QMessageBox::warning(this, tr("Audio"), error);
+            }
+        });
+        ui->horizontalSlider_audio_volume->setRange(0, 100);
+        QProcess volume;
+        startNvidiaAudioCommand(volume, "wpctl", {"get-volume", "@DEFAULT_AUDIO_SINK@"});
+        if (volume.waitForFinished(1000) && volume.exitCode() == 0) {
+            const QString value = QString::fromLatin1(volume.readAllStandardOutput());
+            ui->horizontalSlider_audio_volume->setValue(qRound(value.section(' ', 1, 1).toDouble() * 100));
+        }
+        ui->pushButton_record->hide();
+    }
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::AudioTest);
     connect(ui->pushButton_audio,&QPushButton::clicked,this,&MainWindow::ChangeVolume);
     connect(ui->pushButton_record,&QPushButton::clicked,this,&MainWindow::RecordTest);
@@ -1685,6 +1880,10 @@ void MainWindow::audioInit()
         buzzer->setGpioDirection(true);
     }
 
+    if (cpuplat == "nvidia" && buzzerpath.isEmpty()) {
+        ui->checkBox_buzzer->setEnabled(false);
+        ui->checkBox_buzzer->setToolTip(tr("No buzzer device detected."));
+    }
     ui->checkBox_buzzer->setChecked(false);
     connect(ui->checkBox_buzzer,SIGNAL(toggled(bool)),this,SLOT(ChangeBuzzerState()));
 
@@ -1930,6 +2129,13 @@ void MainWindow::fillPortsParameters()
         list<<info.portName();
         ui->comboBox_com->addItem(list.first(),list);
     }
+    if (cpuplat == "nvidia") {
+        const QDir devices("/dev");
+        for (const QString &name : devices.entryList({"ttyTHS*"}, QDir::System)) {
+            if (ui->comboBox_com->findText(name) < 0)
+                ui->comboBox_com->addItem(name, QStringList{name});
+        }
+    }
     ui->comboBox_com->addItem(tr("Custom"));
     ui->comboBox_com->setCurrentIndex(0);
 
@@ -2168,10 +2374,12 @@ void MainWindow::wifiDisable()
 
 void MainWindow::wifiInfoDisplay()
 {
-    QString cmdstr = "ifconfig >" +QString("%1").arg(TEMPFILEPATH); // Note when this has olny one "+".
-    system(cmdstr.toLocal8Bit());
     ui->textBrowser_network_text->clear();
-    ui->textBrowser_network_text->setText(GetFileValue(TEMPFILEPATH));
+    if (cpuplat != "nvidia") {
+        const QString cmdstr = QStringLiteral("ifconfig >") + TEMPFILEPATH;
+        system(cmdstr.toLocal8Bit());
+        ui->textBrowser_network_text->setText(GetFileValue(TEMPFILEPATH));
+    }
     this->ui->pushButton_netInfo->setText("Refresh");
 
     // Use Network functions
@@ -2181,7 +2389,15 @@ void MainWindow::wifiInfoDisplay()
            QString networkinfo = "";
            for (int i = 0; i < listImpl.length(); ++i) {
                QNetworkInterface interface = listImpl.at(i);
-               if(interface.name()=="lo")
+               if (cpuplat == "nvidia" && interface.type() == QNetworkInterface::Ethernet) {
+                   networkinfo += interface.name() + "\n";
+                   networkinfo += "MAC: " + interface.hardwareAddress() + "\n";
+                   for (const auto &entry : interface.addressEntries())
+                       networkinfo += "IP: " + entry.ip().toString() + "\n";
+                   networkinfo += "\n";
+                   continue;
+               }
+               if (cpuplat == "nvidia" || interface.name()=="lo")
                    continue;
                QList<QNetworkAddressEntry> enrtyList = interface.addressEntries();
                if(enrtyList.length() > 0){
@@ -2200,6 +2416,11 @@ void MainWindow::wifiInfoDisplay()
 
 void MainWindow::getipInfo()
 {
+    if (cpuplat == "nvidia") {
+        wifiInfoDisplay();
+        return;
+    }
+
     QString cmdstr = "";
     if (cpuplat == "pi" || cpuplat == "am335x"){
         cmdstr = "echo `ifconfig eth0 | grep 'inet ' | grep -v '127.0.0.1'` >"+ipaddrpath;
@@ -2236,7 +2457,7 @@ void MainWindow::networkInit()
 
     bool isJammy = (debiancodename == "jammy");
 
-    if(cpuplat == "stm32mp25" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (cpuplat == "rk3588" && debiancodename == "jammy") || (board == "imx6q" && debiancodename == "bionic") || (cpuplat == "rk3576" && debiancodename == "bookworm")
+    if(cpuplat == "nvidia" || cpuplat == "stm32mp25" || cpuplat == "pi" || cpuplat == "px30" || cpuplat == "rk3399" || (cpuplat == "rk3568" && debiancodename == "focal") || (cpuplat == "rk3568" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "bullseye") || (cpuplat == "rk3588" && debiancodename == "focal") || (cpuplat == "rk3588" && debiancodename == "jammy") || (board == "imx6q" && debiancodename == "bionic") || (cpuplat == "rk3576" && debiancodename == "bookworm")
             || (cpuplat == "rk3576" && debiancodename == "jammy")
             || (cpuplat == "rk3568" && debiancodename == "bookworm")
             || (cpuplat == "rk3568" && debiancodename == "jammy")
@@ -2279,7 +2500,8 @@ bool MainWindow::has4GModule()
     QStringList interfaces = netDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     foreach (const QString &interface, interfaces) {
-        if (interface.startsWith("wwan") || interface.startsWith("usb")) {
+        if (interface.startsWith("wwan") || (interface.startsWith("usb")
+            && (cpuplat != "nvidia" || QFile::exists("/dev/ttyACM0")))) {
             qDebug() << "4G module detected:" << interface;
             return true;
         }
@@ -2331,7 +2553,7 @@ void MainWindow::check4GModule()
                 fgisquetel = true;
             }
             break;
-        } else if (interface.startsWith("usb")) {
+        } else if (interface.startsWith("usb") && (cpuplat != "nvidia" || QFile::exists("/dev/ttyACM0"))) {
             qDebug() << "SIMCOM module :" << interface;
             has4G = true;
             if (QFile::exists("/dev/ttyACM0")) {
@@ -2803,6 +3025,11 @@ void MainWindow::alltest()
 
 void MainWindow::alltestInit()
 {
+    if (cpuplat == "nvidia") {
+        ui->pushButton_AllTest->hide();
+        return;
+    }
+
     QString enable = GetComResult("grep -c ENABLE /opt/test/alltest/switch");
     if (enable.left(1) == "1")
     {
@@ -3133,6 +3360,11 @@ void MainWindow::ChangeRelayState()
 
 void MainWindow::gpioInit()
 {
+    if (cpuplat == "nvidia") {
+        ui->groupBox_gpio->hide();
+        return;
+    }
+
     // GPIO_OUT
     ui->radioButton_out_1_low->setChecked(true);
     ui->radioButton_out_2_low->setChecked(true);
@@ -3319,105 +3551,167 @@ void MainWindow::gpioInit()
 /*
  *  CAN
  *
- *  canReceive() canStart() canSend() canStop() checkCustomCanNumPolicy(int idx) canInit()
+ *  Manual CAN
  *
  *
  */
 void MainWindow::canReceive()
 {
-    QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString cannum = ui->comboBox_canNum->currentText();
-    ui->textBrowser_can_text->clear();
-#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    if(GetFileValue(CANTEMPFILEPATH)==QString())
-#else
-    if(GetFileValue(CANTEMPFILEPATH)==NULL)
-#endif
-        ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Received: "+"NULL");
-    else
-        ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Received:\n"+GetFileValue(CANTEMPFILEPATH));
+    while (canDevice->framesAvailable()) {
+        const QCanBusFrame frame = canDevice->readFrame();
+        const QString data = frame.frameType() == QCanBusFrame::ErrorFrame
+            ? canDevice->interpretErrorFrame(frame) : frame.toString();
+        ui->textBrowser_can_text->append(tr("RX %1").arg(data.toHtmlEscaped()));
+    }
+}
+
+bool MainWindow::setCanLink(const QStringList &arguments)
+{
+    QProcess process;
+    process.start("ip", QStringList{"link", "set", "dev"} + arguments);
+    if (process.waitForFinished(3000) && process.exitStatus() == QProcess::NormalExit
+        && process.exitCode() == 0) {
+        return true;
+    }
+
+    QString error = QString::fromLocal8Bit(process.readAllStandardError()).trimmed();
+    if (error.isEmpty())
+        error = process.errorString();
+    ui->textBrowser_can_text->append(tr("CAN configuration failed: %1").arg(error.toHtmlEscaped()));
+    return false;
 }
 
 void MainWindow::canStart()
 {
-    ui->pushButton_canStart->setDisabled(true);
-    ui->pushButton_canSend->setDisabled(false);
-    ui->pushButton_canStop->setDisabled(false);
-    ui->comboBox_canNum->setDisabled(true);
-    QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString cannum = ui->comboBox_canNum->currentText();
-    QString cmdstr = "";
-    
-    if(cpuplat == "px30"){
-        cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && sleep 5 && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (cpuplat == "pi" && debiancodename =="bullseye") {
-        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic")  || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "rk3576"){
-        if(board == "CS_RK3576_BOX_SK")
-           cmdstr = "sudo ip link set "+cannum+" down && sudo ip link set "+cannum+" type can bitrate 10000 dbitrate 50000 fd on && sudo ip link set "+cannum+" up && sudo candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-        else
-            cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 triple-sampling on && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else if (cpuplat == "stm32mp25"){
-        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000  && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    const QString name = ui->comboBox_canNum->currentText();
+    if (name.isEmpty() || canDevice)
+        return;
+
+    const QString path = "/sys/class/net/" + name;
+    bool ok = false;
+    const uint flags = GetFileValue(path + "/flags").trimmed().toUInt(&ok, 0);
+    if (!ok || (flags & IFF_UP)) {
+        ui->textBrowser_can_text->append(tr("Select an available CAN interface that is down."));
+        return;
     }
 
-    else if (ispifive) {
-        cmdstr = "ip link set "+cannum+" down && ip link set "+cannum+" type can bitrate 10000 && ip link set "+cannum+" up && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
-    } else {
-        cmdstr = "canconfig "+cannum+" stop && canconfig "+cannum+" bitrate 10000 ctrlmode triple-sampling on loopback off && canconfig "+cannum+" start && candump "+cannum+" >"+QString("%1").arg(CANTEMPFILEPATH)+"&";
+    const bool fd = ui->comboBox_canMode->currentIndex() == 1;
+    QString error;
+    QCanBusDevice *device = QCanBus::instance()->createDevice("socketcan", name, &error);
+    if (!device) {
+        ui->textBrowser_can_text->append(error.toHtmlEscaped());
+        return;
     }
-    system(cmdstr.toLocal8Bit());
-    canReceiveTimer->start(50);
-    ui->textBrowser_can_text->clear();
-    ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Started!!");
-    //QMessageBox::critical(this,"M",cmdstr);
+
+    // The Qt SocketCAN plugin cannot configure the data-phase bitrate.
+    QStringList config{name, "type", "can", "bitrate", ui->comboBox_canBitRate->currentText()};
+    if (fd)
+        config << "dbitrate" << ui->comboBox_canDataBitRate->currentText() << "fd" << "on";
+    else if (GetFileValue(path + "/mtu").trimmed().toInt() == 72)
+        config << "fd" << "off";
+
+    if (!setCanLink(config) || !setCanLink({name, "up"})) {
+        delete device;
+        return;
+    }
+
+    // Remove the plugin's default bitrate because ip already configured the link.
+    device->setConfigurationParameter(QCanBusDevice::BitRateKey, QVariant());
+    device->setConfigurationParameter(QCanBusDevice::CanFdKey, fd);
+    if (!device->connectDevice()) {
+        ui->textBrowser_can_text->append(device->errorString().toHtmlEscaped());
+        delete device;
+        setCanLink({name, "down"});
+        return;
+    }
+
+    canDevice = device;
+    connect(device, &QCanBusDevice::framesReceived, this, &MainWindow::canReceive);
+    connect(device, &QCanBusDevice::errorOccurred, this, [this, device](QCanBusDevice::CanBusError) {
+        ui->textBrowser_can_text->append(device->errorString().toHtmlEscaped());
+    });
+    updateCanControls();
+    ui->textBrowser_can_text->append(tr("Opened %1").arg(name.toHtmlEscaped()));
 }
 
 void MainWindow::canSend()
 {
-    QString canframe;
-    QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || cpuplat == "rk3399" || cpuplat == "rk3568" || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52")  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576"){
-	canframe = CANSENDCANFRAMENEW;
-    } else {
-	canframe = CANSENDDATA;
-    }
-    QString cmdstr = "cansend "+ui->comboBox_canNum->currentText()+" "+QString("%1").arg(canframe);
+    if (!canDevice)
+        return;
 
-    system(cmdstr.toLocal8Bit());
-    ui->textBrowser_can_text->clear();
-    ui->textBrowser_can_text->setText(currenttime+"\n"+cannum+" Sended: "+QString("%1").arg(canframe));
-    //QMessageBox::critical(this,"M",cmdstr);
+    const bool fd = ui->comboBox_canMode->currentIndex() == 1;
+    const QString idText = ui->lineEdit_canId->text().trimmed();
+    static const QRegularExpression hexId("^[0-9a-fA-F]{1,8}$");
+    static const QRegularExpression hexBytes("^(?:[0-9a-fA-F]{2}\\s*)*$");
+    bool ok = false;
+    const uint id = idText.toUInt(&ok, 16);
+    const QString data = ui->lineEdit_canPayload->text().trimmed();
+    if (!ok || id > 0x1fffffff || !hexId.match(idText).hasMatch()
+        || !hexBytes.match(data).hasMatch()) {
+        ui->textBrowser_can_text->append(tr("Enter a hexadecimal identifier and complete hexadecimal bytes."));
+        return;
+    }
+
+    const QByteArray payload = QByteArray::fromHex(data.toLatin1());
+    const int size = payload.size();
+    if ((!fd && size > 8) || (fd && size > 8 && size != 12 && size != 16
+                             && size != 20 && size != 24 && size != 32 && size != 48 && size != 64)) {
+        ui->textBrowser_can_text->append(fd
+            ? tr("CAN FD payload length must be 0–8, 12, 16, 20, 24, 32, 48 or 64 bytes.")
+            : tr("Classic CAN payload cannot exceed 8 bytes."));
+        return;
+    }
+
+    QCanBusFrame frame(id, payload);
+    frame.setExtendedFrameFormat(id > 0x7ff || ui->checkBox_canExtended->isChecked());
+    frame.setFlexibleDataRateFormat(fd);
+    frame.setBitrateSwitch(fd);
+    if (canDevice->writeFrame(frame))
+        ui->textBrowser_can_text->append(tr("TX %1").arg(frame.toString().toHtmlEscaped()));
 }
 
 void MainWindow::canStop()
 {
-    QString cmdstr;
-    QString currenttime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString cannum = ui->comboBox_canNum->currentText();
-    if((cpuplat == "pi" && debiancodename =="bullseye") || (ispifive) || (board == "imx6q" && debiancodename == "bionic") || (board == "imx6q" && kernelversion == "5.10.52") || cpuplat == "rk3399" || cpuplat == "rk3568"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat == "rk3576"){
-        cmdstr = "ip link set "+cannum+" down";
-    } else {
-        cmdstr = "canconfig "+cannum+" stop";
-    }
-    system(cmdstr.toLocal8Bit());
-    canReceiveTimer->stop();
-    ui->comboBox_canNum->setDisabled(false);
-    ui->pushButton_canStart->setDisabled(false);
-    ui->pushButton_canSend->setDisabled(true);
-    ui->pushButton_canStop->setDisabled(true);
-    ui->textBrowser_can_text->clear();
-    ui->textBrowser_can_text->setText(currenttime+":\n"+cannum+" Stoped!");
-    //QMessageBox::critical(this,"M",cmdstr);
+    if (!canDevice)
+        return;
+
+    const QString name = ui->comboBox_canNum->currentText();
+    canDevice->disconnectDevice();
+    delete canDevice;
+    canDevice = nullptr;
+    if (setCanLink({name, "down"}))
+        ui->textBrowser_can_text->append(tr("Closed %1").arg(name.toHtmlEscaped()));
+    updateCanControls();
 }
 
-void MainWindow::checkCustomCanNumPolicy(int idx)
+void MainWindow::scanCanInterfaces()
 {
-    bool isCustomCanNum = !ui->comboBox_canNum->itemData(idx).isValid();
-    ui->comboBox_canNum->setEditable(isCustomCanNum);
-    if (isCustomCanNum)
-        ui->comboBox_canNum->clearEditText();
+    const QString previous = ui->comboBox_canNum->currentText();
+    ui->comboBox_canNum->clear();
+    const QDir interfaces("/sys/class/net");
+    for (const QString &name : interfaces.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (GetFileValue(interfaces.filePath(name + "/type")).trimmed().toInt() == ARPHRD_CAN)
+            ui->comboBox_canNum->addItem(name);
+    }
+    const int index = ui->comboBox_canNum->findText(previous);
+    if (index >= 0)
+        ui->comboBox_canNum->setCurrentIndex(index);
+    updateCanControls();
+    if (ui->comboBox_canNum->count() == 0)
+        ui->textBrowser_can_text->append(tr("No CAN interfaces detected."));
+}
+
+void MainWindow::updateCanControls()
+{
+    const bool open = canDevice != nullptr;
+    ui->comboBox_canNum->setEnabled(!open);
+    ui->comboBox_canMode->setEnabled(!open);
+    ui->comboBox_canBitRate->setEnabled(!open);
+    ui->comboBox_canDataBitRate->setEnabled(!open && ui->comboBox_canMode->currentIndex() == 1);
+    ui->pushButton_canRefresh->setEnabled(!open);
+    ui->pushButton_canStart->setEnabled(!open && ui->comboBox_canNum->count() > 0);
+    ui->pushButton_canStop->setEnabled(open);
+    ui->pushButton_canSend->setEnabled(open);
 }
 
 void MainWindow::Enable2Can()
@@ -3454,75 +3748,33 @@ void MainWindow::ChangeCanState()
 
 void MainWindow::canInit()
 {
-    // UI
-    ui->checkBox_2can->setVisible(false);
-    if(board == "imx6q" || board == "imx6d" || board == "imx6u" || board == "CS12800_RK3568_101" || board == "CS10600_RK3568_070"  || cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || (cpuplat == "rk3576" && board != "AIO_RK3576_101")){
-        ui->comboBox_canNum->addItem("can0","can0");
-        ui->comboBox_canNum->addItem("can1","can1");
-        ui->comboBox_canNum->addItem("Custum");
-    }else if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board == "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "AIO_RK3576_101"){
-        ui->comboBox_canNum->setDisabled(true);
-        ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
-    }else if(board == "AM335XBOARD"){
-        ui->checkBox_2can->setVisible(true);
-        QString cmdstr = "test -f /usr/hardwaretest/.2can || touch /usr/hardwaretest/.2can";
-        system(cmdstr.toLocal8Bit());
-        if(GetFileValue("/usr/hardwaretest/.2can").remove(QChar('\n'),Qt::CaseInsensitive)=="1"){
-            canflag = true;
-            ui->comboBox_canNum->addItem("can0","can0");
-            ui->comboBox_canNum->addItem("can1","can1");
-        } else {
-            canflag = false;
-            ui->comboBox_canNum->addItem("can0","can0");
-        }
-        ui->comboBox_canNum->addItem("Custum");
+    const bool productionMode = exeName == "hardwaretest_auto";
+    ui->widget_canConfig->setVisible(!productionMode);
+    ui->widget_canTransmit->setVisible(!productionMode);
+    ui->checkBox_2can->setVisible(board == "AM335XBOARD");
+    if (board == "AM335XBOARD") {
+        canflag = GetFileValue("/usr/hardwaretest/.2can").trimmed() == "1";
         ui->checkBox_2can->setChecked(canflag);
-    }else if(board == "CS12800RA101") {
-        if(GetComResult("ifconfig -a").contains("can1")) {
-                ui->comboBox_canNum->addItem("can0","can0");
-                ui->comboBox_canNum->addItem("can1","can1");
-                ui->comboBox_canNum->addItem("Custum");
-        } else {
-                ui->comboBox_canNum->addItem("can0","can0");
-                ui->comboBox_canNum->addItem("Custum");
-        }
-    }else if(board == "CS12800RA5101A") {
-        if(GetComResult("ifconfig -a").contains("can0")) {
-                ui->comboBox_canNum->addItem("can0","can0");
-                ui->comboBox_canNum->addItem("Custum");
-        } else {
-                ui->comboBox_canNum->setDisabled(true);
-                ui->textBrowser_can_text->setText("This device don't support CAN Bus.");
-        }
-    }else{
-        ui->comboBox_canNum->addItem("can0","can0");
-        ui->comboBox_canNum->addItem("Custum");
+        connect(ui->checkBox_2can, &QCheckBox::toggled, this, &MainWindow::ChangeCanState);
     }
+    if (productionMode)
+        return;
 
-    connect(ui->checkBox_2can,SIGNAL(toggled(bool)),this,SLOT(ChangeCanState()));
-    connect(ui->comboBox_canNum, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                this, &MainWindow::checkCustomCanNumPolicy);
+    ui->comboBox_canMode->addItems({tr("Classic CAN"), tr("CAN FD")});
+    ui->comboBox_canBitRate->addItems({"10000", "20000", "50000", "100000", "125000",
+                                      "250000", "500000", "800000", "1000000"});
+    ui->comboBox_canBitRate->setCurrentText("500000");
+    ui->comboBox_canDataBitRate->addItems({"500000", "1000000", "2000000", "4000000", "5000000", "8000000"});
+    ui->comboBox_canDataBitRate->setCurrentText("2000000");
+    ui->textBrowser_can_text->document()->setMaximumBlockCount(1000);
 
-    // Button
-    ui->pushButton_canSend->setDisabled(true);
-    ui->pushButton_canStop->setDisabled(true);
-    if(board == "CS10600RA070" || board == "CS12800RA4101" || board == "LRRA4-101" || board == "CS12800RA4101A" || board== "CS10600R070" || board == "CS12800R101" || board == "CS40230RB" || board == "CS12800RA4101AV4" || board == "AIO_RK3576_101"){
-        ui->pushButton_canStart->setDisabled(true);
-    }
-    if(board == "CS12800RA5101A") {
-        if(GetComResult("ifconfig -a").contains("can0")) {
-            ui->pushButton_canStart->setDisabled(false);
-        } else {
-            ui->pushButton_canStart->setDisabled(true);
-        }
-    }
-    connect(ui->pushButton_canStart,&QPushButton::clicked,this,&MainWindow::canStart);
-    connect(ui->pushButton_canSend,&QPushButton::clicked,this,&MainWindow::canSend);
-    connect(ui->pushButton_canStop,&QPushButton::clicked,this,&MainWindow::canStop);
-
-    // Receive
-    canReceiveTimer = new QTimer(this);
-    connect(canReceiveTimer,SIGNAL(timeout()),this,SLOT(canReceive()));
+    connect(ui->comboBox_canMode, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::updateCanControls);
+    connect(ui->pushButton_canRefresh, &QPushButton::clicked, this, &MainWindow::scanCanInterfaces);
+    connect(ui->pushButton_canStart, &QPushButton::clicked, this, &MainWindow::canStart);
+    connect(ui->pushButton_canSend, &QPushButton::clicked, this, &MainWindow::canSend);
+    connect(ui->pushButton_canStop, &QPushButton::clicked, this, &MainWindow::canStop);
+    scanCanInterfaces();
 }
 
 /*
@@ -3718,6 +3970,8 @@ void MainWindow::autoTest()
             eventloop.exec();
             RecordTest();
         }
+    } else if (cpuplat == "nvidia") {
+        AudioTest();
     } else if(board == "AM335XBOARD"){
 
     } else if(board == "CS_RK3576_BOX_SK") {
@@ -3969,6 +4223,8 @@ void MainWindow::autoTest()
         }
     }
 
+    if (cpuplat == "nvidia")
+        board = "NVIDIA";
     thread.startSlave(&board);
 
 }

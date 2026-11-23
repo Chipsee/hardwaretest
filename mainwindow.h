@@ -13,6 +13,9 @@
 #include "gpiocontroller.h"
 #include <QSettings>
 
+class QCanBusDevice;
+class QProcess;
+
 namespace Ui {
 class MainWindow;
 }
@@ -84,7 +87,6 @@ private slots:
     void setGPIOOutStatu();
     void setGPIOOutAllHigh();
     void setGPIOOutAllLow();
-    void checkCustomCanNumPolicy(int);
     void canStart();
     void canSend();
     void canStop();
@@ -145,7 +147,9 @@ private:
     QTimer *gpioInStatuTimer;
     QTimer *gpioOutStatuTimer;
     QTimer *serialReceiveTimer;
-    QTimer *canReceiveTimer;
+    QCanBusDevice *canDevice = nullptr;
+    QProcess *nvidiaAudio = nullptr;
+    QString nvidiaLedTrigger;
     QTimer *usbautotestTimer;
     QTimer *ipautotestTimer;
     QSerialPort *serial;
@@ -203,6 +207,11 @@ private:
     QString gpioOutArray[4];
 
     void BoardSetting();
+    void showCapacity();
+    void showI2cInterfaces();
+    void setNvidiaLed(bool enabled);
+    void startNvidiaAudioCommand(QProcess &process, const QString &program, const QStringList &arguments);
+    void playNvidiaAudio(const QString &path);
     QString GetTempFileValue();
     QString GetFileValue(QString);
     QString GetComResult(QString);
@@ -233,6 +242,9 @@ private:
     void usbInit();
     void gpioInit();
     void canInit();
+    void scanCanInterfaces();
+    void updateCanControls();
+    bool setCanLink(const QStringList &arguments);
     void autotestInit();
     void mobile4gInit();
     void showRequest(const QString &s);

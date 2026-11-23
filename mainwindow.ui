@@ -1171,93 +1171,138 @@
         <property name="title">
          <string>CAN</string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QVBoxLayout" name="verticalLayout_can">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_can_1">
-           <item>
-            <widget class="QLabel" name="label_canNum">
-             <property name="text">
-              <string>CanNum:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="comboBox_canNum">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton_canStart">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>CanStart</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton_canSend">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>CanSend</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushButton_canStop">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>CanStop</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="checkBox_2can">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>2CAN</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QWidget" name="widget_canConfig">
+           <layout class="QGridLayout" name="gridLayout_canConfig">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_canNum">
+              <property name="text">
+               <string>Interface</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboBox_canNum"/>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="pushButton_canRefresh">
+              <property name="text">
+               <string>Refresh</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_canMode">
+              <property name="text">
+               <string>Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QComboBox" name="comboBox_canMode"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_canBitRate">
+              <property name="text">
+               <string>Arbitration (bit/s)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1" colspan="2">
+             <widget class="QComboBox" name="comboBox_canBitRate"/>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_canDataBitRate">
+              <property name="text">
+               <string>Data (bit/s)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1" colspan="2">
+             <widget class="QComboBox" name="comboBox_canDataBitRate"/>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="pushButton_canStart">
+              <property name="text">
+               <string>Open</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QPushButton" name="pushButton_canStop">
+              <property name="text">
+               <string>Close</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayou_can_2">
-           <item>
-            <widget class="QLabel" name="label_can_statu">
-             <property name="text">
-              <string>Statu:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTextBrowser" name="textBrowser_can_text"/>
-           </item>
-          </layout>
+          <widget class="QCheckBox" name="checkBox_2can">
+           <property name="text">
+            <string>2CAN</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_canTransmit">
+           <layout class="QGridLayout" name="gridLayout_canTransmit">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_canId">
+              <property name="text">
+               <string>TX ID (hex)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEdit_canId">
+              <property name="text">
+               <string notr="true">5A1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QCheckBox" name="checkBox_canExtended">
+              <property name="text">
+               <string>Extended</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_canPayload">
+              <property name="text">
+               <string>Data (hex)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_canPayload">
+              <property name="text">
+               <string notr="true">11 22 33 44 55 66 77 88</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="pushButton_canSend">
+              <property name="text">
+               <string>Send</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_can_statu">
+           <property name="text">
+            <string>Receive / status</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTextBrowser" name="textBrowser_can_text"/>
          </item>
         </layout>
        </widget>
@@ -1291,6 +1336,19 @@
            </property>
            <property name="text">
             <string>Version 4.4</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelMemory"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelEmmc"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_i2cInfo">
+           <property name="text">
+            <string>I²C Interfaces</string>
            </property>
           </widget>
          </item>

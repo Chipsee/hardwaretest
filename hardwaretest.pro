@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui serialport network bluetooth qml quick multimedia multimediawidgets
+QT       += core gui serialport serialbus network bluetooth qml quick multimedia multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

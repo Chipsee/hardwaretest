@@ -29,6 +29,7 @@ mkdir -p usr/share/pixmaps
 mkdir -p usr/bin/
 mkdir -p usr/lib/${LIBDIR}/qt5/qml/QtQml
 mkdir -p usr/lib/${LIBDIR}/qt5/qml/QtQuick
+mkdir -p usr/lib/${LIBDIR}/qt5/plugins/canbus
 mkdir -p usr/lib/${LIBDIR}/qt5/qml/QtQuick/Window.2
 mkdir -p usr/lib/${LIBDIR}/qt5/qml/QtQuick.2
 sudo cp resourcefiles/hardwaretest usr/ -rf
@@ -50,6 +51,8 @@ sudo cp -a /usr/lib/${LIBDIR}/libQt5Quick.so* usr/lib/${LIBDIR}/
 sudo cp -a /usr/lib/${LIBDIR}/libQt5QmlModels.so* usr/lib/${LIBDIR}/
 sudo cp -a /usr/lib/${LIBDIR}/libQt5QmlWorkerScript.so* usr/lib/${LIBDIR}/
 sudo cp -a /usr/lib/${LIBDIR}/libQt5SerialPort.so* usr/lib/${LIBDIR}/
+sudo cp -a /usr/lib/${LIBDIR}/libQt5SerialBus.so* usr/lib/${LIBDIR}/
+sudo cp -a /usr/lib/${LIBDIR}/qt5/plugins/canbus/libqtsocketcanbus.so usr/lib/${LIBDIR}/qt5/plugins/canbus/
 sync
 tar zcvf hardwaretest-app-${KVR}.tar.gz usr
 sync

@@ -4,7 +4,7 @@ One Qt program which is used by Chipsee to test Chipsee products and one Demo to
 # Required Packages
 ```
 sudo apt install qt5-default  // some platforms doesn't have this package, ignore it
-sudo apt install git make g++ libqt5serialport5-dev qtdeclarative5-dev qml-module-qtquick2 qml-module-qtquick-controls qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev qml-module-qtquick-controls2
+sudo apt install git make g++ libqt5serialport5-dev libqt5serialbus5-dev libqt5serialbus5-plugins iproute2 qtdeclarative5-dev qml-module-qtquick2 qml-module-qtquick-controls qtmultimedia5-dev qtconnectivity5-dev gpiod libgpiod-dev qml-module-qtquick-controls2
 ```
 
 # Build system DDR limited
@@ -25,6 +25,25 @@ This program only support the following Chipsee products now:
  - [RK3399](https://chipsee.com/product-category/ipc/arm/?query_type_cpu=or&filter_cpu=rockchip-rk3399)
  - [RK3568](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=arm-rockchip-rk3568&query_type_cpu=or)
  - [RK3588](https://chipsee.com/product-category/ipc/arm-rockchip/?filter_cpu=rockchip-rk3588&query_type_cpu=or)
+
+ - NVIDIA Tegra
+
+# Manual CAN test on Linux
+
+Run hardwaretest with permission to configure CAN network interfaces. Close any
+other CAN test first and use an interface that is down. Click **Refresh** after
+adding a USB CAN adapter, select the interface and bitrates, then click **Open**.
+Classic CAN defaults to 500000 bit/s. CAN FD defaults to 500000 bit/s for
+arbitration and 2000000 bit/s for data, with bitrate switching enabled on TX.
+Set the same bitrates on the peer. The default TX frame uses ID `5A1` and
+payload `11 22 33 44 55 66 77 88`. Click **Close** to release the interface.
+
+On NVIDIA Tegra, run from the desktop session with sudo so CAN, RTC, LED and
+backlight controls can access their Linux interfaces. Audio uses GStreamer
+(`gst-play-1.0`, `pipewiresink`) and the desktop user's default PipeWire sink.
+Volume changes use `wpctl`. Install the package or its media files before running
+the audio test. The I²C dialog lists exposed adapters. The buzzer control is
+enabled when the board exposes `/dev/buzzer`.
 
 # Build deb packages
 ```

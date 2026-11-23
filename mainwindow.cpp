@@ -1269,24 +1269,44 @@ void MainWindow::showCapacity()
 
 void MainWindow::showI2cDevices()
 {
-    const QDir devices("/sys/bus/i2c/devices");
     QStringList buses;
     for (const int bus : {7, 1}) {
         const QString heading = QStringLiteral("i2c-%1").arg(bus);
-        const QString filter = QStringLiteral("%1-????").arg(bus);
-        QStringList entries;
-        for (const QString &device : devices.entryList({filter}, QDir::Dirs)) {
-            bool ok = false;
-            const uint address = device.section('-', 1).toUInt(&ok, 16);
-            const QString name = GetFileValue(devices.filePath(device + "/name")).trimmed();
-            if (ok && !name.isEmpty())
-                entries << QStringLiteral("0x%1  %2").arg(address, 2, 16, QChar('0')).arg(name);
+        QProcess scan;
+        scan.start("i2cdetect", {"-r", "-y", QString::number(bus), "0x08", "0x77"});
+        if (!scan.waitForFinished(3000) || scan.exitStatus() != QProcess::NormalExit || scan.exitCode() != 0) {
+            QString error = QString::fromLocal8Bit(scan.readAllStandardError()).trimmed();
+            if (error.isEmpty())
+                error = scan.errorString();
+            buses << tr("%1: Scan failed (%2)").arg(heading, error);
+            continue;
         }
-        if (entries.isEmpty())
-            entries << (devices.exists(heading) ? tr("No devices registered") : tr("Bus not detected"));
-        buses << heading + '\n' + entries.join('\n');
+
+        QStringList addresses;
+        const auto lines = QString::fromLatin1(scan.readAllStandardOutput()).split('\n');
+        for (const QString &line : lines) {
+            if (line.size() < 3 || line.at(2) != ':')
+                continue;
+            bool ok = false;
+            const int row = line.left(2).toInt(&ok, 16);
+            if (!ok)
+                continue;
+
+            // The first table row omits the reserved addresses below 0x08.
+            int address = qMax(row, 0x08);
+            for (const QString &cell : line.mid(3).simplified().split(' ')) {
+                const QString hex = QStringLiteral("%1").arg(address, 2, 16, QChar('0'));
+                if (cell == "UU" || cell == hex)
+                    addresses << "0x" + hex;
+                ++address;
+            }
+        }
+        buses << tr("%1: %2").arg(heading, addresses.isEmpty() ? tr("No devices detected") : addresses.join(", "));
     }
-    QMessageBox::information(this, tr("I²C Devices"), buses.join("\n\n"));
+    QMessageBox dialog(QMessageBox::Information, tr("I²C Devices"), buses.join('\n'),
+                       QMessageBox::Ok, this);
+    dialog.setTextFormat(Qt::PlainText);
+    dialog.exec();
 }
 
 /*

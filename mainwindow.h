@@ -151,6 +151,7 @@ private:
     QTimer *serialReceiveTimer;
     QCanBusDevice *canDevice = nullptr;
     QProcess *nvidiaAudio = nullptr;
+    QProcess *nvidiaVideo = nullptr;
     QString nvidiaLedTrigger;
     QTimer *usbautotestTimer;
     QTimer *ipautotestTimer;
@@ -212,8 +213,9 @@ private:
     void showCapacity();
     void showI2cInterfaces();
     void setNvidiaLed(bool enabled);
-    void startNvidiaAudioCommand(QProcess &process, const QString &program, const QStringList &arguments);
+    void startNvidiaSessionCommand(QProcess &process, const QString &program, const QStringList &arguments);
     void playNvidiaAudio(const QString &path);
+    void playNvidiaVideo();
     QString GetTempFileValue();
     QString GetFileValue(QString);
     QString GetComResult(QString);

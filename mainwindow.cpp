@@ -312,6 +312,13 @@ MainWindow::~MainWindow()
         nvidiaAudio->kill();
         nvidiaAudio->waitForFinished(1000);
     }
+    if (nvidiaVideo && nvidiaVideo->state() != QProcess::NotRunning) {
+        nvidiaVideo->terminate();
+        if (!nvidiaVideo->waitForFinished(3000)) {
+            nvidiaVideo->kill();
+            nvidiaVideo->waitForFinished(1000);
+        }
+    }
     if (!nvidiaLedTrigger.isEmpty()) {
         QFile trigger("/sys/class/leds/status/trigger");
         if (trigger.open(QIODevice::WriteOnly))
@@ -829,9 +836,7 @@ void MainWindow::BoardSetting()
         maxbacklightpath = MAXBACKLIGHTPATH;
         audiopath = "/usr/hardwaretest/AudioTest.wav";
         cueaudiopath = CUEAUDIOPATH;
-        videopath = VIDEOPATH;
-        if (QFile::exists(BUZZERPATH))
-            buzzerpath = BUZZERPATH;
+        videopath = "/usr/hardwaretest/h264.mp4";
         return;
     }
 
@@ -1426,15 +1431,19 @@ void MainWindow::AudioLoop()
     }
 }
 
-void MainWindow::startNvidiaAudioCommand(QProcess &process, const QString &program,
+void MainWindow::startNvidiaSessionCommand(QProcess &process, const QString &program,
                                          const QStringList &arguments)
 {
     const QString user = qEnvironmentVariable("SUDO_USER");
     const QString uid = qEnvironmentVariable("SUDO_UID");
     if (geteuid() == 0 && !user.isEmpty() && !uid.isEmpty()) {
-        // PipeWire belongs to the desktop session, even when hardware tests run as root.
-        process.start("runuser", QStringList{"-u", user, "--", "env",
-                       "XDG_RUNTIME_DIR=/run/user/" + uid, program} + arguments);
+        // X11 and PipeWire belong to the desktop session.
+        QStringList command{"-u", user, "--", "env", "XDG_RUNTIME_DIR=/run/user/" + uid};
+        for (const auto &variable : {"DISPLAY", "XAUTHORITY"}) {
+            if (qEnvironmentVariableIsSet(variable))
+                command << QString::fromLatin1(variable) + "=" + qEnvironmentVariable(variable);
+        }
+        process.start("runuser", command << program << arguments);
     } else {
         process.start(program, arguments);
     }
@@ -1444,7 +1453,7 @@ void MainWindow::playNvidiaAudio(const QString &path)
 {
     if (nvidiaAudio->state() != QProcess::NotRunning)
         return;
-    startNvidiaAudioCommand(*nvidiaAudio, "gst-play-1.0", {"--audiosink=pipewiresink", path});
+    startNvidiaSessionCommand(*nvidiaAudio, "gst-play-1.0", {"--audiosink=pipewiresink", path});
 }
 
 void MainWindow::AudioTest()
@@ -1721,7 +1730,7 @@ void MainWindow::ChangeVolume()
 
     if (cpuplat == "nvidia") {
         QProcess volume;
-        startNvidiaAudioCommand(volume, "wpctl", {"set-volume", "@DEFAULT_AUDIO_SINK@", value + "%"});
+        startNvidiaSessionCommand(volume, "wpctl", {"set-volume", "@DEFAULT_AUDIO_SINK@", value + "%"});
         if (!volume.waitForFinished(1000) || volume.exitCode() != 0)
             qWarning() << "Cannot set PipeWire volume:" << volume.readAllStandardError();
         return;
@@ -1755,7 +1764,7 @@ void MainWindow::ChangeVolume()
 
 void MainWindow::EnableBuzzer()
 {
-    if (cpuplat == "nvidia" && buzzerpath.isEmpty())
+    if (cpuplat == "nvidia")
         return;
 
     if(cpuplat == "imx8mp" || cpuplat == "rk3588" || cpuplat == "stm32mp25" || cpuplat  == "rk3576"){
@@ -1768,7 +1777,7 @@ void MainWindow::EnableBuzzer()
 
 void MainWindow::DisableBuzzer()
 {
-    if (cpuplat == "nvidia" && buzzerpath.isEmpty())
+    if (cpuplat == "nvidia")
         return;
 
     if(cpuplat == "imx8mp" || cpuplat == "rk3588"|| cpuplat == "stm32mp25" || cpuplat  == "rk3576") {
@@ -1825,7 +1834,7 @@ void MainWindow::audioInit()
         });
         ui->horizontalSlider_audio_volume->setRange(0, 100);
         QProcess volume;
-        startNvidiaAudioCommand(volume, "wpctl", {"get-volume", "@DEFAULT_AUDIO_SINK@"});
+        startNvidiaSessionCommand(volume, "wpctl", {"get-volume", "@DEFAULT_AUDIO_SINK@"});
         if (volume.waitForFinished(1000) && volume.exitCode() == 0) {
             const QString value = QString::fromLatin1(volume.readAllStandardOutput());
             ui->horizontalSlider_audio_volume->setValue(qRound(value.section(' ', 1, 1).toDouble() * 100));
@@ -1882,12 +1891,13 @@ void MainWindow::audioInit()
         buzzer->setGpioDirection(true);
     }
 
-    if (cpuplat == "nvidia" && buzzerpath.isEmpty()) {
-        ui->checkBox_buzzer->setEnabled(false);
-        ui->checkBox_buzzer->setToolTip(tr("No buzzer device detected."));
+    if (cpuplat == "nvidia") {
+        ui->label_buzzer->hide();
+        ui->checkBox_buzzer->hide();
+    } else {
+        ui->checkBox_buzzer->setChecked(false);
+        connect(ui->checkBox_buzzer,SIGNAL(toggled(bool)),this,SLOT(ChangeBuzzerState()));
     }
-    ui->checkBox_buzzer->setChecked(false);
-    connect(ui->checkBox_buzzer,SIGNAL(toggled(bool)),this,SLOT(ChangeBuzzerState()));
 
     audioloopTimer = new QTimer(this);
     audioloopTimer->stop();
@@ -1931,7 +1941,18 @@ void MainWindow::VideoLoop()
     else {
         vautoflag=false;
         videoloopTimer->stop();
+        if (nvidiaVideo && nvidiaVideo->state() != QProcess::NotRunning)
+            nvidiaVideo->terminate();
     }
+}
+
+void MainWindow::playNvidiaVideo()
+{
+    if (nvidiaVideo->state() != QProcess::NotRunning)
+        return;
+
+    startNvidiaSessionCommand(*nvidiaVideo, "gst-play-1.0",
+        {"--no-interactive", "--videosink=glimagesink", "--audiosink=pipewiresink", videopath});
 }
 
 void MainWindow::VideoTest()
@@ -1943,6 +1964,11 @@ void MainWindow::VideoTest()
 
     if(!vautoflag){
         QMessageBox::warning(this,"Tips","Press OK to Play Video!");
+    }
+
+    if (cpuplat == "nvidia") {
+        playNvidiaVideo();
+        return;
     }
 
     if((board == "imx6q" && kernelversion == "5.10.52"))
@@ -2105,6 +2131,22 @@ void MainWindow::TouchTest()
 
 void MainWindow::displayInit()
 {
+    if (cpuplat == "nvidia") {
+        nvidiaVideo = new QProcess(this);
+        connect(nvidiaVideo, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
+            if (error == QProcess::FailedToStart)
+                QMessageBox::warning(this, tr("Video"), nvidiaVideo->errorString());
+        });
+        connect(nvidiaVideo, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, [this](int, QProcess::ExitStatus status) {
+            const QString errors = QString::fromLocal8Bit(nvidiaVideo->readAllStandardError()).trimmed();
+            nvidiaVideo->readAllStandardOutput();
+            if (status == QProcess::NormalExit && errors.contains("ERROR", Qt::CaseInsensitive)
+                && !errors.contains("Output window was closed", Qt::CaseInsensitive)) {
+                QMessageBox::warning(this, tr("Video"), errors);
+            }
+        });
+    }
     connect(ui->pushButton_video,&QPushButton::clicked,this,&MainWindow::VideoTest);
     if (cpuplat == "nvidia") {
         connect(ui->pushButton_lcdtest, &QPushButton::clicked, this, &MainWindow::showNvidiaLcdTest);
